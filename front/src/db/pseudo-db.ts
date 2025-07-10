@@ -7,16 +7,16 @@ export const fondos = [
   {
     id: 2,
     fecha: "2025-07-07",
-    monto: 630,
+    monto: 6300,
   },
-  {
-    id: 3,
-    fecha: "2025-01-12",
-    monto: 850,
-  },
+  // {
+  //   id: 3,
+  //   fecha: "2025-01-12",
+  //   monto: 8500,
+  // },
   // {
   //   id: 4,
   //   fecha: "2025-01-13",
-  //   monto: 1500,
+  //   monto: 7500,
   // }
 ];

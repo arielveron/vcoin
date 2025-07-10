@@ -73,7 +73,7 @@ export default function MontoActual(
   // ✅ Función más robusta para formatear
   const formatearConDecimales = (numero: number) => {
     // Convertir a string con 3 decimales
-    const numeroCompleto = numero.toFixed(3);
+    const numeroCompleto = numero.toFixed(4);
     const [parteEntera, parteDecimal] = numeroCompleto.split('.');
     
     // Formatear parte entera con separador de miles
@@ -86,7 +86,7 @@ export default function MontoActual(
 
   return (
     <div className={`col-span-2 font-bold text-2xl text-center text-green-600 ${props.className}`}>
-      USD {enteroFormateado},<span className='align-super text-xs'>{decimalesFormateados}</span>
+      $ {enteroFormateado},<span className='align-super text-xs'>{decimalesFormateados}</span>
     </div>
   );
 }
