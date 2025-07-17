@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "next/image";
 import { monthlyInterestRate } from "@/config/settings";
 import { formatearMoneda } from "@/utils/format";
 

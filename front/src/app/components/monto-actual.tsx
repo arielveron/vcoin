@@ -1,22 +1,21 @@
 'use client';
 
-import { getMontoActual, getMontoAFinalizacion } from '@/logic/calculations'
 import { endDate } from '@/config/settings'
+import { getCurrentMonto } from '@/actions/investment-actions'
 import React, { useState, useEffect, useRef } from 'react'
 
-export default function MontoActual(
-  props: React.HTMLAttributes<HTMLDivElement> & { className?: string }
-) {
+interface MontoActualProps extends React.HTMLAttributes<HTMLDivElement> {
+  className?: string;
+  montoActual: number; // Initial amount from server
+}
+
+export default function MontoActual({ montoActual: initialMonto, className, ...props }: MontoActualProps) {
   // Check if we've reached the end date
   const hasReachedEndDate = () => new Date() >= new Date(endDate);
   
-  const [montoMostrado, setMontoMostrado] = useState(() => 
-    hasReachedEndDate() ? getMontoAFinalizacion() : getMontoActual()
-  );
+  const [montoMostrado, setMontoMostrado] = useState(initialMonto);
   
-  const montoObjetivoRef = useRef(
-    hasReachedEndDate() ? getMontoAFinalizacion() : getMontoActual()
-  );
+  const montoObjetivoRef = useRef(initialMonto);
   const animacionRef = useRef<number | null>(null);
   const [enAnimacion, setEnAnimacion] = useState(false);
 
@@ -27,7 +26,7 @@ export default function MontoActual(
 
     setEnAnimacion(true);
     const diferencia = valorFinal - valorInicial;
-    const duracion = 1200;
+    const duracion = 10000; // Animation duration close to fetch interval (10s) for continuous effect
     
     const tiempoInicio = Date.now();
 
@@ -52,51 +51,50 @@ export default function MontoActual(
   useEffect(() => {
     // Don't start any timers if we've reached the end date
     if (hasReachedEndDate()) {
-      const finalMonto = getMontoAFinalizacion();
-      setMontoMostrado(finalMonto);
-      montoObjetivoRef.current = finalMonto;
+      setMontoMostrado(initialMonto);
+      montoObjetivoRef.current = initialMonto;
       return;
     }
 
-    const actualizarMonto = () => {
+    const actualizarMonto = async () => {
       // Check again before each update
       if (hasReachedEndDate()) {
-        const finalMonto = getMontoAFinalizacion();
+        const finalMonto = initialMonto; // Use initial value if reached end
         animarHaciaValor(montoObjetivoRef.current, finalMonto);
         montoObjetivoRef.current = finalMonto;
         return;
       }
 
-      const nuevoMonto = getMontoActual();
-      const montoAnterior = montoObjetivoRef.current;
-      
-      if (Math.abs(nuevoMonto - montoAnterior) > 0.00001) {
-        animarHaciaValor(montoAnterior, nuevoMonto);
-        montoObjetivoRef.current = nuevoMonto;
+      try {
+        // Fetch fresh data from server
+        const nuevoMonto = await getCurrentMonto();
+        const montoAnterior = montoObjetivoRef.current;
+        
+        if (Math.abs(nuevoMonto - montoAnterior) > 0.00001) {
+          animarHaciaValor(montoAnterior, nuevoMonto);
+          montoObjetivoRef.current = nuevoMonto;
+        }
+      } catch (error) {
+        console.warn('Error fetching current amount, using cached value:', error);
       }
     };
 
-    const getIntervalo = () => enAnimacion ? 2000 : 800;
+    // Start immediately, then continue with 10-second intervals
+    actualizarMonto(); // First call immediately
     
-    const programarSiguiente = () => {
-      setTimeout(() => {
-        // Stop scheduling if we've reached the end date
-        if (hasReachedEndDate()) {
-          return;
-        }
+    const interval = setInterval(() => {
+      if (!hasReachedEndDate()) {
         actualizarMonto();
-        programarSiguiente();
-      }, getIntervalo());
-    };
-
-    programarSiguiente();
+      }
+    }, 10000); // 10-second interval for subsequent calls
     
     return () => {
+      clearInterval(interval);
       if (animacionRef.current) {
         cancelAnimationFrame(animacionRef.current);
       }
     };
-  }, [enAnimacion]);
+  }, [initialMonto]); // Remove enAnimacion from dependencies
 
   // ✅ Función más robusta para formatear
   const formatearConDecimales = (numero: number) => {
@@ -113,7 +111,7 @@ export default function MontoActual(
   const { enteroFormateado, decimalesFormateados } = formatearConDecimales(montoMostrado);
 
   return (
-    <div className={`col-span-2 font-bold text-2xl text-center text-green-600 ${props.className}`}>
+    <div className={`col-span-2 font-bold text-2xl text-center text-green-600 ${className}`} {...props}>
       $ {enteroFormateado},<span className='align-super text-xs'>{decimalesFormateados}</span>
     </div>
   );

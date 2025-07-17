@@ -51,7 +51,7 @@ export default function Pasaje() {
             <select
               className="border rounded px-2 py-1"
               value={inputType}
-              onChange={(e) => setInputType(e.target.value as any)}
+              onChange={(e) => setInputType(e.target.value as 'mensual' | 'anual' | 'diaria' | 'segundos')}
             >
               <option value="mensual">Efectiva Mensual</option>
               <option value="anual">Efectiva Anual</option>

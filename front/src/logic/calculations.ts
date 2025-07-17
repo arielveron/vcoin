@@ -1,4 +1,4 @@
-import { diasInterestRate, endDate, monthlyInterestRate, segundosInterestRate } from "@/config/settings";
+import { diasInterestRate, endDate, segundosInterestRate } from "@/config/settings";
 import { getListInvertidos, getMontoInvertido } from "@/repos/montos-repo";
 import { differenceInDays, differenceInSeconds, parseISO } from "date-fns";
 

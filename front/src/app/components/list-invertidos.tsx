@@ -1,26 +1,39 @@
 "use client";
 
 import React, { useState } from "react";
-import { getListInvertidos, getMontoInvertido } from "@/repos/montos-repo";
 
-export default function ListInvertidos(props: React.HTMLAttributes<HTMLDivElement> & { className?: string }) {
+interface InvestmentItem {
+  id: number;
+  fecha: string;
+  monto: number;
+  concepto: string;
+}
+
+interface ListInvertidosProps extends React.HTMLAttributes<HTMLDivElement> {
+  className?: string;
+  totalInvertido: number;
+  listInvertidos: InvestmentItem[];
+}
+
+export default function ListInvertidos({ totalInvertido, listInvertidos, className, ...props }: ListInvertidosProps) {
   const [isCollapsed, setIsCollapsed] = useState(true);
-  const list = getListInvertidos();
-  if (!list || list.length === 0) {
+  
+  if (!listInvertidos || listInvertidos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 bg-gray-100 rounded-lg shadow-lg w-full max-w-md">
         No hay fondos invertidos.
       </div>
     );
   }
+  
   return (
-    <div className={`w-full max-w-md px-5 text-xs ${props.className}`}>
+    <div className={`w-full max-w-md px-5 text-xs ${className}`} {...props}>
       <div 
         className="flex items-center justify-between cursor-pointer p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         <div className="text-gray-700 font-bold text-center flex-1">
-          Total Invertido: {getMontoInvertido().toLocaleString("es-AR")} $
+          Total Invertido: {totalInvertido.toLocaleString("es-AR")} $
         </div>
         <div className="ml-2 text-gray-500">
           {isCollapsed ? "►" : "▼"}
@@ -35,7 +48,7 @@ export default function ListInvertidos(props: React.HTMLAttributes<HTMLDivElemen
             <div className="text-gray-700 font-bold">Concepto</div>
           </div>
           <hr className="border-gray-300" />
-          {list.map((item) => (
+          {listInvertidos.map((item) => (
             <div key={item.fecha} className="grid grid-cols-[1fr_1fr_2fr] gap-2 items-start p-2 border-b border-gray-100 last:border-b-0">
               <div className="text-gray-700 text-nowrap">{item.fecha}</div>
               <div className="text-gray-700 text-right text-nowrap font-bold">{item.monto.toLocaleString("es-AR")} $</div>
