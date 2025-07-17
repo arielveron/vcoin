@@ -75,16 +75,20 @@ export default function Pasaje() {
         </form>
         <div className="mt-4 w-full bg-gray-50 rounded-lg p-4 shadow flex flex-col gap-2">
           <div>
-            <span className="font-semibold">Tasa Efectiva Anual:</span> {(rates.anual).toFixed(10)}
+            <div><span className="font-semibold">Tasa Efectiva Anual:</span> {(rates.anual).toFixed(10)}</div>
+            ({(rates.anual * 100).toFixed(2)} %)
           </div>
           <div>
-            <span className="font-semibold">Tasa Efectiva Mensual:</span> {(rates.mensual).toFixed(10)}
+            <div><span className="font-semibold">Tasa Efectiva Mensual:</span> {(rates.mensual).toFixed(10)}</div>
+            ({(rates.mensual * 100).toFixed(2)} %)
           </div>
           <div>
-            <span className="font-semibold">Tasa Efectiva Diaria:</span> {(rates.diaria).toFixed(10)}
+            <div><span className="font-semibold">Tasa Efectiva Diaria:</span> {(rates.diaria).toFixed(10)}</div>
+            ({(rates.diaria * 100).toFixed(2)} %)
           </div>
           <div>
-            <span className="font-semibold">Tasa Efectiva por Segundo:</span> {(rates.segundos).toFixed(20)}
+            <div><span className="font-semibold">Tasa Efectiva por Segundo:</span> {(rates.segundos).toFixed(20)}</div>
+            ({(rates.segundos * 100).toFixed(10)} %)
           </div>
         </div>
       </main>
