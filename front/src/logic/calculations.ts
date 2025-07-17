@@ -50,7 +50,7 @@ export const getMontoAFechaSegundos = (fecha: Date): number => {
 export const getGananciaTotal = (): number => {
   const montoActual = getMontoActual();
   const montoInvertido = getMontoInvertido();
-  return montoActual / montoInvertido - 1;
+  return (montoActual / montoInvertido - 1) * 100;
 }
 
 export const getDiasRestantes = (): number => {
