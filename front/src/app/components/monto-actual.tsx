@@ -1,14 +1,22 @@
 'use client';
 
-import { getMontoActual } from '@/logic/calculations'
+import { getMontoActual, getMontoAFinalizacion } from '@/logic/calculations'
+import { endDate } from '@/config/settings'
 import React, { useState, useEffect, useRef } from 'react'
 
 export default function MontoActual(
   props: React.HTMLAttributes<HTMLDivElement> & { className?: string }
 ) {
-  const [montoMostrado, setMontoMostrado] = useState(() => getMontoActual());
+  // Check if we've reached the end date
+  const hasReachedEndDate = () => new Date() >= new Date(endDate);
   
-  const montoObjetivoRef = useRef(getMontoActual());
+  const [montoMostrado, setMontoMostrado] = useState(() => 
+    hasReachedEndDate() ? getMontoAFinalizacion() : getMontoActual()
+  );
+  
+  const montoObjetivoRef = useRef(
+    hasReachedEndDate() ? getMontoAFinalizacion() : getMontoActual()
+  );
   const animacionRef = useRef<number | null>(null);
   const [enAnimacion, setEnAnimacion] = useState(false);
 
@@ -42,7 +50,23 @@ export default function MontoActual(
   };
 
   useEffect(() => {
+    // Don't start any timers if we've reached the end date
+    if (hasReachedEndDate()) {
+      const finalMonto = getMontoAFinalizacion();
+      setMontoMostrado(finalMonto);
+      montoObjetivoRef.current = finalMonto;
+      return;
+    }
+
     const actualizarMonto = () => {
+      // Check again before each update
+      if (hasReachedEndDate()) {
+        const finalMonto = getMontoAFinalizacion();
+        animarHaciaValor(montoObjetivoRef.current, finalMonto);
+        montoObjetivoRef.current = finalMonto;
+        return;
+      }
+
       const nuevoMonto = getMontoActual();
       const montoAnterior = montoObjetivoRef.current;
       
@@ -56,6 +80,10 @@ export default function MontoActual(
     
     const programarSiguiente = () => {
       setTimeout(() => {
+        // Stop scheduling if we've reached the end date
+        if (hasReachedEndDate()) {
+          return;
+        }
         actualizarMonto();
         programarSiguiente();
       }, getIntervalo());

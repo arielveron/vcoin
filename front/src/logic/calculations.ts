@@ -19,7 +19,7 @@ export const getMontoAFecha = (fecha: Date): number => {
 
   let totalGanancia = 0;
   for (const item of listInvertidos) {
-    const diasTranscurridos = differenceInDays(fecha, parseISO(item.fecha));
+    const diasTranscurridos = differenceInDays(fecha, parseISO(item.fecha)) + 1;
     const ganancia = item.monto * Math.pow(1 + diasInterestRate, diasTranscurridos);
     totalGanancia += ganancia;
   }
@@ -56,5 +56,5 @@ export const getGananciaTotal = (): number => {
 export const getDiasRestantes = (): number => {
   const today = new Date();
   const endDateObj = new Date(endDate);
-  return differenceInDays(endDateObj, today);
+  return differenceInDays(endDateObj, today) + 1;
 }
