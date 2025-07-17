@@ -12,5 +12,6 @@ export const getListInvertidos = () => {
     id: fondo.id,
     fecha: fondo.fecha,
     monto: fondo.monto,
+    concepto: fondo.concepto,
   }));
 }

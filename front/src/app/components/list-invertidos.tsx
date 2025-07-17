@@ -1,7 +1,10 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import { getListInvertidos, getMontoInvertido } from "@/repos/montos-repo";
 
 export default function ListInvertidos(props: React.HTMLAttributes<HTMLDivElement> & { className?: string }) {
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const list = getListInvertidos();
   if (!list || list.length === 0) {
     return (
@@ -11,17 +14,38 @@ export default function ListInvertidos(props: React.HTMLAttributes<HTMLDivElemen
     );
   }
   return (
-    <div className={`grid grid-cols-2 gap-2 items-center justify-center w-full max-w-md px-5 text-xs ${props.className}`}>
-      <div className="col-span-2 text-gray-700 font-bold text-center">Total Invertido: {getMontoInvertido().toLocaleString("es-AR")} $</div>
-      <hr className="col-span-2 border-gray-300" />
-      <div className="text-gray-700 font-bold">Fecha</div>
-      <div className="text-gray-700 font-bold justify-self-end">Monto</div>
-      {list.map((item) => (
-        <React.Fragment key={item.fecha}>
-          <div className="text-gray-700">{item.fecha}</div>
-          <div className="text-gray-700 justify-self-end">{item.monto.toLocaleString("es-AR")} $</div>
-        </React.Fragment>
-      ))}
+    <div className={`w-full max-w-md px-5 text-xs ${props.className}`}>
+      <div 
+        className="flex items-center justify-between cursor-pointer p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+      >
+        <div className="text-gray-700 font-bold text-center flex-1">
+          Total Invertido: {getMontoInvertido().toLocaleString("es-AR")} $
+        </div>
+        <div className="ml-2 text-gray-500">
+          {isCollapsed ? "►" : "▼"}
+        </div>
+      </div>
+      
+      {!isCollapsed && (
+        <div className="mt-2 border border-gray-200 rounded-lg overflow-hidden">
+          <div className="grid grid-cols-[1fr_1fr_2fr] gap-2 items-center bg-gray-100 p-2">
+            <div className="text-gray-700 font-bold">Fecha</div>
+            <div className="text-gray-700 font-bold text-center">Monto</div>
+            <div className="text-gray-700 font-bold">Concepto</div>
+          </div>
+          <hr className="border-gray-300" />
+          {list.map((item) => (
+            <div key={item.fecha} className="grid grid-cols-[1fr_1fr_2fr] gap-2 items-start p-2 border-b border-gray-100 last:border-b-0">
+              <div className="text-gray-700 text-nowrap">{item.fecha}</div>
+              <div className="text-gray-700 text-right text-nowrap font-bold">{item.monto.toLocaleString("es-AR")} $</div>
+              <div className="text-gray-700 text-xs leading-tight break-words">
+                {item.concepto}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
