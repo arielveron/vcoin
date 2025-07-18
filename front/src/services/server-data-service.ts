@@ -1,5 +1,12 @@
 import { InvestmentService } from '@/services/investment-service';
-import { fondos } from '@/db/pseudo-db';
+import { fondos, students, classes, ClassSettings } from '@/db/pseudo-db';
+
+// Default fallback settings (should rarely be used as pseudo-db has complete data)
+const defaultClassSettings: ClassSettings = {
+  end_date: "2025-07-18",
+  timezone: "America/Argentina/Buenos_Aires",
+  monthly_interest_rate: 0.01  // Default to 1% monthly rate
+};
 
 // Server-side data service that handles database/pseudo-db fallback
 export class ServerDataService {
@@ -36,8 +43,10 @@ export class ServerDataService {
       }
     }
     
-    // Fallback to pseudo-db
-    return fondos.reduce((acc, fondo) => acc + fondo.monto, 0);
+    // Fallback to pseudo-db - filter by student_id
+    return fondos
+      .filter(fondo => fondo.student_id === studentId)
+      .reduce((acc, fondo) => acc + fondo.monto, 0);
   }
 
   static async getInvestmentsList(studentId: number = 1) {
@@ -57,13 +66,15 @@ export class ServerDataService {
       }
     }
     
-    // Fallback to pseudo-db
-    return fondos.map((fondo) => ({
-      id: fondo.id,
-      fecha: fondo.fecha,
-      monto: fondo.monto,
-      concepto: fondo.concepto,
-    }));
+    // Fallback to pseudo-db - filter by student_id
+    return fondos
+      .filter(fondo => fondo.student_id === studentId)
+      .map((fondo) => ({
+        id: fondo.id,
+        fecha: fondo.fecha,
+        monto: fondo.monto,
+        concepto: fondo.concepto,
+      }));
   }
 
   static async getAllStudents() {
@@ -77,15 +88,8 @@ export class ServerDataService {
       }
     }
     
-    // Return default student data for pseudo-db mode
-    return [{
-      id: 1,
-      name: 'Estudiante Demo',
-      email: 'demo@ejemplo.com',
-      class_id: 1,
-      created_at: new Date(),
-      updated_at: new Date()
-    }];
+    // Return pseudo-db students
+    return students;
   }
 
   static async getAllClasses() {
@@ -99,13 +103,63 @@ export class ServerDataService {
       }
     }
     
-    // Return default class data for pseudo-db mode
-    return [{
-      id: 1,
-      name: 'Clase Demo',
-      description: 'Clase de demostración usando pseudo-db',
-      created_at: new Date(),
-      updated_at: new Date()
-    }];
+    // Return pseudo-db classes with settings
+    return classes;
+  }
+
+  static async getClassSettings(classId: number): Promise<ClassSettings> {
+    const dbAvailable = await this.checkDatabaseAvailability();
+    
+    if (dbAvailable && this.service) {
+      try {
+        const classData = await this.service.getClassById(classId);
+        if (classData) {
+          return {
+            end_date: classData.end_date,
+            timezone: classData.timezone,
+            monthly_interest_rate: classData.monthly_interest_rate
+          };
+        }
+      } catch (error) {
+        console.error('Database error:', error);
+      }
+    }
+    
+    // Fallback to pseudo-db
+    const classData = classes.find(c => c.id === classId);
+    if (classData) {
+      return {
+        end_date: classData.end_date,
+        timezone: classData.timezone,
+        monthly_interest_rate: classData.monthly_interest_rate
+      };
+    }
+    
+    // Ultimate fallback to default settings
+    return defaultClassSettings;
+  }
+
+  static async getStudentClassSettings(studentId: number): Promise<ClassSettings> {
+    const dbAvailable = await this.checkDatabaseAvailability();
+    
+    if (dbAvailable && this.service) {
+      try {
+        const student = await this.service.getStudentById(studentId);
+        if (student) {
+          return await this.getClassSettings(student.class_id);
+        }
+      } catch (error) {
+        console.error('Database error:', error);
+      }
+    }
+    
+    // Fallback to pseudo-db
+    const student = students.find(s => s.id === studentId);
+    if (student) {
+      return await this.getClassSettings(student.class_id);
+    }
+    
+    // Ultimate fallback
+    return defaultClassSettings;
   }
 }

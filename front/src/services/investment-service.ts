@@ -76,6 +76,10 @@ export class InvestmentService {
     return await this.studentRepo.findAll();
   }
 
+  async getStudentById(id: number): Promise<Student | null> {
+    return await this.studentRepo.findById(id);
+  }
+
   async updateStudent(id: number, data: Partial<CreateStudentRequest>): Promise<Student | null> {
     return await this.studentRepo.update(id, data);
   }

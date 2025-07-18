@@ -1,17 +1,32 @@
 'use client';
 
-import { endDate } from '@/config/settings'
 import { getCurrentMonto } from '@/actions/investment-actions'
+import { ClassSettings } from '@/db/pseudo-db'
 import React, { useState, useEffect, useRef } from 'react'
 
 interface MontoActualProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   montoActual: number; // Initial amount from server
+  classSettings: ClassSettings; // Class-specific settings
 }
 
-export default function MontoActual({ montoActual: initialMonto, className, ...props }: MontoActualProps) {
-  // Check if we've reached the end date
-  const hasReachedEndDate = () => new Date() >= new Date(endDate);
+export default function MontoActual({ montoActual: initialMonto, classSettings, className, ...props }: MontoActualProps) {
+  // Check if we've reached the end date using class settings
+  const hasReachedEndDate = () => {
+    const now = new Date();
+    const endDate = new Date(classSettings.end_date + 'T23:59:59');
+    
+    // Handle timezone conversion for Argentina (GMT-3)
+    if (classSettings.timezone && classSettings.timezone.includes('Argentina')) {
+      endDate.setTime(endDate.getTime() + (3 * 60 * 60 * 1000)); // Add 3 hours
+    }
+    // Handle timezone conversion for Sao Paulo (GMT-2)
+    else if (classSettings.timezone && classSettings.timezone.includes('Sao_Paulo')) {
+      endDate.setTime(endDate.getTime() + (2 * 60 * 60 * 1000)); // Add 2 hours
+    }
+    
+    return now >= endDate;
+  };
   
   const [montoMostrado, setMontoMostrado] = useState(initialMonto);
   
