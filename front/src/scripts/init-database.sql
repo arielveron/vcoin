@@ -2,10 +2,10 @@
 -- This script creates the initial database structure for the VCoin investment tracking application
 
 -- Create the database (run this separately if needed)
--- CREATE DATABASE vcoin_db;
+-- CREATE DATABASE vcoin;
 
 -- Connect to the database
--- \c vcoin_db;
+-- \c vcoin;
 
 -- Enable UUID extension for better ID generation (optional)
 -- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -46,7 +46,7 @@ CREATE TABLE investments (
     id SERIAL PRIMARY KEY,
     student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     fecha DATE NOT NULL, -- Investment date
-    monto BIGINT NOT NULL, -- Amount in cents/smallest currency unit
+    monto INTEGER NOT NULL, -- Amount as integer (returns as number in JavaScript)
     concepto TEXT NOT NULL, -- Description/concept of the investment
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

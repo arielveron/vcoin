@@ -1,9 +1,9 @@
-import { differenceInDays, differenceInSeconds, parseISO } from "date-fns";
+import { differenceInDays, differenceInSeconds } from "date-fns";
 import { ClassSettings } from "@/db/pseudo-db";
 
 interface InvestmentItem {
   id: number;
-  fecha: string;
+  fecha: Date; // Changed to Date to match database type
   monto: number;
   concepto: string;
 }
@@ -22,11 +22,19 @@ export const calculateSecondsInterestRate = (monthlyRate: number): number => {
 
 // Server-side calculations that work with passed data and class settings
 export const calculateMontoActual = (investments: InvestmentItem[], settings: ClassSettings): number => {
+  // Check if we've reached the end date
+  if (hasReachedEndDate(settings)) {
+    // If we've reached the end date, calculate using the end date (finalization)
+    return calculateMontoAFinalizacion(investments, settings);
+  }
+  // Otherwise, calculate using current time
   return calculateMontoAFechaSegundos(new Date(), investments, settings);
 };
 
 export const calculateMontoAFinalizacion = (investments: InvestmentItem[], settings: ClassSettings): number => {
-  const finalizacionDate = new Date(settings.end_date + 'T23:59:59');
+  // Use the Date object directly, don't create a new Date from it
+  const finalizacionDate = new Date(settings.end_date.getTime());
+  finalizacionDate.setHours(23, 59, 59, 999);
   return calculateMontoAFecha(finalizacionDate, investments, settings);
 };
 
@@ -39,7 +47,7 @@ export const calculateMontoAFecha = (fecha: Date, investments: InvestmentItem[],
   
   let totalGanancia = 0;
   for (const item of investments) {
-    const diasTranscurridos = differenceInDays(fecha, parseISO(item.fecha)) + 1;
+    const diasTranscurridos = differenceInDays(fecha, item.fecha) + 1; // item.fecha is already a Date
     if (diasTranscurridos <= 0) continue; // Skip future investments
     
     const ganancia = item.monto * Math.pow(1 + dailyRate, diasTranscurridos);
@@ -57,7 +65,7 @@ export const calculateMontoAFechaSegundos = (fecha: Date, investments: Investmen
   
   let totalGanancia = 0;
   for (const item of investments) {
-    const segundosTranscurridos = differenceInSeconds(fecha, parseISO(item.fecha));
+    const segundosTranscurridos = differenceInSeconds(fecha, item.fecha); // item.fecha is already a Date
     if (segundosTranscurridos <= 0) continue; // Skip future investments
     
     const ganancia = item.monto * Math.pow(1 + secondsRate, segundosTranscurridos);
@@ -77,7 +85,8 @@ export const calculateGananciaTotal = (investments: InvestmentItem[], settings: 
 
 export const calculateDiasRestantes = (settings: ClassSettings): number => {
   const today = new Date();
-  const endDateObj = new Date(settings.end_date + 'T23:59:59');
+  const endDateObj = new Date(settings.end_date.getTime());
+  endDateObj.setHours(23, 59, 59, 999);
   
   // Handle timezone conversion for Argentina (GMT-3)
   if (settings.timezone && settings.timezone.includes('Argentina')) {
@@ -94,7 +103,8 @@ export const calculateDiasRestantes = (settings: ClassSettings): number => {
 
 export const hasReachedEndDate = (settings: ClassSettings): boolean => {
   const now = new Date();
-  const endDate = new Date(settings.end_date + 'T23:59:59');
+  const endDate = new Date(settings.end_date.getTime());
+  endDate.setHours(23, 59, 59, 999);
   
   // Handle timezone conversion for Argentina (GMT-3)
   if (settings.timezone && settings.timezone.includes('Argentina')) {

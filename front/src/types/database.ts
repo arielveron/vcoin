@@ -1,7 +1,7 @@
 // Database entity types
 
 export interface ClassSettings {
-  end_date: string; // ISO date string (YYYY-MM-DD)
+  end_date: Date; // Date object for consistency throughout the application
   timezone: string; // IANA timezone identifier (e.g., 'America/Argentina/Buenos_Aires')
   monthly_interest_rate: number;
 }
@@ -10,7 +10,7 @@ export interface Class {
   id: number;
   name: string;
   description?: string;
-  end_date: string;
+  end_date: Date; // PostgreSQL DATE field returns as Date object
   timezone: string;
   monthly_interest_rate: number;
   created_at: Date;
@@ -30,8 +30,8 @@ export interface Student {
 export interface Investment {
   id: number;
   student_id: number;
-  fecha: string; // Keep as string to match current format (YYYY-MM-DD)
-  monto: number;
+  fecha: Date; // PostgreSQL DATE field returns as Date object
+  monto: number; // PostgreSQL INTEGER field returns as number
   concepto: string;
   created_at: Date;
   updated_at: Date;
@@ -53,7 +53,7 @@ export interface StudentWithInvestments extends Student {
 export interface CreateClassRequest {
   name: string;
   description?: string;
-  end_date: string;
+  end_date: Date;
   timezone: string;
   monthly_interest_rate: number;
 }
@@ -67,7 +67,7 @@ export interface CreateStudentRequest {
 
 export interface CreateInvestmentRequest {
   student_id: number;
-  fecha: string;
+  fecha: Date; // Date object for consistency
   monto: number;
   concepto: string;
 }

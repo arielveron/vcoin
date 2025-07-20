@@ -61,8 +61,8 @@ GRANT ALL PRIVILEGES ON DATABASE vcoin_db TO vcoin_user;
    ```env
    DB_HOST=localhost
    DB_PORT=5432
-   DB_NAME=vcoin_db
-   DB_USER=postgres
+   DB_NAME=vcoin
+   DB_USER=vcoin
    DB_PASSWORD=your_password_here
    USE_DATABASE=true
    ```
@@ -96,7 +96,7 @@ You should see output confirming successful database connection and data retriev
 - `id` (SERIAL PRIMARY KEY)
 - `student_id` (INTEGER) - Foreign key to students table
 - `fecha` (DATE) - Investment date
-- `monto` (NUMERIC) - Investment amount
+- `monto` (INTEGER) - Investment amount
 - `concepto` (TEXT) - Investment concept/description
 - `created_at` (TIMESTAMP)
 - `updated_at` (TIMESTAMP)

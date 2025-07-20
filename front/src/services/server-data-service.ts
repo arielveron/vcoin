@@ -3,7 +3,7 @@ import { fondos, students, classes, ClassSettings } from '@/db/pseudo-db';
 
 // Default fallback settings (should rarely be used as pseudo-db has complete data)
 const defaultClassSettings: ClassSettings = {
-  end_date: "2025-07-18",
+  end_date: new Date("2025-07-18"),
   timezone: "America/Argentina/Buenos_Aires",
   monthly_interest_rate: 0.01  // Default to 1% monthly rate
 };
@@ -57,7 +57,7 @@ export class ServerDataService {
         const investments = await this.service.getInvestmentsByStudent(studentId);
         return investments.map((investment) => ({
           id: investment.id,
-          fecha: investment.fecha,
+          fecha: investment.fecha, // Keep as Date from database
           monto: investment.monto,
           concepto: investment.concepto,
         }));
@@ -115,7 +115,7 @@ export class ServerDataService {
         const classData = await this.service.getClassById(classId);
         if (classData) {
           return {
-            end_date: classData.end_date,
+            end_date: classData.end_date, // Use Date object directly
             timezone: classData.timezone,
             monthly_interest_rate: classData.monthly_interest_rate
           };

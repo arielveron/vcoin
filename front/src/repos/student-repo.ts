@@ -49,7 +49,7 @@ export class StudentRepository {
     const client = await pool.connect();
     try {
       const studentResult = await client.query(`
-        SELECT id, name, email, class_id, created_at, updated_at 
+        SELECT id, registro, name, email, class_id, created_at, updated_at 
         FROM students 
         WHERE id = $1
       `, [id]);
@@ -75,7 +75,7 @@ export class StudentRepository {
 
       return {
         ...student,
-        investments: investmentsResult.rows,
+        investments: investmentsResult.rows, // Keep as-is since fecha is Date and monto is number
         total_invested: parseFloat(totalResult.rows[0].total_invested)
       };
     } finally {
@@ -87,10 +87,10 @@ export class StudentRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        INSERT INTO students (name, email, class_id) 
-        VALUES ($1, $2, $3) 
-        RETURNING id, name, email, class_id, created_at, updated_at
-      `, [data.name, data.email, data.class_id]);
+        INSERT INTO students (name, registro, email, class_id) 
+        VALUES ($1, $2, $3, $4) 
+        RETURNING id, registro, name, email, class_id, created_at, updated_at
+      `, [data.name, data.registro, data.email, data.class_id]);
       return result.rows[0];
     } finally {
       client.release();
@@ -114,6 +114,11 @@ export class StudentRepository {
         values.push(data.email);
       }
 
+      if (data.registro !== undefined) {
+        updates.push(`registro = $${paramCount++}`);
+        values.push(data.registro);
+      }
+
       if (data.class_id !== undefined) {
         updates.push(`class_id = $${paramCount++}`);
         values.push(data.class_id);
@@ -128,7 +133,7 @@ export class StudentRepository {
         UPDATE students 
         SET ${updates.join(', ')} 
         WHERE id = $${paramCount} 
-        RETURNING id, name, email, class_id, created_at, updated_at
+        RETURNING id, registro, name, email, class_id, created_at, updated_at
       `, values);
 
       return result.rows[0] || null;

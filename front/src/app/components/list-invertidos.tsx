@@ -4,7 +4,7 @@ import React, { useState } from "react";
 
 interface InvestmentItem {
   id: number;
-  fecha: string;
+  fecha: Date; // Always Date type
   monto: number;
   concepto: string;
 }
@@ -48,15 +48,19 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
             <div className="text-gray-700 font-bold">Concepto</div>
           </div>
           <hr className="border-gray-300" />
-          {listInvertidos.map((item) => (
-            <div key={item.fecha} className="grid grid-cols-[1fr_1fr_2fr] gap-2 items-start p-2 border-b border-gray-100 last:border-b-0">
-              <div className="text-gray-700 text-nowrap">{item.fecha}</div>
-              <div className="text-gray-700 text-right text-nowrap font-bold">{item.monto.toLocaleString("es-AR")} $</div>
-              <div className="text-gray-700 text-xs leading-tight break-words">
-                {item.concepto}
+          {listInvertidos.map((item) => {
+            const fechaDisplay = item.fecha.toISOString().split('T')[0];
+              
+            return (
+              <div key={`${item.id}-${fechaDisplay}`} className="grid grid-cols-[1fr_1fr_2fr] gap-2 items-start p-2 border-b border-gray-100 last:border-b-0">
+                <div className="text-gray-700 text-nowrap">{fechaDisplay}</div>
+                <div className="text-gray-700 text-right text-nowrap font-bold">{item.monto.toLocaleString("es-AR")} $</div>
+                <div className="text-gray-700 text-xs leading-tight break-words">
+                  {item.concepto}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

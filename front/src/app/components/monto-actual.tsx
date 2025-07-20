@@ -14,7 +14,8 @@ export default function MontoActual({ montoActual: initialMonto, classSettings, 
   // Check if we've reached the end date using class settings
   const hasReachedEndDate = () => {
     const now = new Date();
-    const endDate = new Date(classSettings.end_date + 'T23:59:59');
+    const endDate = new Date(classSettings.end_date.getTime());
+    endDate.setHours(23, 59, 59, 999);
     
     // Handle timezone conversion for Argentina (GMT-3)
     if (classSettings.timezone && classSettings.timezone.includes('Argentina')) {

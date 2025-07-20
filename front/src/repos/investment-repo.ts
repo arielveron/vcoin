@@ -1,5 +1,5 @@
-import { pool } from '../config/database';
-import { Investment, CreateInvestmentRequest, InvestmentWithStudent } from '../types/database';
+import { pool } from '@/config/database';
+import { Investment, CreateInvestmentRequest, InvestmentWithStudent } from '@/types/database';
 
 export class InvestmentRepository {
   async findAll(): Promise<Investment[]> {
@@ -10,6 +10,8 @@ export class InvestmentRepository {
         FROM investments 
         ORDER BY fecha DESC
       `);
+      
+      // Return as-is since PostgreSQL returns fecha as Date and monto as number (INTEGER)
       return result.rows;
     } finally {
       client.release();
@@ -24,6 +26,8 @@ export class InvestmentRepository {
         FROM investments 
         WHERE id = $1
       `, [id]);
+      
+      // Return as-is since PostgreSQL returns fecha as Date and monto as number
       return result.rows[0] || null;
     } finally {
       client.release();
@@ -39,6 +43,7 @@ export class InvestmentRepository {
         WHERE student_id = $1
         ORDER BY fecha DESC
       `, [studentId]);
+      
       return result.rows;
     } finally {
       client.release();
@@ -65,6 +70,8 @@ export class InvestmentRepository {
         JOIN classes c ON s.class_id = c.id
         ORDER BY i.fecha DESC
       `);
+      
+      // Return as-is since PostgreSQL returns fecha as Date and monto as number
       return result.rows;
     } finally {
       client.release();
@@ -93,6 +100,8 @@ export class InvestmentRepository {
         VALUES ($1, $2, $3, $4) 
         RETURNING id, student_id, fecha, monto, concepto, created_at, updated_at
       `, [data.student_id, data.fecha, data.monto, data.concepto]);
+      
+      // Return as-is since PostgreSQL returns fecha as Date and monto as number
       return result.rows[0];
     } finally {
       client.release();
@@ -103,7 +112,7 @@ export class InvestmentRepository {
     const client = await pool.connect();
     try {
       const updates: string[] = [];
-      const values: (string | number | undefined)[] = [];
+      const values: (string | number | Date | undefined)[] = [];
       let paramCount = 1;
 
       if (data.student_id !== undefined) {
@@ -138,7 +147,10 @@ export class InvestmentRepository {
         RETURNING id, student_id, fecha, monto, concepto, created_at, updated_at
       `, values);
 
-      return result.rows[0] || null;
+      if (!result.rows[0]) return null;
+      
+      // Return as-is since PostgreSQL returns fecha as Date and monto as number
+      return result.rows[0];
     } finally {
       client.release();
     }

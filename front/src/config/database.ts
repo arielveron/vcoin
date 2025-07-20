@@ -2,10 +2,10 @@ import { Pool } from 'pg';
 
 // Database configuration
 const dbConfig = {
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'vcoin_db',
-  password: process.env.DB_PASSWORD || 'password',
+  user: process.env.DB_USER || 'vcoin',
+  host: process.env.DB_HOST || 'raspi42.home.veron.com.ar',
+  database: process.env.DB_NAME || 'vcoin',
+  password: process.env.DB_PASSWORD || 'secret',
   port: parseInt(process.env.DB_PORT || '5432'),
   // Connection pool settings
   max: 20, // maximum number of clients in the pool

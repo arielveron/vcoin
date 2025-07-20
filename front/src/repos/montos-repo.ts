@@ -12,7 +12,7 @@ const CURRENT_STUDENT_ID = 1;
 let cachedTotal = 0;
 let cachedList: Array<{
   id: number;
-  fecha: string;
+  fecha: Date | string; // Handle both Date from DB and string from pseudo-db
   monto: number;
   concepto: string;
 }> = [];
@@ -27,7 +27,7 @@ const initializeCache = async () => {
     const investments = await investmentRepo.findByStudentId(CURRENT_STUDENT_ID);
     cachedList = investments.map((investment) => ({
       id: investment.id,
-      fecha: investment.fecha,
+      fecha: investment.fecha, // Keep as Date from database
       monto: investment.monto,
       concepto: investment.concepto,
     }));
@@ -82,7 +82,7 @@ export const getListInvertidosAsync = async () => {
     const investments = await investmentRepo.findByStudentId(CURRENT_STUDENT_ID);
     return investments.map((investment) => ({
       id: investment.id,
-      fecha: investment.fecha,
+      fecha: investment.fecha, // Keep as Date from database
       monto: investment.monto,
       concepto: investment.concepto,
     }));
