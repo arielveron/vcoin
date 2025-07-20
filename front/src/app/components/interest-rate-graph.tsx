@@ -73,7 +73,7 @@ export default function InterestRateGraph({ rates, className = "" }: InterestRat
   return (
     <div className={`${className}`}>
       {/* SVG Line Graph */}
-      <div className="relative bg-white rounded p-2">
+      <div className="relative  rounded p-2">
         <svg 
           width={graphWidth} 
           height={graphHeight} 
@@ -114,9 +114,9 @@ export default function InterestRateGraph({ rates, className = "" }: InterestRat
               const previousRate = points[index - 1].rate;
               
               if (currentRate > previousRate) {
-                dotColor = '#10b981'; // green-500 for up
+                dotColor = '#16a34a'; // green-500 for up
               } else if (currentRate < previousRate) {
-                dotColor = '#ef4444'; // red-500 for down
+                dotColor = '#dc2626'; // red-500 for down
               } else {
                 dotColor = '#6b7280'; // gray-500 for no change
               }

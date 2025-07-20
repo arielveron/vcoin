@@ -14,12 +14,11 @@ export default async function MainScreen() {
   const totalInvertido = await ServerDataService.getTotalInvested(studentId);
   const listInvertidos = await ServerDataService.getInvestmentsList(studentId);
   const classSettings = await ServerDataService.getStudentClassSettings(studentId);
-  const classId = await ServerDataService.getStudentClassId(studentId);
   
-  // Calculate derived values using historical rates (with fallback to legacy methods)
-  const montoActual = await ServerDataService.calculateMontoActualWithHistory(studentId);
-  const gananciaTotal = await ServerDataService.calculateGananciaTotalWithHistory(studentId);
-  const montoEstimado = await ServerDataService.calculateMontoEstimadoWithHistory(studentId);
+  // Calculate derived values using current rates (not historical complexity)
+  const montoActual = await ServerDataService.calculateMontoActual(studentId);
+  const gananciaTotal = await ServerDataService.calculateGananciaTotal(studentId);
+  const montoEstimado = await ServerDataService.calculateMontoEstimado(studentId);
 
   return (
     <div className="grid grid-cols-2 gap-4 items-start justify-center p-8 bg-gray-100 rounded-lg shadow-lg w-full max-w-md">
@@ -35,13 +34,9 @@ export default async function MainScreen() {
       />
       <Ganancia 
         gananciaTotal={gananciaTotal}
+        studentId={studentId}
       />
-      <div className="bg-gray-300 rounded-lg p-4 flex items-center justify-center">
-        <span className="text-gray-500 text-xs">Próximo gráfico</span>
-      </div>
-      <div className="bg-gray-300 rounded-lg p-4 flex items-center justify-center">
-        <span className="text-gray-500 text-xs">Próximo gráfico</span>
-      </div>
+      
       <Estimado 
         className="col-span-2" 
         montoEstimado={montoEstimado}

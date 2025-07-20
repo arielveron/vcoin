@@ -158,18 +158,19 @@ export const calculateMontoAFinalizacionWithHistory = async (
 ): Promise<number> => {
   const finalizacionDate = new Date(settings.end_date.getTime());
   finalizacionDate.setHours(23, 59, 59, 999);
-  return calculateMontoAFechaWithHistory(finalizacionDate, investments, classId, getRateForDate);
+  return calculateMontoAFechaWithHistory(finalizacionDate, investments, classId, getRateForDate, undefined);
 };
 
 /**
  * Calculate monto at a specific date using historical rates
- * This applies different rates based on when they were effective
+ * This applies different rates over different time periods based on rate changes
  */
 export const calculateMontoAFechaWithHistory = async (
   fecha: Date, 
   investments: InvestmentItem[], 
   classId: number,
-  getRateForDate: (classId: number, date: Date) => Promise<number>
+  getRateForDate: (classId: number, date: Date) => Promise<number>,
+  rateHistory?: any[] // Pass rate history to avoid repeated calls
 ): Promise<number> => {
   if (!investments || investments.length === 0) {
     return 0; // No investments found
@@ -181,16 +182,77 @@ export const calculateMontoAFechaWithHistory = async (
     // Skip future investments
     if (item.fecha > fecha) continue;
     
-    // For simplicity, we'll use the rate that was effective when the investment was made
-    // This can be enhanced later to apply different rates over different periods
-    const effectiveRate = await getRateForDate(classId, item.fecha);
-    const dailyRate = calculateDailyInterestRate(effectiveRate);
+    // More efficient calculation by applying rates in chunks between rate change dates
+    let currentAmount = item.monto;
+    let periodStart = new Date(item.fecha);
     
-    const diasTranscurridos = differenceInDays(fecha, item.fecha) + 1;
-    if (diasTranscurridos <= 0) continue;
+    // Get all rate change dates between investment date and target date
+    // If rateHistory is provided, use it; otherwise get rates day by day
+    if (rateHistory && rateHistory.length > 0) {
+      // Sort rate changes by date
+      const relevantRates = rateHistory
+        .filter(rate => new Date(rate.effective_date) >= periodStart && new Date(rate.effective_date) <= fecha)
+        .sort((a, b) => new Date(a.effective_date).getTime() - new Date(b.effective_date).getTime());
+      
+      let currentDate = new Date(periodStart);
+      
+      for (let i = 0; i <= relevantRates.length; i++) {
+        let periodEnd: Date;
+        let currentRate: number;
+        
+        if (i < relevantRates.length) {
+          periodEnd = new Date(relevantRates[i].effective_date);
+          // Use the rate that was effective before this change
+          currentRate = i === 0 ? 
+            await getRateForDate(classId, currentDate) : 
+            relevantRates[i - 1].monthly_interest_rate;
+        } else {
+          // Last period until target date
+          periodEnd = new Date(fecha);
+          currentRate = relevantRates.length > 0 ? 
+            relevantRates[relevantRates.length - 1].monthly_interest_rate :
+            await getRateForDate(classId, currentDate);
+        }
+        
+        // Calculate days in this period
+        const daysInPeriod = Math.max(0, Math.ceil((periodEnd.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)));
+        
+        if (daysInPeriod > 0) {
+          const dailyRate = calculateDailyInterestRate(currentRate);
+          currentAmount = currentAmount * Math.pow(1 + dailyRate, daysInPeriod);
+        }
+        
+        currentDate = new Date(periodEnd);
+      }
+    } else {
+      // Fallback to day-by-day calculation
+      let currentDate = new Date(periodStart);
+      
+      while (currentDate < fecha) {
+        const nextDay = new Date(currentDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        
+        // Don't go beyond our target date
+        const endDate = nextDay > fecha ? fecha : nextDay;
+        
+        // Get the rate that was effective on this specific date
+        const effectiveRate = await getRateForDate(classId, currentDate);
+        const dailyRate = calculateDailyInterestRate(effectiveRate);
+        
+        // Calculate the fraction of day if endDate is not a full day
+        const hours = (endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60);
+        const dayFraction = hours / 24;
+        
+        // Apply compound interest for this period
+        if (dayFraction > 0) {
+          currentAmount = currentAmount * Math.pow(1 + dailyRate, dayFraction);
+        }
+        
+        currentDate = endDate;
+      }
+    }
     
-    const ganancia = item.monto * Math.pow(1 + dailyRate, diasTranscurridos);
-    totalGanancia += ganancia;
+    totalGanancia += currentAmount;
   }
   
   return totalGanancia;

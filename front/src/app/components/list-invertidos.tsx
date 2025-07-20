@@ -42,7 +42,7 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
       
       {!isCollapsed && (
         <div className="mt-2 border border-gray-200 rounded-lg overflow-hidden">
-          <div className="grid grid-cols-[1fr_1fr_2fr] gap-2 items-center bg-gray-100 p-2">
+          <div className="grid grid-cols-[1fr_1fr_2fr] gap-2 items-center bg-gray-200 p-2">
             <div className="text-gray-700 font-bold">Fecha</div>
             <div className="text-gray-700 font-bold text-center">Monto</div>
             <div className="text-gray-700 font-bold">Concepto</div>

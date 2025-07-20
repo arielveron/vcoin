@@ -1,11 +1,6 @@
 import { InvestmentService } from '@/services/investment-service';
 import { fondos, students, classes, ClassSettings } from '@/db/pseudo-db';
 import { InterestRateHistoryRepository } from '@/repos/interest-rate-history-repo';
-import { 
-  calculateMontoActualWithHistory,
-  calculateGananciaTotalWithHistory,
-  calculateMontoAFinalizacionWithHistory 
-} from '@/logic/calculations';
 
 // Default fallback settings (should rarely be used as pseudo-db has complete data)
 const defaultClassSettings: ClassSettings = {
@@ -272,8 +267,8 @@ export class ServerDataService {
     return [];
   }
 
-  // Enhanced calculation methods using current rates (not historical)
-  static async calculateMontoActualWithHistory(studentId: number): Promise<number> {
+  // Standard calculation methods using current rates only
+  static async calculateMontoActual(studentId: number): Promise<number> {
     try {
       const [investments, classId, classSettings] = await Promise.all([
         this.getInvestmentsList(studentId),
@@ -290,18 +285,84 @@ export class ServerDataService {
         monthly_interest_rate: currentRate
       };
 
-      // Use the legacy calculation with current rate (no need for historical complexity)
+      // Use the standard calculation with current rate applied to ENTIRE investment period
       const { calculateMontoActual } = await import('@/logic/calculations');
       return calculateMontoActual(investments, currentClassSettings);
     } catch (error) {
       console.error('Error calculating monto actual with current rate:', error);
-      // Fallback to legacy calculation with class settings
+      // Fallback to calculation with class settings
       const [investments, classSettings] = await Promise.all([
         this.getInvestmentsList(studentId),
         this.getStudentClassSettings(studentId)
       ]);
       const { calculateMontoActual } = await import('@/logic/calculations');
       return calculateMontoActual(investments, classSettings);
+    }
+  }
+
+  // True historical calculation methods that consider rate changes over time
+  static async calculateMontoActualWithHistory(studentId: number): Promise<number> {
+    try {
+      const [investments, classId, classSettings] = await Promise.all([
+        this.getInvestmentsList(studentId),
+        this.getStudentClassId(studentId),
+        this.getStudentClassSettings(studentId)
+      ]);
+
+      // Create getRateForDate function for historical calculations
+      const getRateForDate = async (classId: number, date: Date): Promise<number> => {
+        if (!this.rateHistoryRepo) {
+          this.rateHistoryRepo = new InterestRateHistoryRepository();
+        }
+        
+        try {
+          const rate = await this.rateHistoryRepo.getRateForDate(classId, date);
+          return rate || classSettings.monthly_interest_rate;
+        } catch (error) {
+          console.error('Error getting rate for date:', error);
+          return classSettings.monthly_interest_rate;
+        }
+      };
+
+      // Use the true historical calculation
+      const { calculateMontoActualWithHistory } = await import('@/logic/calculations');
+      return calculateMontoActualWithHistory(investments, classId, classSettings, getRateForDate);
+    } catch (error) {
+      console.error('Error calculating monto actual with history:', error);
+      // Fallback to standard calculation
+      return this.calculateMontoActual(studentId);
+    }
+  }
+
+  static async calculateGananciaTotal(studentId: number): Promise<number> {
+    try {
+      const [investments, classId, classSettings] = await Promise.all([
+        this.getInvestmentsList(studentId),
+        this.getStudentClassId(studentId),
+        this.getStudentClassSettings(studentId)
+      ]);
+
+      // Get the current/latest rate for the class
+      const currentRate = await this.getCurrentInterestRate(classId);
+      
+      // Create class settings with the current rate
+      const currentClassSettings = {
+        ...classSettings,
+        monthly_interest_rate: currentRate
+      };
+
+      // Use the standard calculation with current rate
+      const { calculateGananciaTotal } = await import('@/logic/calculations');
+      return calculateGananciaTotal(investments, currentClassSettings);
+    } catch (error) {
+      console.error('Error calculating ganancia total with current rate:', error);
+      // Fallback to calculation with class settings
+      const [investments, classSettings] = await Promise.all([
+        this.getInvestmentsList(studentId),
+        this.getStudentClassSettings(studentId)
+      ]);
+      const { calculateGananciaTotal } = await import('@/logic/calculations');
+      return calculateGananciaTotal(investments, classSettings);
     }
   }
 
@@ -313,31 +374,32 @@ export class ServerDataService {
         this.getStudentClassSettings(studentId)
       ]);
 
-      // Get the current/latest rate for the class
-      const currentRate = await this.getCurrentInterestRate(classId);
-      
-      // Create class settings with the current rate
-      const currentClassSettings = {
-        ...classSettings,
-        monthly_interest_rate: currentRate
+      // Create getRateForDate function for historical calculations
+      const getRateForDate = async (classId: number, date: Date): Promise<number> => {
+        if (!this.rateHistoryRepo) {
+          this.rateHistoryRepo = new InterestRateHistoryRepository();
+        }
+        
+        try {
+          const rate = await this.rateHistoryRepo.getRateForDate(classId, date);
+          return rate || classSettings.monthly_interest_rate;
+        } catch (error) {
+          console.error('Error getting rate for date:', error);
+          return classSettings.monthly_interest_rate;
+        }
       };
 
-      // Use the legacy calculation with current rate (no need for historical complexity)
-      const { calculateGananciaTotal } = await import('@/logic/calculations');
-      return calculateGananciaTotal(investments, currentClassSettings);
+      // Use the true historical calculation
+      const { calculateGananciaTotalWithHistory } = await import('@/logic/calculations');
+      return calculateGananciaTotalWithHistory(investments, classId, classSettings, getRateForDate);
     } catch (error) {
-      console.error('Error calculating ganancia total with current rate:', error);
-      // Fallback to legacy calculation with class settings
-      const [investments, classSettings] = await Promise.all([
-        this.getInvestmentsList(studentId),
-        this.getStudentClassSettings(studentId)
-      ]);
-      const { calculateGananciaTotal } = await import('@/logic/calculations');
-      return calculateGananciaTotal(investments, classSettings);
+      console.error('Error calculating ganancia total with history:', error);
+      // Fallback to standard calculation
+      return this.calculateGananciaTotal(studentId);
     }
   }
 
-  static async calculateMontoEstimadoWithHistory(studentId: number): Promise<number> {
+  static async calculateMontoEstimado(studentId: number): Promise<number> {
     try {
       const [investments, classId, classSettings] = await Promise.all([
         this.getInvestmentsList(studentId),
@@ -354,18 +416,131 @@ export class ServerDataService {
         monthly_interest_rate: currentRate
       };
 
-      // Use the legacy calculation with current rate (no need for historical complexity)
+      // Use the standard calculation with current rate
       const { calculateMontoAFinalizacion } = await import('@/logic/calculations');
       return calculateMontoAFinalizacion(investments, currentClassSettings);
     } catch (error) {
       console.error('Error calculating monto estimado with current rate:', error);
-      // Fallback to legacy calculation with class settings
+      // Fallback to calculation with class settings
       const [investments, classSettings] = await Promise.all([
         this.getInvestmentsList(studentId),
         this.getStudentClassSettings(studentId)
       ]);
       const { calculateMontoAFinalizacion } = await import('@/logic/calculations');
       return calculateMontoAFinalizacion(investments, classSettings);
+    }
+  }
+
+  static async calculateMontoEstimadoWithHistory(studentId: number): Promise<number> {
+    try {
+      const [investments, classId, classSettings] = await Promise.all([
+        this.getInvestmentsList(studentId),
+        this.getStudentClassId(studentId),
+        this.getStudentClassSettings(studentId)
+      ]);
+
+      // Create getRateForDate function for historical calculations
+      const getRateForDate = async (classId: number, date: Date): Promise<number> => {
+        if (!this.rateHistoryRepo) {
+          this.rateHistoryRepo = new InterestRateHistoryRepository();
+        }
+        
+        try {
+          const rate = await this.rateHistoryRepo.getRateForDate(classId, date);
+          return rate || classSettings.monthly_interest_rate;
+        } catch (error) {
+          console.error('Error getting rate for date:', error);
+          return classSettings.monthly_interest_rate;
+        }
+      };
+
+      // Use the true historical calculation
+      const { calculateMontoAFinalizacionWithHistory } = await import('@/logic/calculations');
+      return calculateMontoAFinalizacionWithHistory(investments, classId, classSettings, getRateForDate);
+    } catch (error) {
+      console.error('Error calculating monto estimado with history:', error);
+      // Fallback to standard calculation
+      return this.calculateMontoEstimado(studentId);
+    }
+  }
+
+  // Method for historical amount tracking for graphs
+  static async getHistoricalAmounts(studentId: number): Promise<Array<{date: Date, amount: number}>> {
+    try {
+      const [investments, classId, classSettings] = await Promise.all([
+        this.getInvestmentsList(studentId),
+        this.getStudentClassId(studentId),
+        this.getStudentClassSettings(studentId)
+      ]);
+
+      if (!investments || investments.length === 0) {
+        return [];
+      }
+
+      // Get all rate changes for more efficient calculation
+      const rateHistory = await this.getInterestRateHistory(classId);
+      
+      // Create getRateForDate function for historical calculations
+      const getRateForDate = async (classId: number, date: Date): Promise<number> => {
+        // Find the most recent rate that was effective on or before the given date
+        const effectiveRate = rateHistory
+          .filter(rate => new Date(rate.effective_date) <= date)
+          .sort((a, b) => new Date(b.effective_date).getTime() - new Date(a.effective_date).getTime())[0];
+        
+        const rate = effectiveRate ? effectiveRate.monthly_interest_rate : classSettings.monthly_interest_rate;
+        
+        // Add debug logging for critical rate transition dates
+        const dateStr = date.toISOString().split('T')[0];
+        if (dateStr === '2025-05-01' || dateStr === '2025-06-15' || dateStr === '2025-07-20' || 
+            dateStr === '2025-06-14' || dateStr === '2025-06-16' || dateStr === '2025-07-19' || dateStr === '2025-07-21') {
+          console.log(`🔥 CRITICAL RATE: ${dateStr} => ${rate} (${rate * 100}%)`);
+        }
+        
+        return rate;
+      };
+
+      // Get the first investment date and today's date
+      const firstInvestmentDate = new Date(Math.min(...investments.map(inv => inv.fecha.getTime())));
+      const today = new Date();
+      const endDate = new Date(classSettings.end_date);
+      const finalDate = today < endDate ? today : endDate;
+
+      const historicalAmounts: Array<{date: Date, amount: number}> = [];
+      
+      // Calculate amount for each day from first investment to today/end date
+      const { calculateMontoAFechaWithHistory } = await import('@/logic/calculations');
+      
+      // Start from the first investment date (April 13, 2025)
+      // This ensures we only show meaningful data where investments actually exist
+      // Rate changes that will affect this period:
+      // April 13 - April 30: 1% rate, May 1 - June 14: 60% rate, June 15 - July 19: 2% rate, July 20+: 27% rate
+      const startDate = new Date(firstInvestmentDate);
+
+      for (let d = new Date(startDate); d <= finalDate; d.setDate(d.getDate() + 1)) {
+        const currentDate = new Date(d);
+        
+        // Log every 10th day to see progression
+        const daysSinceStart = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysSinceStart % 10 === 0) {
+          console.log(`Processing historical date: ${currentDate.toISOString().split('T')[0]} (day ${daysSinceStart})`);
+        }
+        
+        try {
+          // Pass rateHistory to the calculation for efficiency
+          const amount = await calculateMontoAFechaWithHistory(currentDate, investments, classId, getRateForDate, rateHistory);
+          historicalAmounts.push({
+            date: new Date(currentDate),
+            amount: amount
+          });
+        } catch (error) {
+          console.error('Error calculating historical amount for date:', currentDate, error);
+        }
+      }
+
+      return historicalAmounts;
+    } catch (error) {
+      console.error('Error getting historical amounts:', error);
+      return [];
     }
   }
 }
