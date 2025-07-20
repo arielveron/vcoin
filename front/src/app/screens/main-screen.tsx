@@ -5,7 +5,6 @@ import Ganancia from "@/app/components/ganancia";
 import Estimado from "@/app/components/estimado";
 import ListInvertidos from "@/app/components/list-invertidos";
 import { ServerDataService } from "@/services/server-data-service";
-import { calculateMontoActual, calculateGananciaTotal, calculateMontoAFinalizacion } from "@/logic/calculations";
 
 export default async function MainScreen() {
   // For now, hardcoded student ID = 1, but this could come from authentication
@@ -15,14 +14,15 @@ export default async function MainScreen() {
   const totalInvertido = await ServerDataService.getTotalInvested(studentId);
   const listInvertidos = await ServerDataService.getInvestmentsList(studentId);
   const classSettings = await ServerDataService.getStudentClassSettings(studentId);
+  const classId = await ServerDataService.getStudentClassId(studentId);
   
-  // Calculate derived values on the server using class-specific settings
-  const montoActual = calculateMontoActual(listInvertidos, classSettings);
-  const gananciaTotal = calculateGananciaTotal(listInvertidos, classSettings);
-  const montoEstimado = calculateMontoAFinalizacion(listInvertidos, classSettings);
+  // Calculate derived values using historical rates (with fallback to legacy methods)
+  const montoActual = await ServerDataService.calculateMontoActualWithHistory(studentId);
+  const gananciaTotal = await ServerDataService.calculateGananciaTotalWithHistory(studentId);
+  const montoEstimado = await ServerDataService.calculateMontoEstimadoWithHistory(studentId);
 
   return (
-    <div className="grid grid-cols-2 gap-4 items-center justify-center p-8 bg-gray-100 rounded-lg shadow-lg w-full max-w-md">
+    <div className="grid grid-cols-2 gap-4 items-start justify-center p-8 bg-gray-100 rounded-lg shadow-lg w-full max-w-md">
       <div className='col-span-2 text-gray-700 font-bold text-center [family-name:var(--font-geist-mono)]'>VCOIN</div>
       <MontoActual 
         className="col-span-2" 
@@ -31,10 +31,17 @@ export default async function MainScreen() {
       />
       <Interes 
         classSettings={classSettings}
+        studentId={studentId}
       />
       <Ganancia 
         gananciaTotal={gananciaTotal}
       />
+      <div className="bg-gray-300 rounded-lg p-4 flex items-center justify-center">
+        <span className="text-gray-500 text-xs">Próximo gráfico</span>
+      </div>
+      <div className="bg-gray-300 rounded-lg p-4 flex items-center justify-center">
+        <span className="text-gray-500 text-xs">Próximo gráfico</span>
+      </div>
       <Estimado 
         className="col-span-2" 
         montoEstimado={montoEstimado}

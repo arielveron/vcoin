@@ -12,6 +12,7 @@
 
 -- Drop tables if they exist (for development reset)
 DROP TABLE IF EXISTS investments CASCADE;
+DROP TABLE IF EXISTS interest_rate_history CASCADE;
 DROP TABLE IF EXISTS students CASCADE;
 DROP TABLE IF EXISTS classes CASCADE;
 
@@ -52,6 +53,17 @@ CREATE TABLE investments (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Create interest_rate_history table
+-- This table tracks the historical changes of interest rates for each class
+CREATE TABLE interest_rate_history (
+    id SERIAL PRIMARY KEY,
+    class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    monthly_interest_rate DECIMAL(10,8) NOT NULL,
+    effective_date DATE NOT NULL, -- Date when this rate becomes effective
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Create indexes for better query performance
 CREATE INDEX idx_students_class_id ON students(class_id);
 CREATE INDEX idx_students_email ON students(email);
@@ -61,6 +73,9 @@ CREATE INDEX idx_investments_fecha ON investments(fecha);
 CREATE INDEX idx_investments_student_fecha ON investments(student_id, fecha);
 CREATE INDEX idx_classes_end_date ON classes(end_date);
 CREATE INDEX idx_classes_timezone ON classes(timezone);
+CREATE INDEX idx_interest_rate_history_class_id ON interest_rate_history(class_id);
+CREATE INDEX idx_interest_rate_history_effective_date ON interest_rate_history(effective_date);
+CREATE INDEX idx_interest_rate_history_class_effective_date ON interest_rate_history(class_id, effective_date);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -75,6 +90,7 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_classes_updated_at BEFORE UPDATE ON classes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_students_updated_at BEFORE UPDATE ON students FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_investments_updated_at BEFORE UPDATE ON investments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_interest_rate_history_updated_at BEFORE UPDATE ON interest_rate_history FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Insert initial test data
 -- Create classes with specific settings
@@ -135,6 +151,55 @@ INSERT INTO investments (student_id, fecha, monto, concepto) VALUES
 (6, '2025-06-05', 900000, 'Proyecto de investigación'),
 (6, '2025-06-25', 750000, 'Examen comprensivo');
 
+-- Insert initial interest rate history
+-- This creates the base rates and some historical changes to demonstrate the functionality
+INSERT INTO interest_rate_history (class_id, monthly_interest_rate, effective_date) VALUES 
+-- Class 1 (Programación 2024) - Initial rate and changes
+(1, 0.01, '2025-01-01'),   -- Initial rate
+(1, 0.015, '2025-05-01'),  -- Rate increased to 1.5%
+(1, 0.02, '2025-06-15'),   -- Rate increased again to 2%
+
+-- Class 2 (Finanzas Básicas) - Initial rate and changes  
+(2, 0.04, '2025-01-01'),   -- Initial rate
+(2, 0.035, '2025-06-01'),  -- Rate decreased to 3.5%
+
+-- Class 3 (Matemáticas Avanzadas) - Initial rate and changes
+(3, 0.07, '2025-01-01'),   -- Initial rate
+(3, 0.075, '2025-05-15');  -- Rate increased to 7.5%
+
+-- Create views for interest rate management
+
+-- View to get current rates for each class
+CREATE VIEW current_interest_rates AS
+SELECT DISTINCT ON (class_id)
+    class_id,
+    monthly_interest_rate,
+    effective_date,
+    created_at
+FROM interest_rate_history
+ORDER BY class_id, effective_date DESC, created_at DESC;
+
+-- View to get rate changes with previous rate for comparison
+CREATE VIEW interest_rate_changes AS
+SELECT 
+    irh.id,
+    irh.class_id,
+    c.name as class_name,
+    irh.monthly_interest_rate,
+    irh.effective_date,
+    LAG(irh.monthly_interest_rate) OVER (PARTITION BY irh.class_id ORDER BY irh.effective_date, irh.created_at) as previous_rate,
+    CASE 
+        WHEN LAG(irh.monthly_interest_rate) OVER (PARTITION BY irh.class_id ORDER BY irh.effective_date, irh.created_at) IS NULL THEN 'initial'
+        WHEN irh.monthly_interest_rate > LAG(irh.monthly_interest_rate) OVER (PARTITION BY irh.class_id ORDER BY irh.effective_date, irh.created_at) THEN 'up'
+        WHEN irh.monthly_interest_rate < LAG(irh.monthly_interest_rate) OVER (PARTITION BY irh.class_id ORDER BY irh.effective_date, irh.created_at) THEN 'down'
+        ELSE 'same'
+    END as rate_direction,
+    irh.created_at,
+    irh.updated_at
+FROM interest_rate_history irh
+JOIN classes c ON irh.class_id = c.id
+ORDER BY irh.class_id, irh.effective_date DESC, irh.created_at DESC;
+
 -- Create a view for easy querying of investment data with student info and class settings
 CREATE VIEW investments_with_details AS
 SELECT 
@@ -152,24 +217,29 @@ SELECT
     c.name as class_name,
     c.end_date as class_end_date,
     c.timezone as class_timezone,
-    c.monthly_interest_rate as class_monthly_rate
+    c.monthly_interest_rate as class_monthly_rate,
+    cir.monthly_interest_rate as current_monthly_rate
 FROM investments i
 JOIN students s ON i.student_id = s.id
 JOIN classes c ON s.class_id = c.id
+LEFT JOIN current_interest_rates cir ON c.id = cir.class_id
 ORDER BY i.fecha DESC;
 
 -- Create a view for class settings easy access
 CREATE VIEW classes_with_settings AS
 SELECT 
-    id,
-    name,
-    description,
-    end_date,
-    timezone,
-    monthly_interest_rate,
-    created_at,
-    updated_at
-FROM classes;
+    c.id,
+    c.name,
+    c.description,
+    c.end_date,
+    c.timezone,
+    c.monthly_interest_rate as original_monthly_interest_rate,
+    cir.monthly_interest_rate as current_monthly_interest_rate,
+    cir.effective_date as current_rate_effective_date,
+    c.created_at,
+    c.updated_at
+FROM classes c
+LEFT JOIN current_interest_rates cir ON c.id = cir.class_id;
 
 -- Create a view for student totals
 CREATE VIEW student_investment_totals AS
@@ -179,15 +249,17 @@ SELECT
     s.name as student_name,
     s.email as student_email,
     c.name as class_name,
-    c.monthly_interest_rate,
+    c.monthly_interest_rate as original_monthly_interest_rate,
+    cir.monthly_interest_rate as current_monthly_interest_rate,
     c.timezone,
     c.end_date,
     COALESCE(SUM(i.monto), 0) as total_invested,
     COUNT(i.id) as investment_count
 FROM students s
 JOIN classes c ON s.class_id = c.id
+LEFT JOIN current_interest_rates cir ON c.id = cir.class_id
 LEFT JOIN investments i ON s.id = i.student_id
-GROUP BY s.id, s.registro, s.name, s.email, c.name, c.monthly_interest_rate, c.timezone, c.end_date
+GROUP BY s.id, s.registro, s.name, s.email, c.name, c.monthly_interest_rate, cir.monthly_interest_rate, c.timezone, c.end_date
 ORDER BY total_invested DESC;
 
 -- Display summary
@@ -195,3 +267,24 @@ SELECT 'Database initialization completed successfully!' as status;
 SELECT 'Classes created: ' || COUNT(*) as classes_count FROM classes;
 SELECT 'Students created: ' || COUNT(*) as students_count FROM students;
 SELECT 'Investments created: ' || COUNT(*) as investments_count FROM investments;
+SELECT 'Interest rate history records: ' || COUNT(*) as rate_history_count FROM interest_rate_history;
+
+-- Display current interest rates by class
+SELECT 
+    c.name as "Class Name",
+    cir.monthly_interest_rate as "Current Rate",
+    cir.effective_date as "Effective Date"
+FROM current_interest_rates cir
+JOIN classes c ON cir.class_id = c.id
+ORDER BY c.name;
+
+-- Display interest rate changes with direction indicators
+SELECT 
+    class_name as "Class",
+    monthly_interest_rate as "Rate",
+    effective_date as "Date",
+    rate_direction as "Direction",
+    previous_rate as "Previous Rate"
+FROM interest_rate_changes
+WHERE rate_direction != 'initial'
+ORDER BY class_id, effective_date DESC;

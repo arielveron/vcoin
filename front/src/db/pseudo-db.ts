@@ -36,6 +36,21 @@ export interface Investment {
   updated_at: string;
 }
 
+export interface InterestRateHistory {
+  id: number;
+  class_id: number;
+  monthly_interest_rate: number;
+  effective_date: Date;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InterestRateChange extends InterestRateHistory {
+  class_name: string;
+  previous_rate?: number;
+  rate_direction: 'initial' | 'up' | 'down' | 'same';
+}
+
 // Fallback data with class settings
 export const classes: Class[] = [
   {
