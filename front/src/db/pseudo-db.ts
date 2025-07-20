@@ -2,7 +2,7 @@
 export interface ClassSettings {
   end_date: Date;
   timezone: string;
-  monthly_interest_rate: number;
+  current_monthly_interest_rate?: number; // Current rate from history
 }
 
 export interface Class {
@@ -11,7 +11,6 @@ export interface Class {
   description: string;
   end_date: Date; // Use Date type consistently
   timezone: string;
-  monthly_interest_rate: number;
   created_at: string;
   updated_at: string;
 }
@@ -59,7 +58,6 @@ export const classes: Class[] = [
     description: "Clase de programación del año 2024 - 3 estudiantes",
     end_date: new Date("2025-07-18"),
     timezone: "America/Argentina/Buenos_Aires",
-    monthly_interest_rate: 0.01,
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z"
   },
@@ -69,7 +67,6 @@ export const classes: Class[] = [
     description: "Curso introductorio de finanzas - 2 estudiantes",
     end_date: new Date("2025-08-15"),
     timezone: "America/Sao_Paulo",
-    monthly_interest_rate: 0.04,
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z"
   },
@@ -79,7 +76,6 @@ export const classes: Class[] = [
     description: "Curso avanzado de matemáticas - 1 estudiante",
     end_date: new Date("2025-09-30"),
     timezone: "America/Argentina/Buenos_Aires",
-    monthly_interest_rate: 0.07,
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z"
   }

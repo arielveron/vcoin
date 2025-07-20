@@ -18,13 +18,13 @@ DROP TABLE IF EXISTS classes CASCADE;
 
 -- Create classes table
 -- Each class represents a group of students with their own investment settings
+-- Note: monthly_interest_rate is now managed in the interest_rate_history table
 CREATE TABLE classes (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
     description TEXT,
     end_date DATE NOT NULL DEFAULT '2025-07-18',
     timezone VARCHAR(100) NOT NULL DEFAULT 'America/Argentina/Buenos_Aires',
-    monthly_interest_rate DECIMAL(10,8) NOT NULL DEFAULT 0.59,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -94,10 +94,10 @@ CREATE TRIGGER update_interest_rate_history_updated_at BEFORE UPDATE ON interest
 
 -- Insert initial test data
 -- Create classes with specific settings
-INSERT INTO classes (name, description, end_date, timezone, monthly_interest_rate) VALUES 
-('Programación 2024', 'Clase de programación del año 2024 - 3 estudiantes', '2025-07-18', 'America/Argentina/Buenos_Aires', 0.01),
-('Finanzas Básicas', 'Curso introductorio de finanzas - 2 estudiantes', '2025-08-15', 'America/Sao_Paulo', 0.04),
-('Matemáticas Avanzadas', 'Curso avanzado de matemáticas - 1 estudiante', '2025-09-30', 'America/Argentina/Buenos_Aires', 0.07);
+INSERT INTO classes (name, description, end_date, timezone) VALUES 
+('Programación 2024', 'Clase de programación del año 2024 - 3 estudiantes', '2025-07-18', 'America/Argentina/Buenos_Aires'),
+('Finanzas Básicas', 'Curso introductorio de finanzas - 2 estudiantes', '2025-08-15', 'America/Sao_Paulo'),
+('Matemáticas Avanzadas', 'Curso avanzado de matemáticas - 1 estudiante', '2025-09-30', 'America/Argentina/Buenos_Aires');
 
 -- Insert test students with registro numbers
 -- Class 1 (Programación 2024, GMT-3, rate 0.01) - 3 students
@@ -217,7 +217,6 @@ SELECT
     c.name as class_name,
     c.end_date as class_end_date,
     c.timezone as class_timezone,
-    c.monthly_interest_rate as class_monthly_rate,
     cir.monthly_interest_rate as current_monthly_rate
 FROM investments i
 JOIN students s ON i.student_id = s.id
@@ -233,7 +232,6 @@ SELECT
     c.description,
     c.end_date,
     c.timezone,
-    c.monthly_interest_rate as original_monthly_interest_rate,
     cir.monthly_interest_rate as current_monthly_interest_rate,
     cir.effective_date as current_rate_effective_date,
     c.created_at,
@@ -249,7 +247,6 @@ SELECT
     s.name as student_name,
     s.email as student_email,
     c.name as class_name,
-    c.monthly_interest_rate as original_monthly_interest_rate,
     cir.monthly_interest_rate as current_monthly_interest_rate,
     c.timezone,
     c.end_date,
@@ -259,7 +256,7 @@ FROM students s
 JOIN classes c ON s.class_id = c.id
 LEFT JOIN current_interest_rates cir ON c.id = cir.class_id
 LEFT JOIN investments i ON s.id = i.student_id
-GROUP BY s.id, s.registro, s.name, s.email, c.name, c.monthly_interest_rate, cir.monthly_interest_rate, c.timezone, c.end_date
+GROUP BY s.id, s.registro, s.name, s.email, c.name, cir.monthly_interest_rate, c.timezone, c.end_date
 ORDER BY total_invested DESC;
 
 -- Display summary

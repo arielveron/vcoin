@@ -3,7 +3,6 @@
 export interface ClassSettings {
   end_date: Date; // Date object for consistency throughout the application
   timezone: string; // IANA timezone identifier (e.g., 'America/Argentina/Buenos_Aires')
-  monthly_interest_rate: number;
   current_monthly_interest_rate?: number; // Current rate from history
 }
 
@@ -41,7 +40,6 @@ export interface Class {
   description?: string;
   end_date: Date; // PostgreSQL DATE field returns as Date object
   timezone: string;
-  monthly_interest_rate: number;
   current_monthly_interest_rate?: number; // Current rate from history
   created_at: Date;
   updated_at: Date;
@@ -85,7 +83,6 @@ export interface CreateClassRequest {
   description?: string;
   end_date: Date;
   timezone: string;
-  monthly_interest_rate: number;
 }
 
 export interface CreateStudentRequest {

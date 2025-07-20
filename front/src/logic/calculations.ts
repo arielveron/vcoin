@@ -35,7 +35,7 @@ export const calculateMontoAFinalizacion = (investments: InvestmentItem[], setti
   // Use the Date object directly, don't create a new Date from it
   const finalizacionDate = new Date(settings.end_date.getTime());
   finalizacionDate.setHours(23, 59, 59, 999);
-  return calculateMontoAFecha(finalizacionDate, investments, settings);
+  return calculateMontoAFechaSegundos(finalizacionDate, investments, settings);
 };
 
 export const calculateMontoAFecha = (fecha: Date, investments: InvestmentItem[], settings: ClassSettings): number => {
@@ -43,7 +43,9 @@ export const calculateMontoAFecha = (fecha: Date, investments: InvestmentItem[],
     return 0; // No investments found
   }
 
-  const dailyRate = calculateDailyInterestRate(settings.monthly_interest_rate);
+  // Use current_monthly_interest_rate if available, otherwise fallback
+  const monthlyRate = settings.current_monthly_interest_rate || 0.01;
+  const dailyRate = calculateDailyInterestRate(monthlyRate);
   
   let totalGanancia = 0;
   for (const item of investments) {
@@ -61,7 +63,9 @@ export const calculateMontoAFechaSegundos = (fecha: Date, investments: Investmen
     return 0; // No investments found
   }
 
-  const secondsRate = calculateSecondsInterestRate(settings.monthly_interest_rate);
+  // Use current_monthly_interest_rate if available, otherwise fallback
+  const monthlyRate = settings.current_monthly_interest_rate || 0.01;
+  const secondsRate = calculateSecondsInterestRate(monthlyRate);
   
   let totalGanancia = 0;
   for (const item of investments) {

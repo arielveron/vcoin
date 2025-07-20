@@ -6,7 +6,7 @@ import { InterestRateHistoryRepository } from '@/repos/interest-rate-history-rep
 const defaultClassSettings: ClassSettings = {
   end_date: new Date("2025-07-18"),
   timezone: "America/Argentina/Buenos_Aires",
-  monthly_interest_rate: 0.01  // Default to 1% monthly rate
+  current_monthly_interest_rate: 0.01  // Default to 1% monthly rate
 };
 
 // Server-side data service that handles database/pseudo-db fallback
@@ -116,10 +116,12 @@ export class ServerDataService {
       try {
         const classData = await this.service.getClassById(classId);
         if (classData) {
+          // Get current interest rate from history
+          const currentRate = await this.getCurrentInterestRate(classId);
           return {
             end_date: classData.end_date, // Use Date object directly
             timezone: classData.timezone,
-            monthly_interest_rate: classData.monthly_interest_rate
+            current_monthly_interest_rate: currentRate
           };
         }
       } catch (error) {
@@ -130,10 +132,24 @@ export class ServerDataService {
     // Fallback to pseudo-db
     const classData = classes.find(c => c.id === classId);
     if (classData) {
+      // Try to get current rate from history, fallback to hardcoded values for pseudo-db
+      let currentRate: number;
+      try {
+        currentRate = await this.getCurrentInterestRate(classId);
+      } catch (error) {
+        // Hardcoded fallback rates for pseudo-db classes
+        const fallbackRates: Record<number, number> = {
+          1: 0.01, // Programación 2024
+          2: 0.04, // Finanzas Básicas  
+          3: 0.07  // Matemáticas Avanzadas
+        };
+        currentRate = fallbackRates[classId] || 0.01;
+      }
+      
       return {
         end_date: classData.end_date,
         timezone: classData.timezone,
-        monthly_interest_rate: classData.monthly_interest_rate
+        current_monthly_interest_rate: currentRate
       };
     }
     
@@ -203,9 +219,13 @@ export class ServerDataService {
       }
     }
     
-    // Fallback to class settings
-    const classSettings = await this.getClassSettings(classId);
-    return classSettings.monthly_interest_rate;
+    // Fallback to hardcoded rates for pseudo-db classes
+    const fallbackRates: Record<number, number> = {
+      1: 0.01, // Programación 2024
+      2: 0.04, // Finanzas Básicas  
+      3: 0.07  // Matemáticas Avanzadas
+    };
+    return fallbackRates[classId] || 0.01;
   }
 
   static async getLatestRateChange(classId: number) {
@@ -279,10 +299,10 @@ export class ServerDataService {
       // Get the current/latest rate for the class
       const currentRate = await this.getCurrentInterestRate(classId);
       
-      // Create class settings with the current rate
+      // Create class settings with the current rate  
       const currentClassSettings = {
         ...classSettings,
-        monthly_interest_rate: currentRate
+        current_monthly_interest_rate: currentRate
       };
 
       // Use the standard calculation with current rate applied to ENTIRE investment period
@@ -317,10 +337,10 @@ export class ServerDataService {
         
         try {
           const rate = await this.rateHistoryRepo.getRateForDate(classId, date);
-          return rate || classSettings.monthly_interest_rate;
+          return rate || await this.getCurrentInterestRate(classId);
         } catch (error) {
           console.error('Error getting rate for date:', error);
-          return classSettings.monthly_interest_rate;
+          return await this.getCurrentInterestRate(classId);
         }
       };
 
@@ -348,7 +368,7 @@ export class ServerDataService {
       // Create class settings with the current rate
       const currentClassSettings = {
         ...classSettings,
-        monthly_interest_rate: currentRate
+        current_monthly_interest_rate: currentRate
       };
 
       // Use the standard calculation with current rate
@@ -382,10 +402,10 @@ export class ServerDataService {
         
         try {
           const rate = await this.rateHistoryRepo.getRateForDate(classId, date);
-          return rate || classSettings.monthly_interest_rate;
+          return rate || await this.getCurrentInterestRate(classId);
         } catch (error) {
           console.error('Error getting rate for date:', error);
-          return classSettings.monthly_interest_rate;
+          return await this.getCurrentInterestRate(classId);
         }
       };
 
@@ -413,7 +433,7 @@ export class ServerDataService {
       // Create class settings with the current rate
       const currentClassSettings = {
         ...classSettings,
-        monthly_interest_rate: currentRate
+        current_monthly_interest_rate: currentRate
       };
 
       // Use the standard calculation with current rate
@@ -447,10 +467,10 @@ export class ServerDataService {
         
         try {
           const rate = await this.rateHistoryRepo.getRateForDate(classId, date);
-          return rate || classSettings.monthly_interest_rate;
+          return rate || await this.getCurrentInterestRate(classId);
         } catch (error) {
           console.error('Error getting rate for date:', error);
-          return classSettings.monthly_interest_rate;
+          return await this.getCurrentInterestRate(classId);
         }
       };
 
@@ -487,7 +507,7 @@ export class ServerDataService {
           .filter(rate => new Date(rate.effective_date) <= date)
           .sort((a, b) => new Date(b.effective_date).getTime() - new Date(a.effective_date).getTime())[0];
         
-        const rate = effectiveRate ? effectiveRate.monthly_interest_rate : classSettings.monthly_interest_rate;
+        const rate = effectiveRate ? effectiveRate.monthly_interest_rate : await this.getCurrentInterestRate(classId);
         
         // Add debug logging for critical rate transition dates
         const dateStr = date.toISOString().split('T')[0];

@@ -6,14 +6,11 @@ export class ClassRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        SELECT id, name, description, end_date, timezone, monthly_interest_rate, created_at, updated_at 
+        SELECT id, name, description, end_date, timezone, created_at, updated_at 
         FROM classes 
         ORDER BY name
       `);
-      return result.rows.map(row => ({
-        ...row,
-        monthly_interest_rate: parseFloat(row.monthly_interest_rate)
-      }));
+      return result.rows;
     } finally {
       client.release();
     }
@@ -23,15 +20,12 @@ export class ClassRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        SELECT id, name, description, end_date, timezone, monthly_interest_rate, created_at, updated_at 
+        SELECT id, name, description, end_date, timezone, created_at, updated_at 
         FROM classes 
         WHERE id = $1
       `, [id]);
       const row = result.rows[0];
-      return row ? {
-        ...row,
-        monthly_interest_rate: parseFloat(row.monthly_interest_rate)
-      } : null;
+      return row || null;
     } finally {
       client.release();
     }
@@ -41,15 +35,12 @@ export class ClassRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        INSERT INTO classes (name, description, end_date, timezone, monthly_interest_rate) 
-        VALUES ($1, $2, $3, $4, $5) 
-        RETURNING id, name, description, end_date, timezone, monthly_interest_rate, created_at, updated_at
-      `, [data.name, data.description, data.end_date, data.timezone, data.monthly_interest_rate]);
+        INSERT INTO classes (name, description, end_date, timezone) 
+        VALUES ($1, $2, $3, $4) 
+        RETURNING id, name, description, end_date, timezone, created_at, updated_at
+      `, [data.name, data.description, data.end_date, data.timezone]);
       const row = result.rows[0];
-      return {
-        ...row,
-        monthly_interest_rate: parseFloat(row.monthly_interest_rate)
-      };
+      return row;
     } finally {
       client.release();
     }
@@ -81,14 +72,11 @@ export class ClassRepository {
         UPDATE classes 
         SET ${updates.join(', ')} 
         WHERE id = $${paramCount} 
-        RETURNING id, name, description, end_date, timezone, monthly_interest_rate, created_at, updated_at
+        RETURNING id, name, description, end_date, timezone, created_at, updated_at
       `, values);
 
       const row = result.rows[0];
-      return row ? {
-        ...row,
-        monthly_interest_rate: parseFloat(row.monthly_interest_rate)
-      } : null;
+      return row || null;
     } finally {
       client.release();
     }
