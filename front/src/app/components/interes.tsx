@@ -29,7 +29,7 @@ export default async function Interes({ classSettings, studentId = 1 }: InteresP
 
       // Pre-format the percentage to avoid locale-based hydration issues
       const percentage = rate.monthly_interest_rate * 100;
-      const formattedPercentage = percentage.toLocaleString("es-ES", {
+      const formattedPercentage = percentage.toLocaleString("es-AR", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });

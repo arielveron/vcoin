@@ -13,7 +13,6 @@ export default async function Ganancia({ gananciaTotal, studentId = 1 }: Gananci
   // Get historical amounts for the ganancia total graph - shows what amounts would have looked like at each date
   // This shows the "current evaluation" effect where rate changes cause historical values to spike up or drop down
   const historicalData = await ServerDataService.getHistoricalAmountsWithCurrentRate(studentId);
-  console.log("Historical Data:", historicalData);
   
   // Format the amounts data for the graph to avoid hydration issues
   const graphData = historicalData.amounts
@@ -56,9 +55,6 @@ export default async function Ganancia({ gananciaTotal, studentId = 1 }: Gananci
     };
   });
 
-  console.log("Graph Data:", graphData);
-  console.log("Investment Markers:", investmentMarkers);
-  console.log("Rate Change Markers:", rateChangeMarkers);
   return (
     <div className="flex flex-col gap-2 items-center justify-center p-4 bg-gray-200 rounded-lg w-full max-w-md">
       {/* Integrated Historical Gains Graph */}

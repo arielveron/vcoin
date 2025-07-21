@@ -1,24 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VCoin - Investment Tracking Application
 
-## Getting Started
+A Next.js application for tracking student investments with an admin panel.
 
-First, run the development server:
+## 🚀 Quick Setup
 
+### 1. Install Dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Setup Database & Admin Panel
+```bash
+npm run setup
+```
+This single command creates:
+- VCoin database tables (classes, students, investments, interest rates)
+- Sample data for testing
+- Admin authentication system
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Configure Environment
+Copy `.env.example` to `.env.local` and configure:
+```bash
+# Database (your existing config)
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=vcoin_db
+DB_USER=postgres
+DB_PASSWORD=your-password
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Admin Panel (new)
+NEXTAUTH_SECRET=your-random-secret
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+ADMIN_EMAILS=your-email@gmail.com
+```
+
+### 4. Start Development
+```bash
+npm run dev
+```
+
+- **Main App**: http://localhost:3000
+- **Admin Panel**: http://localhost:3000/admin
+
+## 📖 Documentation
+
+- **Admin Setup**: See `ADMIN_SETUP.md` for detailed admin panel configuration
+- **Database Setup**: See `DATABASE.md` for database configuration details
+
+## 🏗️ Architecture
+
+- **Frontend**: Next.js 15 with App Router
+- **Database**: PostgreSQL with connection pooling
+- **Authentication**: NextAuth.js with Google OAuth2
+- **Styling**: Tailwind CSS
+- **Pattern**: Server Components + Repository Pattern
+
+## 📁 Project Structure
+
+```
+src/
+├── app/                 # Next.js App Router
+│   ├── admin/          # Admin panel
+│   └── page.tsx        # Main application
+├── repos/              # Data repositories
+├── services/           # Business logic
+├── types/              # TypeScript types
+└── config/             # Database config
+```
 
 ## Learn More
 

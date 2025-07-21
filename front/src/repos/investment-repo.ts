@@ -92,6 +92,19 @@ export class InvestmentRepository {
     }
   }
 
+  async getTotalInvestmentAmount(): Promise<number> {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        SELECT COALESCE(SUM(monto), 0) as total
+        FROM investments
+      `);
+      return parseFloat(result.rows[0].total);
+    } finally {
+      client.release();
+    }
+  }
+
   async create(data: CreateInvestmentRequest): Promise<Investment> {
     const client = await pool.connect();
     try {

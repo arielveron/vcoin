@@ -6,7 +6,7 @@ export class StudentRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        SELECT s.id, s.name, s.email, s.class_id, s.created_at, s.updated_at
+        SELECT s.id, s.registro, s.name, s.email, s.class_id, s.created_at, s.updated_at
         FROM students s
         ORDER BY s.name
       `);
@@ -20,7 +20,7 @@ export class StudentRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        SELECT id, name, email, class_id, created_at, updated_at 
+        SELECT id, registro, name, email, class_id, created_at, updated_at 
         FROM students 
         WHERE id = $1
       `, [id]);
@@ -34,7 +34,7 @@ export class StudentRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        SELECT id, name, email, class_id, created_at, updated_at 
+        SELECT id, registro, name, email, class_id, created_at, updated_at 
         FROM students 
         WHERE class_id = $1
         ORDER BY name
