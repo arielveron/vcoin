@@ -5,19 +5,27 @@ import { InvestmentWithStudent, Student } from '@/types/database'
 import { createInvestment, updateInvestment, deleteInvestment } from './actions'
 import { useAdminFilters } from '@/hooks/useAdminFilters'
 import FilterBadges from '@/app/admin/components/filter-badges'
-import { formatCurrency, formatDate } from '@/utils/format'
+import { formatCurrency } from '@/utils/format'
 import { t } from '@/config/translations'
+import { WithFormattedDates } from '@/utils/format-dates'
+
+// Client-side types with formatted data
+type InvestmentForClient = WithFormattedDates<InvestmentWithStudent, 'fecha' | 'created_at' | 'updated_at'> & {
+  monto_formatted: string
+}
+type StudentForClient = WithFormattedDates<Student, 'created_at' | 'updated_at'>
+type ClassForClient = WithFormattedDates<any, 'end_date' | 'created_at' | 'updated_at'> // Using any for now
 
 interface InvestmentsAdminClientProps {
-  investments: InvestmentWithStudent[]
-  students: Student[]
-  classes: any[] // Add classes for filtering
+  investments: InvestmentForClient[]
+  students: StudentForClient[]
+  classes: ClassForClient[]
 }
 
 export default function InvestmentsAdminClient({ investments: initialInvestments, students, classes }: InvestmentsAdminClientProps) {
   const [investments, setInvestments] = useState(initialInvestments)
   const [showCreateForm, setShowCreateForm] = useState(false)
-  const [editingInvestment, setEditingInvestment] = useState<InvestmentWithStudent | null>(null)
+  const [editingInvestment, setEditingInvestment] = useState<InvestmentForClient | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { filters, updateFilters } = useAdminFilters()
 
@@ -374,10 +382,10 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {formatDate(investment.fecha)}
+                  {investment.fecha_formatted}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {formatCurrency(investment.monto)}
+                  {investment.monto_formatted}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900">
                   {investment.concepto}

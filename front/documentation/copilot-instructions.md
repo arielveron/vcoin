@@ -25,7 +25,7 @@ AdminService → InvestmentRepository → Database
 - **Server Actions** (`actions.ts`): Form processing with authentication checks
 This project never uses API routes except for authentication or if required by third-party libraries.
 The connection to the database is always through server actions.
-Date and currency handling is done in the server components, ensuring consistent data types.
+Date and currency formatting is done in the server components using the hybrid approach, ensuring consistent data types and preventing hydration mismatches.
 
 #### Interest Rate Calculations
 Complex financial calculations in `/src/logic/calculations.ts`:
@@ -113,6 +113,49 @@ export const updateProfile = withStudentAuth(async (formData: FormData) => {
 - **Currency**: `es-AR` locale with ARS symbol
 - **Dates**: `es-AR` format (DD/MM/YYYY)
 - **Percentages**: 2 decimal places with % symbol
+
+### Date and Currency Formatting Pattern (CRITICAL)
+**Server-Side Formatting to Prevent Hydration Mismatches:**
+
+```typescript
+// 1. Use the hybrid formatting utility
+import { withFormattedDates, DateFieldSets, WithFormattedDates } from '@/utils/format-dates'
+
+// 2. In server components (page.tsx)
+const classes = await adminService.getAllClasses()
+const classesForClient = withFormattedDates(classes, [...DateFieldSets.CLASS_FIELDS])
+
+// 3. Define client types with formatted fields
+type ClassForClient = WithFormattedDates<Class, 'end_date' | 'created_at' | 'updated_at'>
+
+// 4. Pass to client component
+<ClassesAdminClient initialClasses={classesForClient as unknown as ClassForClient[]} />
+```
+
+**Benefits of this approach:**
+- ✅ Prevents hydration mismatches (server/client render exactly the same)
+- ✅ Keeps original `Date` objects for calculations and logic
+- ✅ Provides pre-formatted strings for display (`field_name_formatted`)
+- ✅ DRY principle - one utility works for all entities
+- ✅ Type safety with `WithFormattedDates<T, K>` helper
+
+**Available DateFieldSets:**
+```typescript
+DateFieldSets.CLASS_FIELDS = ['end_date', 'created_at', 'updated_at']
+DateFieldSets.INVESTMENT_FIELDS = ['fecha', 'created_at', 'updated_at']  
+DateFieldSets.AUDIT_FIELDS = ['created_at', 'updated_at']
+DateFieldSets.INTEREST_RATE_FIELDS = ['effective_date', 'created_at', 'updated_at']
+```
+
+**Client Component Usage:**
+```typescript
+// Use original dates for calculations
+const daysSinceInvestment = differenceInDays(new Date(), investment.fecha)
+
+// Use formatted strings for display
+<td>{investment.fecha_formatted}</td>
+<td>{investment.monto_formatted}</td>
+```
 
 ### File Naming
 - Server components: `page.tsx`
