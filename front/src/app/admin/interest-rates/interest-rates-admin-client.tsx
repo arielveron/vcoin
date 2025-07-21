@@ -36,10 +36,10 @@ export default function InterestRatesAdminClient({ interestRates: initialRates, 
   const handleCreateRate = async (formData: FormData) => {
     try {
       const result = await createInterestRate(formData)
-      if (result.success && result.rate) {
+      if (result.success && result.data) {
         // Refresh the page to get updated formatted data
         window.location.reload()
-      } else {
+      } else if (!result.success) {
         alert(result.error || 'Failed to create interest rate')
       }
     } catch (error) {
@@ -143,7 +143,7 @@ export default function InterestRatesAdminClient({ interestRates: initialRates, 
       {showCreateForm && (
         <div className="bg-white p-6 rounded-lg shadow border">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Interest Rate</h3>
-          <form action={handleCreateRate} className="space-y-4">
+          <form key={`create-${filters.classId || 'all'}`} action={handleCreateRate} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label htmlFor="class_id" className="block text-sm font-medium text-gray-700">
@@ -153,6 +153,7 @@ export default function InterestRatesAdminClient({ interestRates: initialRates, 
                   id="class_id"
                   name="class_id"
                   required
+                  defaultValue={filters.classId ? filters.classId.toString() : ''}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 >
                   <option value="">Select a class</option>

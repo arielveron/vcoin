@@ -33,13 +33,17 @@ CREATE TABLE classes (
 -- Each student belongs to a class and can have multiple investments
 CREATE TABLE students (
     id SERIAL PRIMARY KEY,
-    registro INTEGER NOT NULL UNIQUE, -- Student registry number for reference
+    registro INTEGER NOT NULL, -- Student registry number for reference (unique within class)
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) NOT NULL, -- Email (unique within class)
     class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
     password_hash VARCHAR(255), -- For student authentication
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    -- Unique constraints per class (same student can exist in different classes)
+    UNIQUE(registro, class_id),
+    UNIQUE(email, class_id)
 );
 
 -- Create investments table

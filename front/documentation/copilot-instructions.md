@@ -157,6 +157,44 @@ const daysSinceInvestment = differenceInDays(new Date(), investment.fecha)
 <td>{investment.monto_formatted}</td>
 ```
 
+### Form Auto-fill Pattern (CRITICAL)
+**Consistent auto-fill behavior across all admin forms:**
+
+```typescript
+// 1. Form key resets when filter changes
+<form key={`create-${filters.classId || filters.studentId || 'all'}`} action={handleCreate}>
+
+// 2. Auto-fill relevant field based on active filter
+<select 
+  defaultValue={filters.classId ? filters.classId.toString() : ''}
+  name="class_id"
+>
+  <option value="">Select a class</option>
+  {classes.map(...)}
+</select>
+
+// 3. Limit options to relevant items when filter is active
+const filteredStudents = filters.classId 
+  ? students.filter(student => student.class_id === filters.classId)
+  : students
+
+<select defaultValue={filters.studentId ? filters.studentId.toString() : ''}>
+  {filteredStudents.map(...)} // Only show relevant students
+</select>
+```
+
+**Benefits of this approach:**
+- ✅ Improves UX - pre-fills expected values when context is clear
+- ✅ Reduces errors - limits options to relevant choices
+- ✅ Form resets properly when filter changes via form key
+- ✅ Graceful fallback when no filter is active
+
+**Applied consistently in:**
+- Classes Admin: Auto-fills when editing existing class
+- Students Admin: Auto-fills class when class filter is active  
+- Investments Admin: Auto-fills student when student filter is active
+- Interest Rates Admin: Auto-fills class when class filter is active
+
 ### File Naming
 - Server components: `page.tsx`
 - Client components: `*-admin-client.tsx` or `*-student-*.tsx`

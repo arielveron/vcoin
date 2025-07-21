@@ -24,14 +24,15 @@ export default function StudentsAdminClient({ students: initialStudents, classes
   const handleCreateStudent = async (formData: FormData) => {
     try {
       const result = await createStudent(formData)
-      if (result.success && result.student) {
-        setStudents([...students, result.student])
+      if (result.success && result.data) {
+        setStudents([...students, result.data])
         setShowCreateForm(false)
-      } else {
+      } else if (!result.success) {
         alert(result.error || 'Error al crear estudiante')
       }
     } catch (error) {
-      alert('Error al crear estudiante')
+      console.error('Create student error:', error)
+      alert('Error al crear estudiante: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
   }
 
@@ -40,16 +41,17 @@ export default function StudentsAdminClient({ students: initialStudents, classes
     
     try {
       const result = await updateStudent(editingStudent.id, formData)
-      if (result.success && result.student) {
+      if (result.success && result.data) {
         setStudents(students.map(s => 
-          s.id === editingStudent.id ? result.student! : s
+          s.id === editingStudent.id ? result.data! : s
         ))
         setEditingStudent(null)
-      } else {
+      } else if (!result.success) {
         alert(result.error || 'Error al actualizar estudiante')
       }
     } catch (error) {
-      alert('Error al actualizar estudiante')
+      console.error('Update student error:', error)
+      alert('Error al actualizar estudiante: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
   }
 
@@ -60,11 +62,12 @@ export default function StudentsAdminClient({ students: initialStudents, classes
       const result = await deleteStudent(id)
       if (result.success) {
         setStudents(students.filter(s => s.id !== id))
-      } else {
+      } else if (!result.success) {
         alert(result.error || 'Error al eliminar estudiante')
       }
     } catch (error) {
-      alert('Error al eliminar estudiante')
+      console.error('Delete student error:', error)
+      alert('Error al eliminar estudiante: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
   }
 
@@ -141,7 +144,7 @@ export default function StudentsAdminClient({ students: initialStudents, classes
       {showCreateForm && (
         <div className="bg-white p-6 rounded-lg shadow border">
           <h3 className="text-lg font-medium text-gray-900 mb-4">{t('students.createNew')}</h3>
-          <form action={handleCreateStudent} className="space-y-4">
+          <form key={`create-${filters.classId || 'all'}`} action={handleCreateStudent} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -189,6 +192,7 @@ export default function StudentsAdminClient({ students: initialStudents, classes
                   id="class_id"
                   name="class_id"
                   required
+                  defaultValue={filters.classId ? filters.classId.toString() : ''}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 >
                   <option value="">{t('students.selectClass')}</option>
