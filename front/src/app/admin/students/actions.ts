@@ -1,117 +1,76 @@
 'use server'
 
-import { redirect } from 'next/navigation'
-import { auth } from '@/auth'
 import { AdminService } from '@/services/admin-service'
 import { StudentAuthService } from '@/services/student-auth-service'
 import { CreateStudentRequest } from '@/types/database'
+import { withAdminAuth, validateRequired, parseFormNumber } from '@/utils/server-actions'
 
 const adminService = new AdminService()
 
-export async function createStudent(formData: FormData) {
-  const session = await auth()
-  if (!session) {
-    redirect('/admin/auth/signin')
+export const createStudent = withAdminAuth(async (formData: FormData) => {
+  const missing = validateRequired(formData, ['registro', 'name', 'class_id'])
+  if (missing.length > 0) {
+    throw new Error(`Missing required fields: ${missing.join(', ')}`)
   }
 
-  try {
-    const registro = parseInt(formData.get('registro') as string)
-    const name = formData.get('name') as string
-    const email = formData.get('email') as string
-    const class_id = parseInt(formData.get('class_id') as string)
+  const registro = parseFormNumber(formData, 'registro')
+  const name = formData.get('name') as string
+  const email = formData.get('email') as string
+  const class_id = parseFormNumber(formData, 'class_id')
 
-    if (!name || !registro || !class_id) {
-      return { success: false, error: 'Missing required fields' }
-    }
-
-    const studentData: CreateStudentRequest = {
-      registro,
-      name,
-      email,
-      class_id
-    }
-
-    const student = await adminService.createStudent(studentData)
-    return { success: true, student }
-  } catch (error) {
-    console.error('Error creating student:', error)
-    return { success: false, error: 'Failed to create student' }
-  }
-}
-
-export async function updateStudent(id: number, formData: FormData) {
-  const session = await auth()
-  if (!session) {
-    redirect('/admin/auth/signin')
+  const studentData: CreateStudentRequest = {
+    registro,
+    name,
+    email,
+    class_id
   }
 
-  try {
-    const registro = parseInt(formData.get('registro') as string)
-    const name = formData.get('name') as string
-    const email = formData.get('email') as string
-    const class_id = parseInt(formData.get('class_id') as string)
+  return await adminService.createStudent(studentData)
+}, 'create student')
 
-    if (!name || !registro || !class_id) {
-      return { success: false, error: 'Missing required fields' }
-    }
-
-    const studentData: CreateStudentRequest = {
-      registro,
-      name,
-      email,
-      class_id
-    }
-
-    const student = await adminService.updateStudent(id, studentData)
-    return { success: true, student }
-  } catch (error) {
-    console.error('Error updating student:', error)
-    return { success: false, error: 'Failed to update student' }
-  }
-}
-
-export async function deleteStudent(id: number) {
-  const session = await auth()
-  if (!session) {
-    redirect('/admin/auth/signin')
+export const updateStudent = withAdminAuth(async (id: number, formData: FormData) => {
+  const missing = validateRequired(formData, ['registro', 'name', 'class_id'])
+  if (missing.length > 0) {
+    throw new Error(`Missing required fields: ${missing.join(', ')}`)
   }
 
-  try {
-    await adminService.deleteStudent(id)
-    return { success: true }
-  } catch (error) {
-    console.error('Error deleting student:', error)
-    return { success: false, error: 'Failed to delete student' }
-  }
-}
+  const registro = parseFormNumber(formData, 'registro')
+  const name = formData.get('name') as string
+  const email = formData.get('email') as string
+  const class_id = parseFormNumber(formData, 'class_id')
 
-export async function setStudentPassword(formData: FormData) {
-  const session = await auth()
-  if (!session) {
-    redirect('/admin/auth/signin')
+  const studentData: CreateStudentRequest = {
+    registro,
+    name,
+    email,
+    class_id
   }
 
-  try {
-    const student_id = parseInt(formData.get('student_id') as string)
-    const password = formData.get('password') as string
+  return await adminService.updateStudent(id, studentData)
+}, 'update student')
 
-    if (!student_id || !password) {
-      return { success: false, error: 'Student ID and password are required' }
-    }
+export const deleteStudent = withAdminAuth(async (id: number) => {
+  return await adminService.deleteStudent(id)
+}, 'delete student')
 
-    if (password.length < 6) {
-      return { success: false, error: 'Password must be at least 6 characters long' }
-    }
-
-    const success = await StudentAuthService.setStudentPassword(student_id, password)
-    
-    if (!success) {
-      return { success: false, error: 'Failed to set password' }
-    }
-
-    return { success: true }
-  } catch (error) {
-    console.error('Error setting student password:', error)
-    return { success: false, error: 'Failed to set password' }
+export const setStudentPassword = withAdminAuth(async (formData: FormData) => {
+  const missing = validateRequired(formData, ['student_id', 'password'])
+  if (missing.length > 0) {
+    throw new Error(`Missing required fields: ${missing.join(', ')}`)
   }
-}
+
+  const student_id = parseFormNumber(formData, 'student_id')
+  const password = formData.get('password') as string
+
+  if (password.length < 6) {
+    throw new Error('Password must be at least 6 characters long')
+  }
+
+  const success = await StudentAuthService.setStudentPassword(student_id, password)
+  
+  if (!success) {
+    throw new Error('Failed to set password')
+  }
+
+  return { success: true }
+}, 'set student password')

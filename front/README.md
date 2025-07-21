@@ -45,8 +45,14 @@ npm run dev
 
 ## 📖 Documentation
 
-- **Admin Setup**: See `ADMIN_SETUP.md` for detailed admin panel configuration
-- **Database Setup**: See `DATABASE.md` for database configuration details
+All detailed documentation is now organized in the `/documentation` folder:
+
+- **[Admin Setup](documentation/ADMIN_SETUP.md)** - Detailed admin panel configuration guide
+- **[Admin Complete](documentation/ADMIN_COMPLETE.md)** - Complete admin implementation details  
+- **[Database Setup](documentation/DATABASE.md)** - Database configuration and setup details
+- **[Student Authentication](documentation/STUDENT_AUTH_SETUP.md)** - Student auth system setup and features
+- **[Implementation Improvements](documentation/IMPLEMENTATION_IMPROVEMENTS.md)** - Recent standardization improvements
+- **[Copilot Instructions](documentation/copilot-instructions.md)** - AI coding agent guidelines
 
 ## 🏗️ Architecture
 

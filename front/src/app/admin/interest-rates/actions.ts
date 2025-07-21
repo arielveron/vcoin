@@ -1,81 +1,49 @@
 'use server'
 
-import { redirect } from 'next/navigation'
-import { auth } from '@/auth'
 import { AdminService } from '@/services/admin-service'
 import { CreateInterestRateRequest } from '@/types/database'
+import { withAdminAuth, validateRequired, parseFormNumber, parseFormFloat, parseFormDate } from '@/utils/server-actions'
 
 const adminService = new AdminService()
 
-export async function createInterestRate(formData: FormData) {
-  const session = await auth()
-  if (!session) {
-    redirect('/admin/auth/signin')
+export const createInterestRate = withAdminAuth(async (formData: FormData) => {
+  const missing = validateRequired(formData, ['class_id', 'monthly_interest_rate', 'effective_date'])
+  if (missing.length > 0) {
+    throw new Error(`Missing required fields: ${missing.join(', ')}`)
   }
 
-  try {
-    const class_id = parseInt(formData.get('class_id') as string)
-    const monthly_interest_rate = parseFloat(formData.get('monthly_interest_rate') as string) / 100 // Convert percentage to decimal
-    const effective_date = new Date(formData.get('effective_date') as string)
+  const class_id = parseFormNumber(formData, 'class_id')
+  const monthly_interest_rate = parseFormFloat(formData, 'monthly_interest_rate') / 100 // Convert percentage to decimal
+  const effective_date = parseFormDate(formData, 'effective_date')
 
-    if (!class_id || isNaN(monthly_interest_rate) || !effective_date) {
-      return { success: false, error: 'Missing required fields' }
-    }
-
-    const rateData: CreateInterestRateRequest = {
-      class_id,
-      monthly_interest_rate,
-      effective_date
-    }
-
-    const rate = await adminService.createInterestRate(rateData)
-    return { success: true, rate }
-  } catch (error) {
-    console.error('Error creating interest rate:', error)
-    return { success: false, error: 'Failed to create interest rate' }
-  }
-}
-
-export async function updateInterestRate(id: number, formData: FormData) {
-  const session = await auth()
-  if (!session) {
-    redirect('/admin/auth/signin')
+  const rateData: CreateInterestRateRequest = {
+    class_id,
+    monthly_interest_rate,
+    effective_date
   }
 
-  try {
-    const class_id = parseInt(formData.get('class_id') as string)
-    const monthly_interest_rate = parseFloat(formData.get('monthly_interest_rate') as string) / 100 // Convert percentage to decimal
-    const effective_date = new Date(formData.get('effective_date') as string)
+  return await adminService.createInterestRate(rateData)
+}, 'create interest rate')
 
-    if (!class_id || isNaN(monthly_interest_rate) || !effective_date) {
-      return { success: false, error: 'Missing required fields' }
-    }
-
-    const rateData: Partial<CreateInterestRateRequest> = {
-      class_id,
-      monthly_interest_rate,
-      effective_date
-    }
-
-    const rate = await adminService.updateInterestRate(id, rateData)
-    return { success: true, rate }
-  } catch (error) {
-    console.error('Error updating interest rate:', error)
-    return { success: false, error: 'Failed to update interest rate' }
-  }
-}
-
-export async function deleteInterestRate(id: number) {
-  const session = await auth()
-  if (!session) {
-    redirect('/admin/auth/signin')
+export const updateInterestRate = withAdminAuth(async (id: number, formData: FormData) => {
+  const missing = validateRequired(formData, ['class_id', 'monthly_interest_rate', 'effective_date'])
+  if (missing.length > 0) {
+    throw new Error(`Missing required fields: ${missing.join(', ')}`)
   }
 
-  try {
-    await adminService.deleteInterestRate(id)
-    return { success: true }
-  } catch (error) {
-    console.error('Error deleting interest rate:', error)
-    return { success: false, error: 'Failed to delete interest rate' }
+  const class_id = parseFormNumber(formData, 'class_id')
+  const monthly_interest_rate = parseFormFloat(formData, 'monthly_interest_rate') / 100 // Convert percentage to decimal
+  const effective_date = parseFormDate(formData, 'effective_date')
+
+  const rateData: Partial<CreateInterestRateRequest> = {
+    class_id,
+    monthly_interest_rate,
+    effective_date
   }
-}
+
+  return await adminService.updateInterestRate(id, rateData)
+}, 'update interest rate')
+
+export const deleteInterestRate = withAdminAuth(async (id: number) => {
+  return await adminService.deleteInterestRate(id)
+}, 'delete interest rate')

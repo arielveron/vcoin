@@ -33,11 +33,17 @@ export default function ClassesAdminClient({ initialClasses }: ClassesAdminClien
       formDataToSubmit.append('end_date', formData.end_date instanceof Date ? formData.end_date.toISOString().split('T')[0] : String(formData.end_date))
       formDataToSubmit.append('timezone', formData.timezone)
 
+      let result
       if (editingClass) {
         formDataToSubmit.append('id', editingClass.id.toString())
-        await updateClass(formDataToSubmit)
+        result = await updateClass(formDataToSubmit)
       } else {
-        await createClass(formDataToSubmit)
+        result = await createClass(formDataToSubmit)
+      }
+
+      if (!result.success) {
+        alert(result.error || 'Error saving class. Please try again.')
+        return
       }
 
       setShowForm(false)
@@ -78,7 +84,12 @@ export default function ClassesAdminClient({ initialClasses }: ClassesAdminClien
       const formData = new FormData()
       formData.append('id', id.toString())
       
-      await deleteClass(formData)
+      const result = await deleteClass(formData)
+      
+      if (!result.success) {
+        alert(result.error || 'Error deleting class. Please try again.')
+        return
+      }
       
       // Refresh the page to get updated data
       router.refresh()

@@ -1,82 +1,65 @@
 'use server'
 
-import { auth } from '@/auth'
 import { AdminService } from '@/services/admin-service'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
+import { withAdminAuth, validateRequired, parseFormNumber, parseFormDate } from '@/utils/server-actions'
 
-async function requireAuth() {
-  const session = await auth()
-  if (!session) {
-    redirect('/admin/auth/signin')
+const adminService = new AdminService()
+
+export const createClass = withAdminAuth(async (formData: FormData) => {
+  const missing = validateRequired(formData, ['name', 'description', 'end_date', 'timezone'])
+  if (missing.length > 0) {
+    throw new Error(`Missing required fields: ${missing.join(', ')}`)
   }
-  return session
-}
 
-export async function createClass(formData: FormData) {
-  await requireAuth()
-  
-  const adminService = new AdminService()
-  
   const name = formData.get('name') as string
   const description = formData.get('description') as string
-  const end_date = new Date(formData.get('end_date') as string)
+  const end_date = parseFormDate(formData, 'end_date')
   const timezone = formData.get('timezone') as string
 
-  try {
-    await adminService.createClass({
-      name,
-      description,
-      end_date,
-      timezone
-    })
-    
-    revalidatePath('/admin/classes')
-  } catch (error) {
-    console.error('Error creating class:', error)
-    throw new Error('Failed to create class')
-  }
-}
+  const result = await adminService.createClass({
+    name,
+    description,
+    end_date,
+    timezone
+  })
+  
+  revalidatePath('/admin/classes')
+  return result
+}, 'create class')
 
-export async function updateClass(formData: FormData) {
-  await requireAuth()
-  
-  const adminService = new AdminService()
-  
-  const id = parseInt(formData.get('id') as string)
+export const updateClass = withAdminAuth(async (formData: FormData) => {
+  const missing = validateRequired(formData, ['id', 'name', 'description', 'end_date', 'timezone'])
+  if (missing.length > 0) {
+    throw new Error(`Missing required fields: ${missing.join(', ')}`)
+  }
+
+  const id = parseFormNumber(formData, 'id')
   const name = formData.get('name') as string
   const description = formData.get('description') as string
-  const end_date = new Date(formData.get('end_date') as string)
+  const end_date = parseFormDate(formData, 'end_date')
   const timezone = formData.get('timezone') as string
 
-  try {
-    await adminService.updateClass(id, {
-      name,
-      description,
-      end_date,
-      timezone
-    })
-    
-    revalidatePath('/admin/classes')
-  } catch (error) {
-    console.error('Error updating class:', error)
-    throw new Error('Failed to update class')
-  }
-}
-
-export async function deleteClass(formData: FormData) {
-  await requireAuth()
+  const result = await adminService.updateClass(id, {
+    name,
+    description,
+    end_date,
+    timezone
+  })
   
-  const adminService = new AdminService()
-  
-  const id = parseInt(formData.get('id') as string)
+  revalidatePath('/admin/classes')
+  return result
+}, 'update class')
 
-  try {
-    await adminService.deleteClass(id)
-    
-    revalidatePath('/admin/classes')
-  } catch (error) {
-    console.error('Error deleting class:', error)
-    throw new Error('Failed to delete class')
+export const deleteClass = withAdminAuth(async (formData: FormData) => {
+  const missing = validateRequired(formData, ['id'])
+  if (missing.length > 0) {
+    throw new Error(`Missing required fields: ${missing.join(', ')}`)
   }
-}
+
+  const id = parseFormNumber(formData, 'id')
+  const result = await adminService.deleteClass(id)
+  
+  revalidatePath('/admin/classes')
+  return result
+}, 'delete class')
