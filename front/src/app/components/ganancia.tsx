@@ -12,7 +12,7 @@ interface GananciaProps {
 export default async function Ganancia({ gananciaTotal, studentId = 1 }: GananciaProps) {
   // Get historical amounts for the graph
   const historicalAmounts = await ServerDataService.getHistoricalAmounts(studentId);
-  
+  console.log("Historical Amounts:", historicalAmounts);
   // Format the data for the graph to avoid hydration issues
   const graphData = historicalAmounts
     .map((item) => {
@@ -35,7 +35,7 @@ export default async function Ganancia({ gananciaTotal, studentId = 1 }: Gananci
       };
     })
     .sort((a, b) => a.sortKey - b.sortKey); // Sort on server to avoid client-side date operations
-
+  // console.log("Graph Data:", graphData);
   return (
     <div className="flex flex-col gap-2 items-center justify-center p-4 bg-gray-200 rounded-lg w-full max-w-md">
       {/* Integrated Historical Gains Graph */}

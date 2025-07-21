@@ -492,6 +492,9 @@ export class ServerDataService {
         this.getStudentClassId(studentId),
         this.getStudentClassSettings(studentId)
       ]);
+      // console.log("Investments:", investments);
+      // console.log("Class ID:", classId);
+      // console.log("Class Settings:", classSettings);  
 
       if (!investments || investments.length === 0) {
         return [];
@@ -502,25 +505,18 @@ export class ServerDataService {
       
       // Create getRateForDate function for historical calculations
       const getRateForDate = async (classId: number, date: Date): Promise<number> => {
-        // Find the most recent rate that was effective on or before the given date
-        const effectiveRate = rateHistory
-          .filter(rate => new Date(rate.effective_date) <= date)
-          .sort((a, b) => new Date(b.effective_date).getTime() - new Date(a.effective_date).getTime())[0];
+        // Since rateHistory is already sorted by effective_date DESC from PostgreSQL,
+        // we can use find() instead of filtering and sorting
+        const effectiveRate = rateHistory.find(rate => new Date(rate.effective_date) <= date);
         
         const rate = effectiveRate ? effectiveRate.monthly_interest_rate : await this.getCurrentInterestRate(classId);
-        
-        // Add debug logging for critical rate transition dates
-        const dateStr = date.toISOString().split('T')[0];
-        if (dateStr === '2025-05-01' || dateStr === '2025-06-15' || dateStr === '2025-07-20' || 
-            dateStr === '2025-06-14' || dateStr === '2025-06-16' || dateStr === '2025-07-19' || dateStr === '2025-07-21') {
-          console.log(`🔥 CRITICAL RATE: ${dateStr} => ${rate} (${rate * 100}%)`);
-        }
-        
         return rate;
       };
 
       // Get the first investment date and today's date
-      const firstInvestmentDate = new Date(Math.min(...investments.map(inv => inv.fecha.getTime())));
+      // Since investments are already sorted by fecha DESC from PostgreSQL,
+      // the last item has the earliest date
+      const firstInvestmentDate = investments[investments.length - 1].fecha;
       const today = new Date();
       const endDate = new Date(classSettings.end_date);
       const finalDate = today < endDate ? today : endDate;
@@ -529,21 +525,10 @@ export class ServerDataService {
       
       // Calculate amount for each day from first investment to today/end date
       const { calculateMontoAFechaWithHistory } = await import('@/logic/calculations');
-      
-      // Start from the first investment date (April 13, 2025)
-      // This ensures we only show meaningful data where investments actually exist
-      // Rate changes that will affect this period:
-      // April 13 - April 30: 1% rate, May 1 - June 14: 60% rate, June 15 - July 19: 2% rate, July 20+: 27% rate
       const startDate = new Date(firstInvestmentDate);
 
       for (let d = new Date(startDate); d <= finalDate; d.setDate(d.getDate() + 1)) {
         const currentDate = new Date(d);
-        
-        // Log every 10th day to see progression
-        const daysSinceStart = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-        if (daysSinceStart % 10 === 0) {
-          console.log(`Processing historical date: ${currentDate.toISOString().split('T')[0]} (day ${daysSinceStart})`);
-        }
         
         try {
           // Pass rateHistory to the calculation for efficiency

@@ -193,10 +193,11 @@ export const calculateMontoAFechaWithHistory = async (
     // Get all rate change dates between investment date and target date
     // If rateHistory is provided, use it; otherwise get rates day by day
     if (rateHistory && rateHistory.length > 0) {
-      // Sort rate changes by date
+      // Filter relevant rates and reverse order since rateHistory comes DESC from PostgreSQL
+      // but we need ASC order for chronological application
       const relevantRates = rateHistory
         .filter(rate => new Date(rate.effective_date) >= periodStart && new Date(rate.effective_date) <= fecha)
-        .sort((a, b) => new Date(a.effective_date).getTime() - new Date(b.effective_date).getTime());
+        .reverse(); // Since PostgreSQL gives us DESC order, reverse to get ASC
       
       let currentDate = new Date(periodStart);
       
