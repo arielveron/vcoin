@@ -492,9 +492,9 @@ export class ServerDataService {
         this.getStudentClassId(studentId),
         this.getStudentClassSettings(studentId)
       ]);
-      // console.log("Investments:", investments);
-      // console.log("Class ID:", classId);
-      // console.log("Class Settings:", classSettings);  
+      console.log("Investments:", investments);
+      console.log("Class ID:", classId);
+      console.log("Class Settings:", classSettings);  
 
       if (!investments || investments.length === 0) {
         return [];
@@ -502,15 +502,23 @@ export class ServerDataService {
 
       // Get all rate changes for more efficient calculation
       const rateHistory = await this.getInterestRateHistory(classId);
+      console.log("Rate History:", rateHistory);
       
       // Create getRateForDate function for historical calculations
       const getRateForDate = async (classId: number, date: Date): Promise<number> => {
-        // Since rateHistory is already sorted by effective_date DESC from PostgreSQL,
-        // we can use find() instead of filtering and sorting
-        const effectiveRate = rateHistory.find(rate => new Date(rate.effective_date) <= date);
+        // Use the repository method which correctly handles the logic to find
+        // the most recent rate that was effective on or before the given date
+        if (!this.rateHistoryRepo) {
+          this.rateHistoryRepo = new InterestRateHistoryRepository();
+        }
         
-        const rate = effectiveRate ? effectiveRate.monthly_interest_rate : await this.getCurrentInterestRate(classId);
-        return rate;
+        try {
+          const rate = await this.rateHistoryRepo.getRateForDate(classId, date);
+          return rate || await this.getCurrentInterestRate(classId);
+        } catch (error) {
+          console.error('Error getting rate for date:', error);
+          return await this.getCurrentInterestRate(classId);
+        }
       };
 
       // Get the first investment date and today's date
@@ -546,6 +554,175 @@ export class ServerDataService {
     } catch (error) {
       console.error('Error getting historical amounts:', error);
       return [];
+    }
+  }
+
+  // Method specifically for the ganancia total graph - shows what the current total would have been on each historical date
+  static async getHistoricalAmountsWithCurrentRate(studentId: number): Promise<{
+    amounts: Array<{date: Date, amount: number}>,
+    investmentMarkers: Array<{date: Date, amount: number}>,
+    rateChangeMarkers: Array<{date: Date, rate: number}>
+  }> {
+    try {
+      const [investments, classId, classSettings] = await Promise.all([
+        this.getInvestmentsList(studentId),
+        this.getStudentClassId(studentId),
+        this.getStudentClassSettings(studentId)
+      ]);
+
+      if (!investments || investments.length === 0) {
+        return { amounts: [], investmentMarkers: [], rateChangeMarkers: [] };
+      }
+
+      // Get rate history for markers
+      const rateHistory = await this.getInterestRateHistory(classId);
+      console.log("📊 Rate History for Class", classId, ":");
+      rateHistory.forEach(rate => {
+        console.log(`  - ${rate.effective_date.toLocaleDateString()}: ${(rate.monthly_interest_rate * 100).toFixed(1)}%`);
+      });
+
+      // Get the first investment date and today's date
+      const firstInvestmentDate = investments[investments.length - 1].fecha;
+      const today = new Date();
+      const endDate = new Date(classSettings.end_date);
+      const finalDate = today < endDate ? today : endDate;
+
+      console.log("📅 Date Range:");
+      console.log(`  - First Investment: ${firstInvestmentDate.toLocaleDateString()}`);
+      console.log(`  - Final Date: ${finalDate.toLocaleDateString()}`);
+
+      const historicalAmounts: Array<{date: Date, amount: number}> = [];
+      
+      // Import calculation function
+      const { calculateMontoAFecha } = await import('@/logic/calculations');
+      const startDate = new Date(firstInvestmentDate);
+
+      let debugSampleDates = 0;
+      const maxDebugSamples = 10; // Limit debug output
+
+      for (let d = new Date(startDate); d <= finalDate; d.setDate(d.getDate() + 1)) {
+        const currentDate = new Date(d);
+        
+        try {
+          // Get the rate that was current on this specific date
+          const rateOnThisDate = await this.getCurrentInterestRateForDate(classId, currentDate);
+          
+          // Debug logging for sample dates
+          if (debugSampleDates < maxDebugSamples) {
+            console.log(`📈 ${currentDate.toLocaleDateString()}: Rate ${(rateOnThisDate * 100).toFixed(1)}%`);
+            debugSampleDates++;
+          }
+          
+          // Create class settings with the rate that was current on this date
+          const dateSpecificClassSettings = {
+            ...classSettings,
+            current_monthly_interest_rate: rateOnThisDate
+          };
+
+          // Calculate what the total would have been on this date, using the rate that was current on this date
+          // This shows what the student would have seen as their "current total" if they checked on this date
+          const amount = calculateMontoAFecha(currentDate, investments, dateSpecificClassSettings);
+          
+          // Debug logging for sample calculations
+          if (debugSampleDates <= maxDebugSamples) {
+            console.log(`  💰 Amount: $${amount.toLocaleString()}`);
+          }
+          
+          historicalAmounts.push({
+            date: new Date(currentDate),
+            amount: amount
+          });
+        } catch (error) {
+          console.error('Error calculating historical amount for date:', currentDate, error);
+        }
+      }
+
+      console.log(`📊 Generated ${historicalAmounts.length} historical data points`);
+
+      // Find periods with dramatic changes
+      let maxAmount = 0;
+      let minAmount = Infinity;
+      let maxDate = '';
+      let minDate = '';
+      
+      historicalAmounts.forEach(point => {
+        if (point.amount > maxAmount) {
+          maxAmount = point.amount;
+          maxDate = point.date.toLocaleDateString();
+        }
+        if (point.amount < minAmount) {
+          minAmount = point.amount;
+          minDate = point.date.toLocaleDateString();
+        }
+      });
+
+      console.log("📈 Amount Range Analysis:");
+      console.log(`  - Maximum: $${maxAmount.toLocaleString()} on ${maxDate}`);
+      console.log(`  - Minimum: $${minAmount.toLocaleString()} on ${minDate}`);
+      console.log(`  - Difference: $${(maxAmount - minAmount).toLocaleString()}`);
+      console.log(`  - Percentage Swing: ${((maxAmount / minAmount - 1) * 100).toFixed(1)}%`);
+
+      // Create investment markers - calculate the total that would have been visible on each investment date
+      const investmentMarkers = [];
+      console.log("💵 Investment Markers:");
+      for (const investment of investments) {
+        try {
+          const rateOnInvestmentDate = await this.getCurrentInterestRateForDate(classId, investment.fecha);
+          const dateSpecificClassSettings = {
+            ...classSettings,
+            current_monthly_interest_rate: rateOnInvestmentDate
+          };
+          const amountOnInvestmentDate = calculateMontoAFecha(investment.fecha, investments, dateSpecificClassSettings);
+          investmentMarkers.push({
+            date: investment.fecha,
+            amount: amountOnInvestmentDate
+          });
+          console.log(`  - ${investment.fecha.toLocaleDateString()}: $${investment.monto.toLocaleString()} invested, total would be $${amountOnInvestmentDate.toLocaleString()} at ${(rateOnInvestmentDate * 100).toFixed(1)}% rate`);
+        } catch (error) {
+          console.error('Error calculating investment marker for date:', investment.fecha, error);
+        }
+      }
+
+      // Create rate change markers - only for changes within our date range
+      const rateChangeMarkers = rateHistory
+        .filter(rate => {
+          const effectiveDate = new Date(rate.effective_date);
+          return effectiveDate >= startDate && effectiveDate <= finalDate;
+        })
+        .map(rate => ({
+          date: new Date(rate.effective_date),
+          rate: rate.monthly_interest_rate
+        }));
+
+      console.log("📊 Rate Change Markers (within graph period):");
+      rateChangeMarkers.forEach(marker => {
+        console.log(`  - ${marker.date.toLocaleDateString()}: Rate changed to ${(marker.rate * 100).toFixed(1)}%`);
+      });
+
+      return {
+        amounts: historicalAmounts,
+        investmentMarkers,
+        rateChangeMarkers
+      };
+    } catch (error) {
+      console.error('Error getting historical amounts with current rate:', error);
+      return { amounts: [], investmentMarkers: [], rateChangeMarkers: [] };
+    }
+  }
+
+  // Helper method to get what the current rate was on a specific historical date
+  private static async getCurrentInterestRateForDate(classId: number, date: Date): Promise<number> {
+    if (!this.rateHistoryRepo) {
+      this.rateHistoryRepo = new InterestRateHistoryRepository();
+    }
+
+    try {
+      // Get the rate that was effective (current) on this specific date
+      const rate = await this.rateHistoryRepo.getRateForDate(classId, date);
+      return rate || 0.01; // Fallback to 1%
+    } catch (error) {
+      console.error('Error getting rate for historical date:', error);
+      return 0.01; // Fallback to 1%
     }
   }
 }

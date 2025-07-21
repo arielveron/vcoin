@@ -10,11 +10,13 @@ interface GananciaProps {
 }
 
 export default async function Ganancia({ gananciaTotal, studentId = 1 }: GananciaProps) {
-  // Get historical amounts for the graph
-  const historicalAmounts = await ServerDataService.getHistoricalAmounts(studentId);
-  console.log("Historical Amounts:", historicalAmounts);
-  // Format the data for the graph to avoid hydration issues
-  const graphData = historicalAmounts
+  // Get historical amounts for the ganancia total graph - shows what amounts would have looked like at each date
+  // This shows the "current evaluation" effect where rate changes cause historical values to spike up or drop down
+  const historicalData = await ServerDataService.getHistoricalAmountsWithCurrentRate(studentId);
+  console.log("Historical Data:", historicalData);
+  
+  // Format the amounts data for the graph to avoid hydration issues
+  const graphData = historicalData.amounts
     .map((item) => {
       const date = item.date instanceof Date ? item.date : new Date(item.date);
 
@@ -35,12 +37,35 @@ export default async function Ganancia({ gananciaTotal, studentId = 1 }: Gananci
       };
     })
     .sort((a, b) => a.sortKey - b.sortKey); // Sort on server to avoid client-side date operations
-  // console.log("Graph Data:", graphData);
+
+  // Format investment markers
+  const investmentMarkers = historicalData.investmentMarkers.map((marker) => {
+    const date = marker.date instanceof Date ? marker.date : new Date(marker.date);
+    return {
+      date: date.getTime(), // Convert to timestamp for graph
+      amount: marker.amount,
+    };
+  });
+
+  // Format rate change markers
+  const rateChangeMarkers = historicalData.rateChangeMarkers.map((marker) => {
+    const date = marker.date instanceof Date ? marker.date : new Date(marker.date);
+    return {
+      date: date.getTime(), // Convert to timestamp for graph
+      rate: marker.rate,
+    };
+  });
+
+  console.log("Graph Data:", graphData);
+  console.log("Investment Markers:", investmentMarkers);
+  console.log("Rate Change Markers:", rateChangeMarkers);
   return (
     <div className="flex flex-col gap-2 items-center justify-center p-4 bg-gray-200 rounded-lg w-full max-w-md">
       {/* Integrated Historical Gains Graph */}
       <HistoricalGainsGraph 
         data={graphData}
+        investmentMarkers={investmentMarkers}
+        rateChangeMarkers={rateChangeMarkers}
         className="w-full"
       />
       <div className="text-gray-700 flex flex-row items-center justify-center gap-2">

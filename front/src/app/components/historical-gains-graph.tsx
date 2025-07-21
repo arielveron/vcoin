@@ -9,10 +9,23 @@ interface HistoricalGainsGraphProps {
     formattedAmount: string; // Pre-formatted amount to avoid locale issues
     sortKey: number; // Pre-calculated sort key
   }>;
+  investmentMarkers?: Array<{
+    date: number; // Timestamp
+    amount: number;
+  }>;
+  rateChangeMarkers?: Array<{
+    date: number; // Timestamp
+    rate: number;
+  }>;
   className?: string;
 }
 
-export default function HistoricalGainsGraph({ data, className = "" }: HistoricalGainsGraphProps) {
+export default function HistoricalGainsGraph({ 
+  data, 
+  investmentMarkers = [], 
+  rateChangeMarkers = [], 
+  className = "" 
+}: HistoricalGainsGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -73,14 +86,76 @@ export default function HistoricalGainsGraph({ data, className = "" }: Historica
 
     ctx.stroke();
 
-  }, [data]);
+    // Draw investment markers (blue dots)
+    if (investmentMarkers.length > 0) {
+      ctx.fillStyle = '#3B82F6'; // Blue color for investments
+      const investmentRadius = 3;
+      investmentMarkers.forEach(marker => {
+        // Find the closest data point to get the X position
+        const markerTime = marker.date;
+        let closestIndex = 0;
+        let closestDistance = Math.abs(sortedData[0].sortKey - markerTime);
+        
+        for (let i = 1; i < sortedData.length; i++) {
+          const distance = Math.abs(sortedData[i].sortKey - markerTime);
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = i;
+          }
+        }
+        
+        const x = getX(closestIndex);
+        const y = getY(marker.amount);
+        
+        // Draw investment marker dot
+        ctx.beginPath();
+        ctx.arc(x, y, investmentRadius, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+    }
+
+    // Draw rate change markers (vertical red lines)
+    if (rateChangeMarkers.length > 0) {
+      ctx.strokeStyle = '#EF4444'; // Red color for rate changes
+      ctx.lineWidth = 1;
+      ctx.setLineDash([1, 1]); // Dashed line pattern
+      
+      rateChangeMarkers.forEach(marker => {
+        // Find the closest data point to get the X position
+        const markerTime = marker.date;
+        let closestIndex = 0;
+        let closestDistance = Math.abs(sortedData[0].sortKey - markerTime);
+        
+        for (let i = 1; i < sortedData.length; i++) {
+          const distance = Math.abs(sortedData[i].sortKey - markerTime);
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = i;
+          }
+        }
+        
+        const x = getX(closestIndex);
+        
+        // Draw vertical line from top to bottom of graph
+        ctx.beginPath();
+        ctx.moveTo(x, padding);
+        ctx.lineTo(x, rect.height - padding);
+        ctx.stroke();
+      });
+      
+      // Reset line style for future drawings
+      ctx.setLineDash([]);
+      ctx.lineWidth = 2;
+    }
+
+  }, [data, investmentMarkers, rateChangeMarkers]);
 
   if (!data || data.length === 0) {
     return null; // Don't render anything if no data
   }
 
   return (
-    <div className={`bg-white rounded ${className}`}>
+    <div className={`rounded ${className}`}>
       <canvas
         ref={canvasRef}
         className="w-full h-16"
