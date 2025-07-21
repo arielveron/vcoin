@@ -18,19 +18,39 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
   const [investments, setInvestments] = useState(initialInvestments)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingInvestment, setEditingInvestment] = useState<InvestmentWithStudent | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { filters, updateFilters } = useAdminFilters()
 
+  const handleCloseCreateForm = () => {
+    setShowCreateForm(false)
+    // Reset form by triggering a re-render
+  }
+
   const handleCreateInvestment = async (formData: FormData) => {
+    setIsSubmitting(true)
     try {
+      console.log('Form data:', {
+        student_id: formData.get('student_id'),
+        fecha: formData.get('fecha'),
+        monto: formData.get('monto'),
+        concepto: formData.get('concepto')
+      })
+      
       const result = await createInvestment(formData)
-      if (result.success && result.investment) {
+      console.log('Create result:', result)
+      
+      if (result.success && result.data) {
+        setShowCreateForm(false)
         // Refresh the investments list - in a real app you'd want to properly update with student info
         window.location.reload()
-      } else {
+      } else if (!result.success) {
         alert(result.error || 'Failed to create investment')
       }
     } catch (error) {
-      alert('Failed to create investment')
+      console.error('Create investment error:', error)
+      alert('Failed to create investment: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -42,7 +62,7 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
       if (result.success) {
         // Refresh the investments list
         window.location.reload()
-      } else {
+      } else if (!result.success) {
         alert(result.error || 'Failed to update investment')
       }
     } catch (error) {
@@ -57,7 +77,7 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
       const result = await deleteInvestment(id)
       if (result.success) {
         setInvestments(investments.filter(inv => inv.id !== id))
-      } else {
+      } else if (!result.success) {
         alert(result.error || 'Failed to delete investment')
       }
     } catch (error) {
@@ -151,7 +171,7 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
       {showCreateForm && (
         <div className="bg-white p-6 rounded-lg shadow border">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Investment</h3>
-          <form action={handleCreateInvestment} className="space-y-4">
+          <form key={`create-${filters.studentId || 'all'}`} action={handleCreateInvestment} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="student_id" className="block text-sm font-medium text-gray-700">
@@ -161,10 +181,11 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
                   id="student_id"
                   name="student_id"
                   required
+                  defaultValue={filters.studentId ? filters.studentId.toString() : ''}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 >
                   <option value="">Select a student</option>
-                  {students.map((student) => (
+                  {filteredStudents.map((student) => (
                     <option key={student.id} value={student.id}>
                       {student.name} (Registry: {student.registro})
                     </option>
@@ -180,6 +201,7 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
                   id="fecha"
                   name="fecha"
                   required
+                  defaultValue={new Date().toLocaleDateString('en-CA')}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 />
               </div>
@@ -192,8 +214,9 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
                   id="monto"
                   name="monto"
                   required
-                  min="0"
+                  min="0.01"
                   step="0.01"
+                  placeholder="0.00"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 />
               </div>
@@ -206,6 +229,7 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
                   id="concepto"
                   name="concepto"
                   required
+                  maxLength={255}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   placeholder="e.g., Final exam, Homework assignment"
                 />
@@ -214,13 +238,14 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+                disabled={isSubmitting}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create Investment
+                {isSubmitting ? 'Creating...' : 'Create Investment'}
               </button>
               <button
                 type="button"
-                onClick={() => setShowCreateForm(false)}
+                onClick={handleCloseCreateForm}
                 className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
               >
                 Cancel
