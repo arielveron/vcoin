@@ -6,7 +6,7 @@ export class StudentRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        SELECT s.id, s.registro, s.name, s.email, s.class_id, s.created_at, s.updated_at
+        SELECT s.id, s.registro, s.name, s.email, s.class_id, s.password_hash, s.created_at, s.updated_at
         FROM students s
         ORDER BY s.name
       `);
@@ -20,7 +20,7 @@ export class StudentRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        SELECT id, registro, name, email, class_id, created_at, updated_at 
+        SELECT id, registro, name, email, class_id, password_hash, created_at, updated_at 
         FROM students 
         WHERE id = $1
       `, [id]);
@@ -34,7 +34,7 @@ export class StudentRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        SELECT id, registro, name, email, class_id, created_at, updated_at 
+        SELECT id, registro, name, email, class_id, password_hash, created_at, updated_at 
         FROM students 
         WHERE class_id = $1
         ORDER BY name
@@ -49,7 +49,7 @@ export class StudentRepository {
     const client = await pool.connect();
     try {
       const studentResult = await client.query(`
-        SELECT id, registro, name, email, class_id, created_at, updated_at 
+        SELECT id, registro, name, email, class_id, password_hash, created_at, updated_at 
         FROM students 
         WHERE id = $1
       `, [id]);
@@ -89,7 +89,7 @@ export class StudentRepository {
       const result = await client.query(`
         INSERT INTO students (name, registro, email, class_id) 
         VALUES ($1, $2, $3, $4) 
-        RETURNING id, registro, name, email, class_id, created_at, updated_at
+        RETURNING id, registro, name, email, class_id, password_hash, created_at, updated_at
       `, [data.name, data.registro, data.email, data.class_id]);
       return result.rows[0];
     } finally {
@@ -133,7 +133,7 @@ export class StudentRepository {
         UPDATE students 
         SET ${updates.join(', ')} 
         WHERE id = $${paramCount} 
-        RETURNING id, registro, name, email, class_id, created_at, updated_at
+        RETURNING id, registro, name, email, class_id, password_hash, created_at, updated_at
       `, values);
 
       return result.rows[0] || null;

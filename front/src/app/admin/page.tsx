@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import AdminDashboardClient from '@/app/admin/components/admin-dashboard-client'
 
 interface AdminDashboardProps {
-  searchParams: { qc?: string; qs?: string }
+  searchParams: Promise<{ qc?: string; qs?: string }>
 }
 
 export default async function AdminDashboard({ searchParams }: AdminDashboardProps) {
@@ -15,8 +15,9 @@ export default async function AdminDashboard({ searchParams }: AdminDashboardPro
   }
 
   // Parse filters from query parameters
-  const classId = searchParams.qc ? parseInt(searchParams.qc) : undefined
-  const studentId = searchParams.qs ? parseInt(searchParams.qs) : undefined
+  const params = await searchParams
+  const classId = params.qc ? parseInt(params.qc) : undefined
+  const studentId = params.qs ? parseInt(params.qs) : undefined
 
   // Fetch data on server side
   const adminService = new AdminService()

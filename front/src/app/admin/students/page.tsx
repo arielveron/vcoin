@@ -4,7 +4,7 @@ import { AdminService } from '@/services/admin-service'
 import StudentsAdminClient from './students-admin-client'
 
 interface StudentsPageProps {
-  searchParams: { qc?: string, qs?: string }
+  searchParams: Promise<{ qc?: string, qs?: string }>
 }
 
 export default async function StudentsAdminPage({ searchParams }: StudentsPageProps) {
@@ -15,7 +15,8 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
   }
 
   const adminService = new AdminService()
-  const classId = searchParams.qc ? parseInt(searchParams.qc) : null
+  const params = await searchParams
+  const classId = params.qc ? parseInt(params.qc) : null
   
   // Get students based on class filter
   const students = classId 

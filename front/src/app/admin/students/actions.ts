@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { AdminService } from '@/services/admin-service'
+import { StudentAuthService } from '@/services/student-auth-service'
 import { CreateStudentRequest } from '@/types/database'
 
 const adminService = new AdminService()
@@ -81,5 +82,36 @@ export async function deleteStudent(id: number) {
   } catch (error) {
     console.error('Error deleting student:', error)
     return { success: false, error: 'Failed to delete student' }
+  }
+}
+
+export async function setStudentPassword(formData: FormData) {
+  const session = await auth()
+  if (!session) {
+    redirect('/admin/auth/signin')
+  }
+
+  try {
+    const student_id = parseInt(formData.get('student_id') as string)
+    const password = formData.get('password') as string
+
+    if (!student_id || !password) {
+      return { success: false, error: 'Student ID and password are required' }
+    }
+
+    if (password.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters long' }
+    }
+
+    const success = await StudentAuthService.setStudentPassword(student_id, password)
+    
+    if (!success) {
+      return { success: false, error: 'Failed to set password' }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error setting student password:', error)
+    return { success: false, error: 'Failed to set password' }
   }
 }

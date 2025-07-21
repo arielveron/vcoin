@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Student, Class } from '@/types/database'
-import { createStudent, updateStudent, deleteStudent } from './actions'
+import { createStudent, updateStudent, deleteStudent, setStudentPassword } from './actions'
 import { useAdminFilters } from '@/hooks/useAdminFilters'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import { t } from '@/config/translations'
@@ -16,6 +16,9 @@ export default function StudentsAdminClient({ students: initialStudents, classes
   const [students, setStudents] = useState(initialStudents)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingStudent, setEditingStudent] = useState<Student | null>(null)
+  const [passwordDialogStudent, setPasswordDialogStudent] = useState<Student | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [settingPassword, setSettingPassword] = useState(false)
   const { filters, updateFilters } = useAdminFilters()
 
   const handleCreateStudent = async (formData: FormData) => {
@@ -62,6 +65,37 @@ export default function StudentsAdminClient({ students: initialStudents, classes
       }
     } catch (error) {
       alert('Error al eliminar estudiante')
+    }
+  }
+
+  const handleSetPassword = async () => {
+    if (!passwordDialogStudent || !newPassword) return
+    
+    setSettingPassword(true)
+    try {
+      const formData = new FormData()
+      formData.append('student_id', passwordDialogStudent.id.toString())
+      formData.append('password', newPassword)
+
+      const result = await setStudentPassword(formData)
+      
+      if (result.success) {
+        // Update student in state to show password is set
+        setStudents(students.map(s => 
+          s.id === passwordDialogStudent.id 
+            ? { ...s, password_hash: 'set' }
+            : s
+        ))
+        setPasswordDialogStudent(null)
+        setNewPassword('')
+        alert('Password set successfully')
+      } else {
+        alert(result.error || 'Error setting password')
+      }
+    } catch (error) {
+      alert('Error setting password')
+    } finally {
+      setSettingPassword(false)
     }
   }
 
@@ -283,6 +317,9 @@ export default function StudentsAdminClient({ students: initialStudents, classes
                 {t('students.class')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Password Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('students.actions')}
               </th>
             </tr>
@@ -306,12 +343,27 @@ export default function StudentsAdminClient({ students: initialStudents, classes
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {studentClass?.name || 'Sin clase asignada'}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      student.password_hash 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {student.password_hash ? 'Set' : 'Not Set'}
+                    </span>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
                       onClick={() => setEditingStudent(student)}
                       className="text-indigo-600 hover:text-indigo-900 mr-3"
                     >
                       {t('students.edit')}
+                    </button>
+                    <button
+                      onClick={() => setPasswordDialogStudent(student)}
+                      className="text-green-600 hover:text-green-900 mr-3"
+                    >
+                      Set Password
                     </button>
                     <button
                       onClick={() => handleDeleteStudent(student.id)}
@@ -331,6 +383,57 @@ export default function StudentsAdminClient({ students: initialStudents, classes
           </div>
         )}
       </div>
+
+      {/* Password Dialog */}
+      {passwordDialogStudent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Set Password for {passwordDialogStudent.name}
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="new-password" className="block text-sm font-medium text-gray-700">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  id="new-password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  placeholder="Enter new password"
+                  minLength={6}
+                />
+              </div>
+              <div className="text-sm text-gray-600">
+                <p>Student login credentials:</p>
+                <p><strong>Class ID:</strong> {passwordDialogStudent.class_id}</p>
+                <p><strong>Registry:</strong> {passwordDialogStudent.registro}</p>
+                <p><strong>Password:</strong> [The password you set above]</p>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={handleSetPassword}
+                disabled={!newPassword || settingPassword}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {settingPassword ? 'Setting...' : 'Set Password'}
+              </button>
+              <button
+                onClick={() => {
+                  setPasswordDialogStudent(null)
+                  setNewPassword('')
+                }}
+                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

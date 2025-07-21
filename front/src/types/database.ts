@@ -51,6 +51,7 @@ export interface Student {
   name: string;
   email: string;
   class_id: number;
+  password_hash?: string; // Optional password hash for student authentication
   created_at: Date;
   updated_at: Date;
 }
@@ -90,6 +91,7 @@ export interface CreateStudentRequest {
   name: string;
   email: string;
   class_id: number;
+  password?: string; // Optional password for initial creation
 }
 
 export interface CreateInvestmentRequest {
@@ -119,4 +121,31 @@ export interface CreateInterestRateRequest {
   class_id: number;
   monthly_interest_rate: number;
   effective_date: Date;
+}
+
+// Student Authentication types
+export interface StudentLoginRequest {
+  class_id: number;
+  registro: number;
+  password: string;
+}
+
+export interface StudentSession {
+  student_id: number;
+  registro: number;
+  name: string;
+  email: string;
+  class_id: number;
+  class_name: string;
+}
+
+export interface StudentPasswordChangeRequest {
+  current_password: string;
+  new_password: string;
+}
+
+export interface StudentProfileUpdateRequest {
+  email?: string;
+  password?: string;
+  current_password?: string;
 }

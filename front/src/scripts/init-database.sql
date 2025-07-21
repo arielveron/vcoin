@@ -37,6 +37,7 @@ CREATE TABLE students (
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    password_hash VARCHAR(255), -- For student authentication
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -68,6 +69,7 @@ CREATE TABLE interest_rate_history (
 CREATE INDEX idx_students_class_id ON students(class_id);
 CREATE INDEX idx_students_email ON students(email);
 CREATE INDEX idx_students_registro ON students(registro);
+CREATE INDEX idx_students_registro_class ON students(registro, class_id); -- For student authentication
 CREATE INDEX idx_investments_student_id ON investments(student_id);
 CREATE INDEX idx_investments_fecha ON investments(fecha);
 CREATE INDEX idx_investments_student_fecha ON investments(student_id, fecha);
