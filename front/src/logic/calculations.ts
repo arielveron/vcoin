@@ -92,14 +92,8 @@ export const calculateDiasRestantes = (settings: ClassSettings): number => {
   const endDateObj = new Date(settings.end_date.getTime());
   endDateObj.setHours(23, 59, 59, 999);
   
-  // Handle timezone conversion for Argentina (GMT-3)
-  if (settings.timezone && settings.timezone.includes('Argentina')) {
-    endDateObj.setTime(endDateObj.getTime() + (3 * 60 * 60 * 1000)); // Add 3 hours
-  }
-  // Handle timezone conversion for Sao Paulo (GMT-2)
-  else if (settings.timezone && settings.timezone.includes('Sao_Paulo')) {
-    endDateObj.setTime(endDateObj.getTime() + (2 * 60 * 60 * 1000)); // Add 2 hours
-  }
+  // The end_date from the database is already in the class's local timezone
+  // We don't need to adjust it further since we're comparing with local server time
   
   const dias = differenceInDays(endDateObj, today);
   return Math.max(0, dias);
@@ -110,14 +104,9 @@ export const hasReachedEndDate = (settings: ClassSettings): boolean => {
   const endDate = new Date(settings.end_date.getTime());
   endDate.setHours(23, 59, 59, 999);
   
-  // Handle timezone conversion for Argentina (GMT-3)
-  if (settings.timezone && settings.timezone.includes('Argentina')) {
-    endDate.setTime(endDate.getTime() + (3 * 60 * 60 * 1000)); // Add 3 hours
-  }
-  // Handle timezone conversion for Sao Paulo (GMT-2)
-  else if (settings.timezone && settings.timezone.includes('Sao_Paulo')) {
-    endDate.setTime(endDate.getTime() + (2 * 60 * 60 * 1000)); // Add 2 hours
-  }
+  // The end_date from the database is already in the class's local timezone
+  // We don't need to adjust it further since we're comparing with local server time
+  // which should be in the same timezone context
   
   return now >= endDate;
 };
