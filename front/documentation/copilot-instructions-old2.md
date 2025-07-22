@@ -1,6 +1,6 @@
 # VCoin - Investment Tracking Application
 
-VCoin is a Next.js application for tracking student investments with a comprehensive admin panel. It uses PostgreSQL, NextAuth.js v5, and follows a server-first architecture with standardized error handling and authentication patterns.
+VCoin is a Next.js application for tracking student investments with a comprehensive admin panel. It uses PostgreSQL, NextAuth.js v5, and follows a server-first architecture.
 
 ## Architecture Overview
 
@@ -37,9 +37,8 @@ Complex financial calculations in `/src/logic/calculations.ts`:
 
 ### Database Setup
 ```bash
-npm run setup  # Creates tables, sample data, and auth system (includes student auth tables)
+npm run setup  # Creates tables, sample data, and auth system
 npm run db:test  # Verify database connectivity
-npm run db:init  # Alternative database initialization
 ```
 
 ### Key Commands
@@ -56,53 +55,15 @@ npm run db:init  # Alternative database initialization
 
 **Admin Routes** (`/admin/*`):
 - Protected by middleware and session checks
-- Server actions use standardized `withAdminAuth()` wrapper
+- Server actions use `await auth()` directly (most files) or `requireAuth()` helper (classes only)
 - Development mode allows any email, production uses `ADMIN_EMAILS`
+- **Note**: Classes actions use `requireAuth()` helper, other admin actions use direct `auth()` calls
 
 **Student Routes** (`/student/*`):
 - Protected by `StudentSessionService` with cookie-based sessions
-- Server actions use standardized `withStudentAuth()` wrapper
+- Server actions check student authentication via `StudentSessionService.getSession()`
 
 ## Project-Specific Conventions
-
-### Standardized Server Actions
-**All server actions now use consistent patterns:**
-```typescript
-// Import the utilities
-import { withAdminAuth, validateRequired, parseFormNumber } from '@/utils/server-actions'
-
-// Admin actions pattern
-export const createEntity = withAdminAuth(async (formData: FormData) => {
-  const missing = validateRequired(formData, ['field1', 'field2'])
-  if (missing.length > 0) {
-    throw new Error(`Missing required fields: ${missing.join(', ')}`)
-  }
-  
-  const field1 = formData.get('field1') as string
-  const field2 = parseFormNumber(formData, 'field2')
-  
-  return await service.createEntity({ field1, field2 })
-}, 'create entity')
-
-// Student actions pattern  
-export const updateProfile = withStudentAuth(async (formData: FormData) => {
-  // validation and logic here
-  return await service.updateProfile(data)
-}, 'update profile')
-```
-
-**Standard Response Format:**
-```typescript
-// Success response
-{ success: true, data?: any, message?: string }
-
-// Error response  
-{ success: false, error: string, code?: string }
-```
-
-**API Routes** (only for authentication or third-party requirements):
-- `/api/auth/[...nextauth]` - NextAuth.js handlers
-- `/api/auth/student/*` - Student login/logout endpoints
 
 ### Data Types
 - **Dates**: Always use `Date` objects, not strings (PostgreSQL handles conversion)
@@ -119,32 +80,56 @@ export const updateProfile = withStudentAuth(async (formData: FormData) => {
 - Client components: `*-admin-client.tsx` or `*-student-*.tsx`
 - Server actions: `actions.ts` (admin) or `/src/actions/*-actions.ts` (student/investment)
 - Types: Centralized in `/src/types/database.ts`
-- **Utilities**: `/src/utils/server-actions.ts` for standardized patterns
 
-### Standardized Error Handling
-**Consistent patterns across the codebase:**
+### Form Handling
+**Server Actions with FormData** (preferred over API routes):
 ```typescript
-// Server actions automatically handle errors via withAdminAuth/withStudentAuth wrappers
-// Services use try-catch with graceful degradation
+// Admin actions pattern
+export async function createStudent(formData: FormData) {
+  const session = await auth()  // Direct auth check (most files)
+  if (!session) redirect('/admin/auth/signin')
+  // Process formData...
+}
+
+// Student actions pattern  
+export async function updateStudentProfile(formData: FormData) {
+  const session = await StudentSessionService.getSession()
+  if (!session) throw new Error('Not authenticated')
+  // Process formData...
+}
+```
+
+**API Routes** (only for authentication or third-party requirements):
+- `/api/auth/[...nextauth]` - NextAuth.js handlers
+- `/api/auth/student/*` - Student login/logout endpoints
+
+### Error Handling
+**Standard patterns across the codebase:**
+```typescript
+// Server actions pattern
+try {
+  // Process formData, validate inputs
+  const result = await adminService.createEntity(data)
+  return { success: true, result }
+} catch (error) {
+  console.error('Error creating entity:', error)
+  return { success: false, error: 'Failed to create entity' }
+}
+
+// Service layer pattern (ServerDataService)
 try {
   return await this.service.getData()
 } catch (error) {
   console.error('Database error, falling back to pseudo-db:', error)
   return fallbackData
 }
-
-// Client components check result.success
-if (!result.success) {
-  alert(result.error || 'Operation failed')
-  return
-}
 ```
 
 **Key principles:**
-- Server actions return standardized `ActionResult<T>` objects
+- Server actions return `{ success: boolean, error?: string }` objects
 - Services log errors and gracefully degrade (database → pseudo-db fallback)
 - Client components show user-friendly error messages
-- Authentication and validation are handled by wrapper functions
+- Critical operations use try-catch with specific error logging
 
 ## Key Integration Points
 
@@ -165,6 +150,7 @@ if (!result.success) {
 - Auto-reconnection and timeout handling
 - Environment variables for credentials
 - Fallback to pseudo-db for development if PostgreSQL unavailable
+
 
 ### Interest Rate System
 - Historical tracking with effective dates
@@ -209,11 +195,3 @@ Basic translation system in `/src/config/translations.ts` with `es-AR` focus.
 - **Database changes**: Update `/src/scripts/init-database.sql` and run setup
 - **Student password management**: Use admin panel or `StudentAuthService` methods
 - **New admin features**: Create `page.tsx` (server), `*-admin-client.tsx` (client), `actions.ts` (forms)
-- **New server actions**: Use `withAdminAuth()` or `withStudentAuth()` wrappers from `/src/utils/server-actions.ts`
-
-## Documentation Structure
-All documentation files are located in the `/documentation` folder:
-- `ADMIN_COMPLETE.md` - Complete admin panel implementation details
-- `ADMIN_SETUP.md` - Admin panel setup guide  
-- `DATABASE.md` - Database configuration and setup
-- `STUDENT_AUTH_SETUP.md` - Student authentication system details
