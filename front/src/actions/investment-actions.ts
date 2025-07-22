@@ -4,13 +4,6 @@ import { ServerDataService } from '@/services/server-data-service';
 import { calculateMontoActual } from '@/logic/calculations';
 
 export async function getCurrentMonto(studentId: number): Promise<number> {
-  // 🔍 DEBUG: Log the student ID being used
-  console.log('💰 getCurrentMonto called for student:', {
-    timestamp: new Date().toISOString(),
-    studentId,
-    function: 'getCurrentMonto'
-  });
-
   const investments = await ServerDataService.getInvestmentsList(studentId);
   const classSettings = await ServerDataService.getStudentClassSettings(studentId);
   return calculateMontoActual(investments, classSettings);

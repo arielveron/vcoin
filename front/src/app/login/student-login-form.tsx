@@ -105,9 +105,21 @@ export default function StudentLoginForm() {
       normalizedFormData.set('registro', registro);
       normalizedFormData.set('password', password);
 
-      await studentLogin(normalizedFormData);
+      const result = await studentLogin(normalizedFormData);
+      
+      // Check if the result indicates an error
+      if (!result.success) {
+        setError(result.error || 'Login failed');
+        setLoading(false);
+        return;
+      }
+      
       // If successful, studentLogin will redirect to /student
     } catch (error: any) {
+      // Handle any unexpected errors (like redirects)
+      if (error.message && error.message.includes('NEXT_REDIRECT')) {
+        throw error; // Let redirects bubble up
+      }
       setError(error.message || 'Login failed');
     } finally {
       setLoading(false);

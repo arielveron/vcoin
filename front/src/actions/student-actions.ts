@@ -4,84 +4,98 @@ import { redirect } from 'next/navigation'
 import { StudentAuthService } from '@/services/student-auth-service'
 import { SecureStudentSessionService } from '@/services/secure-student-session-service'
 import { LoginThrottleService } from '@/services/login-throttle-service'
-import { withStudentAuth, withErrorHandling, validateRequired } from '@/utils/server-actions'
+import { withStudentAuth, withErrorHandling, validateRequired, ActionResult } from '@/utils/server-actions'
 
-export const studentLogin = withErrorHandling(async (formData: FormData) => {
-  const missing = validateRequired(formData, ['class_id', 'registro', 'password'])
-  if (missing.length > 0) {
-    throw new Error(`Missing required fields: ${missing.join(', ')}`)
-  }
+export const studentLogin = async (formData: FormData): Promise<ActionResult> => {
+  try {
+    const missing = validateRequired(formData, ['class_id', 'registro', 'password'])
+    if (missing.length > 0) {
+      return { success: false, error: `Missing required fields: ${missing.join(', ')}` }
+    }
 
-  const class_id = formData.get('class_id') as string
-  const registro = formData.get('registro') as string
-  const password = formData.get('password') as string
+    const class_id = formData.get('class_id') as string
+    const registro = formData.get('registro') as string
+    const password = formData.get('password') as string
 
-  // Server-side input validation
-  // Validate class_id is only numbers (no decimals, no negatives)
-  if (!/^\d+$/.test(class_id) || class_id.includes('.') || class_id.includes('-')) {
-    console.error(`🚨 INVALID INPUT - ${new Date().toISOString()}: Class ID contains invalid characters: ${class_id}`)
-    throw new Error('Class ID must be a positive integer')
-  }
+    // Server-side input validation
+    // Validate class_id is only numbers (no decimals, no negatives)
+    if (!/^\d+$/.test(class_id) || class_id.includes('.') || class_id.includes('-')) {
+      console.error(`🚨 INVALID INPUT - ${new Date().toISOString()}: Class ID contains invalid characters: ${class_id}`)
+      return { success: false, error: 'Class ID must be a positive integer' }
+    }
 
-  // Validate registro is only numbers (no decimals, no negatives)
-  if (!/^\d+$/.test(registro) || registro.includes('.') || registro.includes('-')) {
-    console.error(`🚨 INVALID INPUT - ${new Date().toISOString()}: Registry contains invalid characters: ${registro}`)
-    throw new Error('Registry Number must be a positive integer')
-  }
+    // Validate registro is only numbers (no decimals, no negatives)
+    if (!/^\d+$/.test(registro) || registro.includes('.') || registro.includes('-')) {
+      console.error(`🚨 INVALID INPUT - ${new Date().toISOString()}: Registry contains invalid characters: ${registro}`)
+      return { success: false, error: 'Registry Number must be a positive integer' }
+    }
 
-  // Convert to numbers and validate they're positive
-  const classIdNum = parseInt(class_id, 10)
-  const registroNum = parseInt(registro, 10)
+    // Convert to numbers and validate they're positive
+    const classIdNum = parseInt(class_id, 10)
+    const registroNum = parseInt(registro, 10)
 
-  if (isNaN(classIdNum) || classIdNum <= 0) {
-    console.error(`🚨 INVALID INPUT - ${new Date().toISOString()}: Class ID is not a positive number: ${class_id}`)
-    throw new Error('Class ID must be a positive number')
-  }
+    if (isNaN(classIdNum) || classIdNum <= 0) {
+      console.error(`🚨 INVALID INPUT - ${new Date().toISOString()}: Class ID is not a positive number: ${class_id}`)
+      return { success: false, error: 'Class ID must be a positive number' }
+    }
 
-  if (isNaN(registroNum) || registroNum <= 0) {
-    console.error(`🚨 INVALID INPUT - ${new Date().toISOString()}: Registry is not a positive number: ${registro}`)
-    throw new Error('Registry Number must be a positive number')
-  }
+    if (isNaN(registroNum) || registroNum <= 0) {
+      console.error(`🚨 INVALID INPUT - ${new Date().toISOString()}: Registry is not a positive number: ${registro}`)
+      return { success: false, error: 'Registry Number must be a positive number' }
+    }
 
-  // Validate password contains only allowed characters
-  if (!/^[a-zA-Z0-9\-\.\+\$\&\/\!\?]+$/.test(password)) {
-    console.error(`🚨 INVALID INPUT - ${new Date().toISOString()}: Password contains invalid characters for class ${class_id}, registro ${registro}`)
-    throw new Error('Password contains invalid characters')
-  }
+    // Validate password contains only allowed characters
+    if (!/^[a-zA-Z0-9\-\.\+\$\&\/\!\?]+$/.test(password)) {
+      console.error(`🚨 INVALID INPUT - ${new Date().toISOString()}: Password contains invalid characters for class ${class_id}, registro ${registro}`)
+      return { success: false, error: 'Password contains invalid characters' }
+    }
 
-  // Create unique identifier for throttling (use normalized numbers)
-  const throttleIdentifier = `${classIdNum}:${registroNum}`
+    // Create unique identifier for throttling (use normalized numbers)
+    const throttleIdentifier = `${classIdNum}:${registroNum}`
 
-  // Authenticate student using normalized numbers
-  const studentSession = await StudentAuthService.authenticateStudent({
-    class_id: classIdNum,
-    registro: registroNum,
-    password
-  })
+    // Authenticate student using normalized numbers
+    const studentSession = await StudentAuthService.authenticateStudent({
+      class_id: classIdNum,
+      registro: registroNum,
+      password
+    })
 
-  if (!studentSession) {
-    // Apply throttling for failed attempt
-    await LoginThrottleService.recordFailedAttempt(throttleIdentifier)
+    if (!studentSession) {
+      // Apply throttling for failed attempt
+      await LoginThrottleService.recordFailedAttempt(throttleIdentifier)
+      
+      // Log failed login attempt with timestamp and credentials used
+      const timestamp = new Date().toISOString()
+      console.error(`🚨 FAILED LOGIN ATTEMPT - ${timestamp}`)
+      console.error(`   Class ID: ${classIdNum}`)
+      console.error(`   Registry: ${registroNum}`)
+      console.error(`   IP: ${process.env.NODE_ENV === 'development' ? 'localhost' : 'production'}`)
+      
+      return { success: false, error: 'Invalid credentials. Please check your Class ID, Registry Number, and Password.' }
+    }
+
+    // Clear throttling on successful login
+    LoginThrottleService.recordSuccessfulAttempt(throttleIdentifier)
+
+    // Create secure session
+    await SecureStudentSessionService.createSession(studentSession)
+
+    // Redirect to student dashboard
+    redirect('/student')
+  } catch (error) {
+    // Handle redirects properly
+    if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+      throw error; // Let redirects bubble up normally
+    }
     
-    // Log failed login attempt with timestamp and credentials used
-    const timestamp = new Date().toISOString()
-    console.error(`🚨 FAILED LOGIN ATTEMPT - ${timestamp}`)
-    console.error(`   Class ID: ${classIdNum}`)
-    console.error(`   Registry: ${registroNum}`)
-    console.error(`   IP: ${process.env.NODE_ENV === 'development' ? 'localhost' : 'production'}`)
-    
-    throw new Error('Invalid credentials. Please check your Class ID, Registry Number, and Password.')
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+    console.error('Error in student login:', error)
+    return { 
+      success: false, 
+      error: errorMessage
+    }
   }
-
-  // Clear throttling on successful login
-  LoginThrottleService.recordSuccessfulAttempt(throttleIdentifier)
-
-  // Create secure session
-  await SecureStudentSessionService.createSession(studentSession)
-
-  // Redirect to student dashboard
-  redirect('/student')
-}, 'student login')
+}
 
 export const studentLogout = withErrorHandling(async () => {
   await SecureStudentSessionService.destroySession()
