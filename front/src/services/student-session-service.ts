@@ -29,19 +29,49 @@ export class StudentSessionService {
       const cookieStore = await cookies();
       const studentIdStr = cookieStore.get(COOKIE_NAME)?.value;
       
+      // 🔍 DEBUG: Log cookie retrieval
+      console.log('🍪 StudentSessionService.getSession called:', {
+        timestamp: new Date().toISOString(),
+        cookieName: COOKIE_NAME,
+        cookieValue: studentIdStr,
+        cookieExists: !!studentIdStr
+      });
+      
       if (!studentIdStr) {
+        console.log('❌ No session cookie found');
         return null;
       }
 
       const studentId = parseInt(studentIdStr);
       if (isNaN(studentId)) {
+        console.log('❌ Invalid student ID in cookie:', studentIdStr);
         return null;
       }
       
+      // 🔍 DEBUG: Log student ID parsing
+      console.log('✅ Parsed student ID from cookie:', {
+        studentId,
+        originalValue: studentIdStr
+      });
+      
       // Get fresh student data from database
       const studentSession = await StudentAuthService.getStudentSession(studentId);
+      
+      // 🔍 DEBUG: Log session data retrieved
+      console.log('📋 Session data retrieved:', {
+        studentId,
+        sessionExists: !!studentSession,
+        sessionData: studentSession ? {
+          student_id: studentSession.student_id,
+          name: studentSession.name,
+          registro: studentSession.registro,
+          class_id: studentSession.class_id
+        } : null
+      });
+      
       return studentSession;
     } catch (error) {
+      console.error('❌ Error in getSession:', error);
       // Invalid session or student not found
       return null;
     }

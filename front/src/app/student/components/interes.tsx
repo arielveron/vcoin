@@ -6,10 +6,10 @@ import InterestRateGraph from "./interest-rate-graph";
 
 interface InteresProps {
   classSettings: ClassSettings;
-  studentId?: number;
+  studentId: number; // Required student ID
 }
 
-export default async function Interes({ classSettings, studentId = 1 }: InteresProps) {
+export default async function Interes({ classSettings, studentId }: InteresProps) {
   // Get current rate and rate change information
   const classId = await ServerDataService.getStudentClassId(studentId);
   const currentRate = await ServerDataService.getCurrentInterestRate(classId);

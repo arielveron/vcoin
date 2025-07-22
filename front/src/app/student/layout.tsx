@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { StudentSessionService } from '@/services/student-session-service';
-import StudentNav from './components/student-nav';
+import StudentNav from '@/app/student/components/student-nav';
 
 export default async function StudentLayout({
   children,

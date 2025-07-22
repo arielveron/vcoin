@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react";
-import Footer from "@/app/components/footer";
+import Footer from "@/app/student/components/footer";
 
 function calculateRates({ value, type }: { value: number; type: "mensual" | "anual" | "diaria" | "segundos" }) {
   let mensual = 0,

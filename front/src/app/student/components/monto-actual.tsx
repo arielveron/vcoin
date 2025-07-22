@@ -8,9 +8,10 @@ interface MontoActualProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   montoActual: number; // Initial amount from server
   classSettings: ClassSettings; // Class-specific settings
+  studentId: number; // Student ID for fetching updates
 }
 
-export default function MontoActual({ montoActual: initialMonto, classSettings, className, ...props }: MontoActualProps) {
+export default function MontoActual({ montoActual: initialMonto, classSettings, studentId, className, ...props }: MontoActualProps) {
   // Check if we've reached the end date using class settings
   const hasReachedEndDate = () => {
     const now = new Date();
@@ -34,6 +35,7 @@ export default function MontoActual({ montoActual: initialMonto, classSettings, 
   const montoObjetivoRef = useRef(initialMonto);
   const animacionRef = useRef<number | null>(null);
   const [enAnimacion, setEnAnimacion] = useState(false);
+  
 
   const animarHaciaValor = (valorInicial: number, valorFinal: number) => {
     if (animacionRef.current) {
@@ -82,8 +84,8 @@ export default function MontoActual({ montoActual: initialMonto, classSettings, 
       }
 
       try {
-        // Fetch fresh data from server
-        const nuevoMonto = await getCurrentMonto();
+        // Fetch fresh data from server with correct student ID
+        const nuevoMonto = await getCurrentMonto(studentId);
         const montoAnterior = montoObjetivoRef.current;
         
         if (Math.abs(nuevoMonto - montoAnterior) > 0.00001) {

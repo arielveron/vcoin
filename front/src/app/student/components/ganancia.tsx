@@ -6,10 +6,10 @@ import HistoricalGainsGraph from "./historical-gains-graph";
 
 interface GananciaProps {
   gananciaTotal: number;
-  studentId?: number;
+  studentId: number; // Required student ID
 }
 
-export default async function Ganancia({ gananciaTotal, studentId = 1 }: GananciaProps) {
+export default async function Ganancia({ gananciaTotal, studentId }: GananciaProps) {
   // Get historical amounts for the ganancia total graph - shows what amounts would have looked like at each date
   // This shows the "current evaluation" effect where rate changes cause historical values to spike up or drop down
   const historicalData = await ServerDataService.getHistoricalAmountsWithCurrentRate(studentId);

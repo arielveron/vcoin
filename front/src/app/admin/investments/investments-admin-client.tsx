@@ -37,15 +37,7 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
   const handleCreateInvestment = async (formData: FormData) => {
     setIsSubmitting(true)
     try {
-      console.log('Form data:', {
-        student_id: formData.get('student_id'),
-        fecha: formData.get('fecha'),
-        monto: formData.get('monto'),
-        concepto: formData.get('concepto')
-      })
-      
       const result = await createInvestment(formData)
-      console.log('Create result:', result)
       
       if (result.success && result.data) {
         setShowCreateForm(false)

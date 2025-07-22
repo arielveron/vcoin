@@ -1,9 +1,9 @@
 import React from "react";
-import MontoActual from "@/app/components/monto-actual";
-import Interes from "@/app/components/interes";
-import Ganancia from "@/app/components/ganancia";
-import Estimado from "@/app/components/estimado";
-import ListInvertidos from "@/app/components/list-invertidos";
+import MontoActual from "./monto-actual";
+import Interes from "./interes";
+import Ganancia from "./ganancia";
+import Estimado from "./estimado";
+import ListInvertidos from "./list-invertidos";
 import { ServerDataService } from "@/services/server-data-service";
 
 interface StudentMainScreenProps {
@@ -28,6 +28,7 @@ export default async function StudentMainScreen({ studentId }: StudentMainScreen
         className="col-span-2" 
         montoActual={montoActual}
         classSettings={classSettings}
+        studentId={studentId}
       />
       <Interes 
         classSettings={classSettings}

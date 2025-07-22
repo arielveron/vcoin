@@ -34,7 +34,7 @@ export class ServerDataService {
     }
   }
 
-  static async getTotalInvested(studentId: number = 1): Promise<number> {
+  static async getTotalInvested(studentId: number): Promise<number> {
     const dbAvailable = await this.checkDatabaseAvailability();
     
     if (dbAvailable && this.service) {
@@ -51,7 +51,7 @@ export class ServerDataService {
       .reduce((acc, fondo) => acc + fondo.monto, 0);
   }
 
-  static async getInvestmentsList(studentId: number = 1) {
+  static async getInvestmentsList(studentId: number) {
     const dbAvailable = await this.checkDatabaseAvailability();
     
     if (dbAvailable && this.service) {
@@ -307,7 +307,8 @@ export class ServerDataService {
 
       // Use the standard calculation with current rate applied to ENTIRE investment period
       const { calculateMontoActual } = await import('@/logic/calculations');
-      return calculateMontoActual(investments, currentClassSettings);
+      const result = calculateMontoActual(investments, currentClassSettings);
+      return result;
     } catch (error) {
       console.error('Error calculating monto actual with current rate:', error);
       // Fallback to calculation with class settings
