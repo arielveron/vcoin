@@ -19,6 +19,9 @@ export class SecureStudentSessionService {
   static async createSession(studentSession: StudentSession): Promise<void> {
     const cookieStore = await cookies();
     
+    // Always clear any existing session first (including legacy sessions)
+    cookieStore.delete(COOKIE_NAME);
+    
     // Create signed session data
     const sessionData: SecureSessionData = {
       studentId: studentSession.student_id,
@@ -36,8 +39,6 @@ export class SecureStudentSessionService {
       maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
       path: '/'
     });
-    
-    console.log('🔐 Secure session created for student:', studentSession.student_id);
   }
 
   /**
@@ -48,62 +49,38 @@ export class SecureStudentSessionService {
       const cookieStore = await cookies();
       const encryptedData = cookieStore.get(COOKIE_NAME)?.value;
       
-      console.log('🍪 SecureStudentSessionService.getSession called:', {
-        timestamp: new Date().toISOString(),
-        cookieExists: !!encryptedData
-      });
-      
       if (!encryptedData) {
-        console.log('❌ No session cookie found');
         return null;
       }
 
       // Decrypt and validate session data
       const sessionData = this.decryptSessionData(encryptedData);
       if (!sessionData) {
-        console.log('❌ Invalid session data - destroying session');
-        await this.destroySession();
         return null;
       }
 
       // Validate signature
       const expectedSignature = this.createSignature(sessionData.studentId, sessionData.timestamp);
       if (sessionData.signature !== expectedSignature) {
-        console.log('❌ Session signature validation failed - destroying session');
-        await this.destroySession();
         return null;
       }
 
       // Check session age (7 days max)
       const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
       if (Date.now() - sessionData.timestamp > maxAge) {
-        console.log('❌ Session expired - destroying session');
-        await this.destroySession();
         return null;
       }
-      
-      console.log('✅ Valid session found for student:', sessionData.studentId);
       
       // Get fresh student data from database
       const studentSession = await StudentAuthService.getStudentSession(sessionData.studentId);
       
       if (!studentSession) {
-        console.log('❌ Student not found in database - destroying session');
-        await this.destroySession();
         return null;
       }
       
-      console.log('📋 Session data retrieved:', {
-        student_id: studentSession.student_id,
-        name: studentSession.name,
-        registro: studentSession.registro,
-        class_id: studentSession.class_id
-      });
-      
       return studentSession;
     } catch (error) {
-      console.error('❌ Error in getSession:', error);
-      await this.destroySession();
+      // Cannot destroy session from page components - user will need to log in again
       return null;
     }
   }
@@ -114,15 +91,56 @@ export class SecureStudentSessionService {
   static async destroySession(): Promise<void> {
     const cookieStore = await cookies();
     cookieStore.delete(COOKIE_NAME);
-    console.log('🗑️ Session destroyed');
+  }
+
+  /**
+   * Check if there's an invalid session that needs clearing
+   * This method only reads, doesn't modify cookies
+   */
+  static async hasInvalidSession(): Promise<boolean> {
+    try {
+      const cookieStore = await cookies();
+      const encryptedData = cookieStore.get(COOKIE_NAME)?.value;
+      
+      if (!encryptedData) {
+        return false; // No session cookie = no invalid session
+      }
+
+      // Try to decrypt and validate
+      const sessionData = this.decryptSessionData(encryptedData);
+      if (!sessionData) {
+        return true; // Can't decrypt = invalid session
+      }
+
+      // Validate signature
+      const expectedSignature = this.createSignature(sessionData.studentId, sessionData.timestamp);
+      if (sessionData.signature !== expectedSignature) {
+        return true; // Invalid signature = invalid session
+      }
+
+      // Check if expired
+      const maxAge = 7 * 24 * 60 * 60 * 1000;
+      if (Date.now() - sessionData.timestamp > maxAge) {
+        return true; // Expired = invalid session
+      }
+
+      return false; // Session is valid
+    } catch (error) {
+      return true; // Any error = treat as invalid session
+    }
   }
 
   /**
    * Check if there's an active student session
    */
   static async hasActiveSession(): Promise<boolean> {
-    const session = await this.getSession();
-    return session !== null;
+    try {
+      const session = await this.getSession();
+      return session !== null;
+    } catch (error) {
+      // If there's any error reading the session, treat as no active session
+      return false;
+    }
   }
 
   /**
@@ -134,26 +152,47 @@ export class SecureStudentSessionService {
   }
 
   /**
-   * Encrypt session data
+   * Encrypt session data using AES-256-GCM
    */
   private static encryptSessionData(data: SecureSessionData): string {
-    const cipher = crypto.createCipher('aes-256-cbc', SESSION_SECRET);
+    const algorithm = 'aes-256-gcm';
+    const key = crypto.scryptSync(SESSION_SECRET, 'salt', 32);
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+    
     let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    return encrypted;
+    
+    const authTag = cipher.getAuthTag();
+    
+    return iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted;
   }
 
   /**
-   * Decrypt session data
+   * Decrypt session data using AES-256-GCM
    */
   private static decryptSessionData(encryptedData: string): SecureSessionData | null {
     try {
-      const decipher = crypto.createDecipher('aes-256-cbc', SESSION_SECRET);
-      let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+      const parts = encryptedData.split(':');
+      if (parts.length !== 3) {
+        return null;
+      }
+      
+      const [ivHex, authTagHex, encrypted] = parts;
+      
+      const algorithm = 'aes-256-gcm';
+      const key = crypto.scryptSync(SESSION_SECRET, 'salt', 32);
+      const iv = Buffer.from(ivHex, 'hex');
+      const authTag = Buffer.from(authTagHex, 'hex');
+      
+      const decipher = crypto.createDecipheriv(algorithm, key, iv);
+      decipher.setAuthTag(authTag);
+      
+      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
       decrypted += decipher.final('utf8');
+      
       return JSON.parse(decrypted);
     } catch (error) {
-      console.error('❌ Failed to decrypt session data:', error);
       return null;
     }
   }

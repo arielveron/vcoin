@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { StudentSessionService } from '@/services/student-session-service';
+import { SecureStudentSessionService } from '@/services/secure-student-session-service';
 import StudentNav from '@/app/student/components/student-nav';
 
 export default async function StudentLayout({
@@ -7,7 +7,7 @@ export default async function StudentLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await StudentSessionService.getSession();
+  const session = await SecureStudentSessionService.getSession();
   
   if (!session) {
     redirect('/login');

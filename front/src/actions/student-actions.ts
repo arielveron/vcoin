@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { StudentAuthService } from '@/services/student-auth-service'
-import { StudentSessionService } from '@/services/student-session-service'
+import { SecureStudentSessionService } from '@/services/secure-student-session-service'
 import { LoginThrottleService } from '@/services/login-throttle-service'
 import { withStudentAuth, withErrorHandling, validateRequired } from '@/utils/server-actions'
 
@@ -76,20 +76,25 @@ export const studentLogin = withErrorHandling(async (formData: FormData) => {
   // Clear throttling on successful login
   LoginThrottleService.recordSuccessfulAttempt(throttleIdentifier)
 
-  // Create session
-  await StudentSessionService.createSession(studentSession)
+  // Create secure session
+  await SecureStudentSessionService.createSession(studentSession)
 
   // Redirect to student dashboard
   redirect('/student')
 }, 'student login')
 
 export const studentLogout = withErrorHandling(async () => {
-  await StudentSessionService.destroySession()
+  await SecureStudentSessionService.destroySession()
   redirect('/login')
 }, 'student logout')
 
+export const clearInvalidSession = withErrorHandling(async () => {
+  await SecureStudentSessionService.destroySession()
+  // Don't redirect, just clear the session
+}, 'clear invalid session')
+
 export const updateStudentProfile = withStudentAuth(async (formData: FormData) => {
-  const session = await StudentSessionService.getSession()
+  const session = await SecureStudentSessionService.getSession()
   if (!session) {
     throw new Error('Not authenticated')
   }

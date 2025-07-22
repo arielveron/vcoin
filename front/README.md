@@ -1,6 +1,6 @@
 # VCoin - Investment Tracking Application
 
-A Next.js application for tracking student investments with an admin panel.
+A Next.js application for tracking student investments with dual authentication and encrypted sessions.
 
 ## 🚀 Quick Setup
 
@@ -9,7 +9,21 @@ A Next.js application for tracking student investments with an admin panel.
 npm install
 ```
 
-### 2. Setup Database & Admin Panel
+### 2. Environment Configuration
+Copy `.env.example` to `.env.local` and configure:
+
+**REQUIRED**: Generate a secure session key:
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+Add to `.env.local`:
+```bash
+SESSION_SECRET=your-generated-64-byte-hex-key
+# ... other environment variables from .env.example
+```
+
+### 3. Setup Database & Admin Panel
 ```bash
 npm run setup
 ```
@@ -17,6 +31,7 @@ This single command creates:
 - VCoin database tables (classes, students, investments, interest rates)
 - Sample data for testing
 - Admin authentication system
+- Secure student authentication system
 
 ### 3. Configure Environment
 Copy `.env.example` to `.env.local` and configure:
@@ -74,6 +89,31 @@ src/
 ├── types/              # TypeScript types
 └── config/             # Database config
 ```
+
+## 🔐 Security
+
+### Session Security
+VCoin uses encrypted sessions with HMAC signatures for student authentication. This prevents session tampering and ensures data isolation between students.
+
+**Required Environment Variables:**
+```bash
+# Add to your .env.local
+SESSION_SECRET=your-256-bit-secret-key
+```
+
+**Generate a secure session secret:**
+```bash
+# Option 1: Using Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Option 2: Using OpenSSL
+openssl rand -hex 32
+```
+
+### Authentication Systems
+- **Admin Panel**: NextAuth.js with Google OAuth2
+- **Students**: Secure bcrypt + encrypted sessions
+- **Data Isolation**: Each student can only access their own investment data
 
 ## Learn More
 

@@ -52,7 +52,7 @@ npm run db:init  # Alternative database initialization
 ### Authentication Flow
 **Dual Authentication System:**
 - **Admin Auth**: NextAuth.js v5 with Google OAuth + email whitelist
-- **Student Auth**: Custom bcrypt-based system with class_id/registro/password
+- **Student Auth**: Secure bcrypt-based system with encrypted sessions
 
 **Admin Routes** (`/admin/*`):
 - Protected by middleware and session checks
@@ -60,8 +60,9 @@ npm run db:init  # Alternative database initialization
 - Development mode allows any email, production uses `ADMIN_EMAILS`
 
 **Student Routes** (`/student/*`):
-- Protected by `StudentSessionService` with cookie-based sessions
+- Protected by `SecureStudentSessionService` with encrypted, signed sessions
 - Server actions use standardized `withStudentAuth()` wrapper
+- Sessions are tamper-proof with HMAC signatures and automatic expiration
 
 ## Project-Specific Conventions
 
@@ -236,9 +237,10 @@ if (!result.success) {
 - Session-based with database storage
 
 **Student Authentication:**
+- Secure encrypted sessions with HMAC signatures
 - Custom bcrypt system (12 salt rounds)
 - Login throttling with exponential backoff
-- Cookie-based sessions with `StudentSessionService`
+- Tamper-proof sessions with `SecureStudentSessionService`
 - Password management by admins, profile updates by students
 
 ### Database Connection
@@ -246,6 +248,12 @@ if (!result.success) {
 - Auto-reconnection and timeout handling
 - Environment variables for credentials
 - Fallback to pseudo-db for development if PostgreSQL unavailable
+
+### Session Security
+- **Encrypted Sessions**: AES-256-CBC encryption for session data
+- **HMAC Authentication**: SHA-256 signatures prevent tampering
+- **Automatic Expiration**: 7-day session lifetime with timestamp validation
+- **Secure Environment**: `SESSION_SECRET` required for encryption key
 
 ### Interest Rate System
 - Historical tracking with effective dates
@@ -264,7 +272,13 @@ Custom hook `useAdminFilters` for cross-page state:
 - Input validation and normalization (01 → 1)
 - Login throttling with exponential backoff (1s → 30s max)
 - Comprehensive security logging for failed attempts
-- Session creation via `StudentSessionService`
+- Secure session creation via `SecureStudentSessionService`
+
+**Session Security:**
+- Encrypted session data (AES-256-CBC) prevents cookie manipulation
+- HMAC-SHA256 signatures detect tampering attempts
+- Automatic session destruction on invalid/expired sessions
+- Database verification on every session validation
 
 **Password Management:**
 - Admins set initial passwords via admin panel

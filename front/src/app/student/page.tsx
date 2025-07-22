@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
-import { StudentSessionService } from '@/services/student-session-service';
+import { SecureStudentSessionService } from '@/services/secure-student-session-service';
 import StudentMainScreen from './components/student-main-screen';
 
 export default async function StudentPage() {
-  const session = await StudentSessionService.getSession();
+  const session = await SecureStudentSessionService.getSession();
   
   if (!session) {
     redirect('/login');

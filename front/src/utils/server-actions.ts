@@ -5,7 +5,7 @@
 
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
-import { StudentSessionService } from '@/services/student-session-service'
+import { SecureStudentSessionService } from '@/services/secure-student-session-service'
 
 // Standard response types for server actions
 export interface ActionSuccess<T = any> {
@@ -32,7 +32,7 @@ export async function requireAdminAuth() {
 }
 
 export async function requireStudentAuth() {
-  const session = await StudentSessionService.getSession()
+  const session = await SecureStudentSessionService.getSession()
   if (!session) {
     throw new Error('Authentication required')
   }
@@ -49,6 +49,11 @@ export function withErrorHandling<T extends any[], R>(
       const result = await action(...args)
       return { success: true, data: result }
     } catch (error) {
+      // Don't log NEXT_REDIRECT as an error - it's expected behavior
+      if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+        throw error; // Let redirects bubble up normally
+      }
+      
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
       console.error(`Error in ${context}:`, error)
       return { 

@@ -20,9 +20,13 @@ This will create all tables including the `password_hash` field in the students 
 
 ## Environment Variables
 
-The system supports optional throttling configuration in `.env.local`:
+The system requires the following configuration in `.env.local`:
 
 ```bash
+# Student Session Security (REQUIRED)
+# Generate with: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+SESSION_SECRET=your-secure-random-64-byte-hex-key
+
 # Login Throttling Configuration (optional)
 LOGIN_THROTTLE_MIN_DELAY=1000          # Minimum delay in ms (default: 1000)
 LOGIN_THROTTLE_MAX_DELAY=30000         # Maximum delay in ms (default: 30000)  
@@ -31,7 +35,12 @@ LOGIN_THROTTLE_RESET_TIME=300000       # Reset time in ms (default: 300000)
 LOGIN_THROTTLE_CLEANUP_INTERVAL=60000  # Cleanup interval in ms (default: 60000)
 ```
 
-If not configured, secure defaults are used automatically.
+**IMPORTANT**: The `SESSION_SECRET` is required for secure session encryption. Generate a secure random key using:
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+If not configured, throttling uses secure defaults automatically.
 
 ## How It Works
 
@@ -81,10 +90,20 @@ If not configured, secure defaults are used automatically.
   - Progressive delays: 1s → 2s → 4s → 8s → 16s → 30s (max)
   - Memory-protected against DDoS attacks (max 10,000 tracked attempts)
   - Automatic cleanup of expired attempts
-- **Session Security**: Simple cookie sessions (no JWT complexity)
+- **Secure Sessions**: Encrypted, signed sessions with tamper detection
+  - **AES-256-CBC Encryption**: Session data is encrypted before storage
+  - **HMAC-SHA256 Signatures**: Detects any cookie tampering attempts
+  - **Automatic Expiration**: Sessions expire after 7 days with timestamp validation
+  - **Tamper Protection**: Any modification destroys the session immediately
 - **Enhanced Logging**: Comprehensive security logging for failed attempts
 - **Data Isolation**: Students can only see their own data
 - **Admin Controls**: Only admins can create/delete student accounts
+
+### Session Security Details
+- **Cookie Manipulation Protection**: Sessions cannot be modified to access other accounts
+- **Signature Validation**: Each session is cryptographically signed
+- **Database Verification**: Valid sessions are verified against the database
+- **Automatic Cleanup**: Invalid or expired sessions are destroyed immediately
 
 ### Anti-DDoS Protection
 - **Memory Limits**: Max 10,000 concurrent failed login attempts tracked
@@ -127,13 +146,16 @@ The system follows Next.js best practices:
 ## Key Benefits
 
 ✅ **Simple**: No JWT complexity, uses standard Next.js patterns  
-✅ **Secure**: Password hashing, input validation, and anti-brute force protection  
+✅ **Secure**: Encrypted sessions with HMAC signatures prevent tampering
+✅ **Tamper-Proof**: Cookie manipulation automatically destroys sessions
 ✅ **User-friendly**: Real-time validation, visual feedback, and smart number handling  
 ✅ **DDoS-resistant**: Memory-protected throttling system  
-✅ **Isolated**: Students only see their own data  
+✅ **Isolated**: Students only see their own data with database verification
 ✅ **Admin-controlled**: Only admins can manage student accounts  
 ✅ **Production-ready**: Comprehensive logging and monitoring  
 ✅ **Maintainable**: Server actions instead of API routes  
+✅ **Scalable**: Encrypted sessions with efficient validation
+✅ **Configurable**: Environment variables for security settings  
 ✅ **Scalable**: Cookie-based sessions with efficient throttling  
 ✅ **Configurable**: Environment variables for fine-tuning security settings  
 
