@@ -50,7 +50,7 @@ export class ClassRepository {
     const client = await pool.connect();
     try {
       const updates: string[] = [];
-      const values: (string | number | undefined)[] = [];
+      const values: (string | number | Date | undefined)[] = [];
       let paramCount = 1;
 
       if (data.name !== undefined) {
@@ -63,6 +63,16 @@ export class ClassRepository {
         values.push(data.description);
       }
 
+      if (data.end_date !== undefined) {
+        updates.push(`end_date = $${paramCount++}`);
+        values.push(data.end_date);
+      }
+
+      if (data.timezone !== undefined) {
+        updates.push(`timezone = $${paramCount++}`);
+        values.push(data.timezone);
+      }
+
       if (updates.length === 0) {
         return this.findById(id);
       }
@@ -70,7 +80,7 @@ export class ClassRepository {
       values.push(id);
       const result = await client.query(`
         UPDATE classes 
-        SET ${updates.join(', ')} 
+        SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP 
         WHERE id = $${paramCount} 
         RETURNING id, name, description, end_date, timezone, created_at, updated_at
       `, values);

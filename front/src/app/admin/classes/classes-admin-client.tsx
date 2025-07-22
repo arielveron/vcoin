@@ -11,10 +11,9 @@ interface ClassesAdminClientProps {
 }
 
 export default function ClassesAdminClient({ initialClasses }: ClassesAdminClientProps) {
-  const [classes] = useState<Class[]>(initialClasses)
+  const [classes, setClasses] = useState<Class[]>(initialClasses)
   const [showForm, setShowForm] = useState(false)
   const [editingClass, setEditingClass] = useState<Class | null>(null)
-  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<CreateClassRequest>({
     name: '',
     description: '',
@@ -22,49 +21,6 @@ export default function ClassesAdminClient({ initialClasses }: ClassesAdminClien
     timezone: 'America/Argentina/Buenos_Aires'
   })
   const router = useRouter()
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    
-    try {
-      const formDataToSubmit = new FormData()
-      formDataToSubmit.append('name', formData.name)
-      formDataToSubmit.append('description', formData.description || '')
-      formDataToSubmit.append('end_date', formData.end_date instanceof Date ? formData.end_date.toISOString().split('T')[0] : String(formData.end_date))
-      formDataToSubmit.append('timezone', formData.timezone)
-
-      let result
-      if (editingClass) {
-        formDataToSubmit.append('id', editingClass.id.toString())
-        result = await updateClass(formDataToSubmit)
-      } else {
-        result = await createClass(formDataToSubmit)
-      }
-
-      if (!result.success) {
-        alert(result.error || 'Error saving class. Please try again.')
-        return
-      }
-
-      setShowForm(false)
-      setEditingClass(null)
-      setFormData({
-        name: '',
-        description: '',
-        end_date: new Date(),
-        timezone: 'America/Argentina/Buenos_Aires'
-      })
-      
-      // Refresh the page to get updated data
-      router.refresh()
-    } catch (error) {
-      console.error('Error saving class:', error)
-      alert('Error saving class. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleEdit = (classItem: Class) => {
     setEditingClass(classItem)
@@ -77,28 +33,69 @@ export default function ClassesAdminClient({ initialClasses }: ClassesAdminClien
     setShowForm(true)
   }
 
+  const handleCreateClass = async (formData: FormData) => {
+    try {
+      const result = await createClass(formData)
+      if (result.success && result.data) {
+        setClasses([...classes, result.data])
+        setShowForm(false)
+        setEditingClass(null)
+        setFormData({
+          name: '',
+          description: '',
+          end_date: new Date(),
+          timezone: 'America/Argentina/Buenos_Aires'
+        })
+      } else if (!result.success) {
+        alert(result.error || 'Failed to create class')
+      }
+    } catch {
+      alert('Failed to create class')
+    }
+  }
+
+  const handleUpdateClass = async (formData: FormData) => {
+    if (!editingClass) return
+    
+    try {
+      console.log('Submitting update for class:', editingClass.id)
+      const result = await updateClass(editingClass.id, formData)
+      console.log('Update result:', result)
+      
+      if (result.success && result.data) {
+        setClasses(classes.map(c => 
+          c.id === editingClass.id ? result.data! : c
+        ))
+        setShowForm(false)
+        setEditingClass(null)
+        setFormData({
+          name: '',
+          description: '',
+          end_date: new Date(),
+          timezone: 'America/Argentina/Buenos_Aires'
+        })
+      } else if (!result.success) {
+        alert(result.error || 'Failed to update class')
+      }
+    } catch (error) {
+      console.error('Error updating class:', error)
+      alert('Failed to update class')
+    }
+  }
+
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this class?')) return
 
-    setLoading(true)
     try {
-      const formData = new FormData()
-      formData.append('id', id.toString())
+      const result = await deleteClass(id)
       
-      const result = await deleteClass(formData)
-      
-      if (!result.success) {
-        alert(result.error || 'Error deleting class. Please try again.')
-        return
+      if (result.success) {
+        setClasses(classes.filter(c => c.id !== id))
+      } else if (!result.success) {
+        alert(result.error || 'Failed to delete class')
       }
-      
-      // Refresh the page to get updated data
-      router.refresh()
-    } catch (error) {
-      console.error('Error deleting class:', error)
-      alert('Error deleting class. Please try again.')
-    } finally {
-      setLoading(false)
+    } catch {
+      alert('Failed to delete class')
     }
   }
 
@@ -117,8 +114,7 @@ export default function ClassesAdminClient({ initialClasses }: ClassesAdminClien
               timezone: 'America/Argentina/Buenos_Aires'
             })
           }}
-          disabled={loading}
-          className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-4 py-2 rounded-md text-sm font-medium"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
         >
           Add New Class
         </button>
@@ -164,15 +160,13 @@ export default function ClassesAdminClient({ initialClasses }: ClassesAdminClien
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button
                     onClick={() => handleEdit(classItem)}
-                    disabled={loading}
-                    className="text-indigo-600 hover:text-indigo-900 disabled:text-indigo-400 mr-4"
+                    className="text-indigo-600 hover:text-indigo-900 mr-4"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(classItem.id)}
-                    disabled={loading}
-                    className="text-red-600 hover:text-red-900 disabled:text-red-400"
+                    className="text-red-600 hover:text-red-900"
                   >
                     Delete
                   </button>
@@ -190,47 +184,43 @@ export default function ClassesAdminClient({ initialClasses }: ClassesAdminClien
             <h3 className="text-lg font-bold text-gray-900 mb-4">
               {editingClass ? 'Edit Class' : 'Add New Class'}
             </h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form action={editingClass ? handleUpdateClass : handleCreateClass} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Name</label>
                 <input
                   type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  name="name"
+                  defaultValue={formData.name}
                   className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                   required
-                  disabled={loading}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Description</label>
                 <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  name="description"
+                  defaultValue={formData.description}
                   className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                   rows={3}
-                  disabled={loading}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">End Date</label>
                 <input
                   type="date"
-                  value={formData.end_date instanceof Date ? formData.end_date.toISOString().split('T')[0] : formData.end_date}
-                  onChange={(e) => setFormData({ ...formData, end_date: new Date(e.target.value) })}
+                  name="end_date"
+                  defaultValue={formData.end_date instanceof Date ? formData.end_date.toISOString().split('T')[0] : formData.end_date}
                   className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                   required
-                  disabled={loading}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Timezone</label>
                 <select
-                  value={formData.timezone}
-                  onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+                  name="timezone"
+                  defaultValue={formData.timezone}
                   className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                   required
-                  disabled={loading}
                 >
                   <option value="America/Argentina/Buenos_Aires">America/Argentina/Buenos_Aires</option>
                   <option value="America/Sao_Paulo">America/Sao_Paulo</option>
@@ -242,17 +232,15 @@ export default function ClassesAdminClient({ initialClasses }: ClassesAdminClien
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  disabled={loading}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 disabled:bg-gray-100"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400"
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
                 >
-                  {loading ? 'Saving...' : (editingClass ? 'Update' : 'Create')}
+                  {editingClass ? 'Update' : 'Create'}
                 </button>
               </div>
             </form>

@@ -119,6 +119,12 @@ export function parseFormFloat(formData: FormData, field: string): number {
 
 export function parseFormDate(formData: FormData, field: string): Date {
   const value = formData.get(field) as string
+  // For date inputs (YYYY-MM-DD), create date in local timezone to avoid offset issues
+  if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [year, month, day] = value.split('-').map(Number)
+    return new Date(year, month - 1, day) // month is 0-indexed
+  }
+  // For other date formats, use standard parsing
   const date = new Date(value)
   if (isNaN(date.getTime())) {
     throw new Error(`Invalid date for field: ${field}`)

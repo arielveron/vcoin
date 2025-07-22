@@ -22,7 +22,7 @@ export default async function StudentMainScreen({ studentId }: StudentMainScreen
   const montoEstimado = await ServerDataService.calculateMontoEstimado(studentId);
 
   return (
-    <div className="grid grid-cols-2 gap-4 items-start justify-center p-8 bg-gray-100 rounded-lg shadow-lg w-full max-w-md">
+    <div className="grid grid-cols-2 gap-4 items-start justify-center px-2 py-8 bg-gray-100 rounded-lg shadow-lg w-full max-w-md">
       <div className='col-span-2 text-gray-700 font-bold text-center [family-name:var(--font-geist-mono)]'>VCOIN</div>
       <MontoActual 
         className="col-span-2" 

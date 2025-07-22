@@ -10,7 +10,7 @@ export default async function StudentPage() {
   }
 
   return (
-    <div className="grid grid-rows-[1fr_20px] items-center justify-items-center min-h-[calc(100vh-4rem)] p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+    <div className="grid grid-rows-[1fr_20px] items-center justify-items-center min-h-[calc(100vh-4rem)] p-2 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-1 items-center sm:items-start">
         <StudentMainScreen studentId={session.student_id} />
       </main>
