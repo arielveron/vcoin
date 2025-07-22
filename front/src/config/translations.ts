@@ -135,10 +135,15 @@ export const translations = {
 // Helper function to replace placeholders in translation strings
 export function t(key: string, replacements?: Record<string, string>): string {
   const keys = key.split('.')
-  let value = translations as any
+  let value: unknown = translations
   
   for (const k of keys) {
-    value = value?.[k]
+    if (value && typeof value === 'object' && k in value) {
+      value = (value as Record<string, unknown>)[k]
+    } else {
+      value = undefined
+      break
+    }
   }
   
   if (typeof value !== 'string') {

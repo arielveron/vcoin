@@ -163,7 +163,7 @@ export const calculateMontoAFechaWithHistory = async (
   investments: InvestmentItem[], 
   classId: number,
   getRateForDate: (classId: number, date: Date) => Promise<number>,
-  rateHistory?: any[] // Pass rate history to avoid repeated calls
+  rateHistory?: { effective_date: Date; monthly_interest_rate: number }[] // Pass rate history to avoid repeated calls
 ): Promise<number> => {
   if (!investments || investments.length === 0) {
     return 0; // No investments found
@@ -177,7 +177,7 @@ export const calculateMontoAFechaWithHistory = async (
     
     // More efficient calculation by applying rates in chunks between rate change dates
     let currentAmount = item.monto;
-    let periodStart = new Date(item.fecha);
+    const periodStart = new Date(item.fecha);
     
     // Get all rate change dates between investment date and target date
     // If rateHistory is provided, use it; otherwise get rates day by day

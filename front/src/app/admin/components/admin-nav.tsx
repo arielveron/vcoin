@@ -2,6 +2,7 @@
 
 import { signOut } from "next-auth/react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useAdminFilters } from '@/hooks/useAdminFilters'
@@ -16,7 +17,7 @@ const navigation = [
 ]
 
 export default function AdminNav() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ name?: string; email?: string; image?: string } | null>(null)
   const pathname = usePathname()
   const { getUrlWithFilters } = useAdminFilters()
 
@@ -60,10 +61,12 @@ export default function AdminNav() {
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
-              <img
+              <Image
                 className="h-8 w-8 rounded-full"
-                src={user?.image || ''}
+                src={user?.image || '/default-avatar.png'}
                 alt=""
+                width={32}
+                height={32}
               />
               <div className="hidden sm:block">
                 <p className="text-sm font-medium text-gray-700">

@@ -4,19 +4,16 @@ import { useState } from 'react'
 import { Class, CreateClassRequest } from '@/types/database'
 import { useRouter } from 'next/navigation'
 import { createClass, updateClass, deleteClass } from '@/app/admin/classes/actions'
-import { WithFormattedDates } from '@/utils/format-dates'
-
-// Client-side version with formatted dates - using the hybrid approach
-type ClassForClient = WithFormattedDates<Class, 'end_date' | 'created_at' | 'updated_at'>
+import { formatDate } from '@/utils/format'
 
 interface ClassesAdminClientProps {
-  initialClasses: ClassForClient[]
+  initialClasses: Class[]
 }
 
 export default function ClassesAdminClient({ initialClasses }: ClassesAdminClientProps) {
-  const [classes, setClasses] = useState<ClassForClient[]>(initialClasses)
+  const [classes] = useState<Class[]>(initialClasses)
   const [showForm, setShowForm] = useState(false)
-  const [editingClass, setEditingClass] = useState<ClassForClient | null>(null)
+  const [editingClass, setEditingClass] = useState<Class | null>(null)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<CreateClassRequest>({
     name: '',
@@ -69,13 +66,12 @@ export default function ClassesAdminClient({ initialClasses }: ClassesAdminClien
     }
   }
 
-  const handleEdit = (classItem: ClassForClient) => {
-    // Now we have both original dates AND formatted strings!
-    setEditingClass(classItem) // ClassForClient extends Class, so this works
+  const handleEdit = (classItem: Class) => {
+    setEditingClass(classItem)
     setFormData({
       name: classItem.name,
       description: classItem.description || '',
-      end_date: classItem.end_date, // Use original Date object
+      end_date: classItem.end_date,
       timezone: classItem.timezone
     })
     setShowForm(true)
@@ -160,7 +156,7 @@ export default function ClassesAdminClient({ initialClasses }: ClassesAdminClien
                   {classItem.description}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {classItem.end_date_formatted}
+                  {formatDate(classItem.end_date)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {classItem.timezone}

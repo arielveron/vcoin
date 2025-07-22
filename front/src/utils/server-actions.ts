@@ -8,7 +8,7 @@ import { redirect } from 'next/navigation'
 import { SecureStudentSessionService } from '@/services/secure-student-session-service'
 
 // Standard response types for server actions
-export interface ActionSuccess<T = any> {
+export interface ActionSuccess<T = unknown> {
   success: true
   data?: T
   message?: string
@@ -20,7 +20,7 @@ export interface ActionError {
   code?: string
 }
 
-export type ActionResult<T = any> = ActionSuccess<T> | ActionError
+export type ActionResult<T = unknown> = ActionSuccess<T> | ActionError
 
 // Authentication utilities
 export async function requireAdminAuth() {
@@ -40,7 +40,7 @@ export async function requireStudentAuth() {
 }
 
 // Error handling wrapper for server actions
-export function withErrorHandling<T extends any[], R>(
+export function withErrorHandling<T extends unknown[], R>(
   action: (...args: T) => Promise<R>,
   context: string
 ) {
@@ -66,7 +66,7 @@ export function withErrorHandling<T extends any[], R>(
 }
 
 // Admin action wrapper - combines auth and error handling
-export function withAdminAuth<T extends any[], R>(
+export function withAdminAuth<T extends unknown[], R>(
   action: (...args: T) => Promise<R>,
   context: string
 ) {
@@ -77,7 +77,7 @@ export function withAdminAuth<T extends any[], R>(
 }
 
 // Student action wrapper - combines auth and error handling
-export function withStudentAuth<T extends any[], R>(
+export function withStudentAuth<T extends unknown[], R>(
   action: (...args: T) => Promise<R>,
   context: string
 ) {

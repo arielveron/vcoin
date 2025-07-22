@@ -1,26 +1,10 @@
-'use client'
-
-import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { Suspense } from "react"
 
-function ErrorContent() {
-  const searchParams = useSearchParams()
-  const error = searchParams.get('error')
+// Force dynamic rendering to avoid static generation issues
+export const dynamic = 'force-dynamic'
 
-  const getErrorMessage = (error: string | null) => {
-    switch (error) {
-      case 'AccessDenied':
-        return 'Access denied. You do not have permission to access this admin panel.'
-      case 'Configuration':
-        return 'There is a problem with the server configuration.'
-      case 'Verification':
-        return 'The verification token has expired or has already been used.'
-      default:
-        return 'An error occurred during authentication.'
-    }
-  }
-
+export default function AuthError() {
+  // Simple static error page to avoid build issues
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -30,7 +14,7 @@ function ErrorContent() {
           </h2>
           <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
             <p className="text-sm text-red-800">
-              {getErrorMessage(error)}
+              An error occurred during authentication. Please try again.
             </p>
           </div>
         </div>
@@ -50,13 +34,5 @@ function ErrorContent() {
         </div>
       </div>
     </div>
-  )
-}
-
-export default function AuthError() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ErrorContent />
-    </Suspense>
   )
 }

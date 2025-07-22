@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { AdminService } from '@/services/admin-service'
+import { Suspense } from 'react'
 import StudentsAdminClient from './students-admin-client'
-import { withFormattedDates, DateFieldSets } from '@/utils/format-dates'
 
 interface StudentsPageProps {
   searchParams: Promise<{ qc?: string, qs?: string }>
@@ -26,10 +26,6 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
   
   const classes = await adminService.getAllClasses()
 
-  // Add formatted dates while keeping original data for calculations
-  const studentsForClient = withFormattedDates(students, [...DateFieldSets.AUDIT_FIELDS])
-  const classesForClient = withFormattedDates(classes, [...DateFieldSets.CLASS_FIELDS])
-
   return (
     <div className="space-y-6">
       <div>
@@ -39,10 +35,12 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
         </p>
       </div>
       
-      <StudentsAdminClient 
-        students={studentsForClient as any} 
-        classes={classesForClient as any} 
-      />
+      <Suspense fallback={<div>Loading students...</div>}>
+        <StudentsAdminClient 
+          students={students} 
+          classes={classes} 
+        />
+      </Suspense>
     </div>
   )
 }

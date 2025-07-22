@@ -12,37 +12,17 @@ interface MontoActualProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export default function MontoActual({ montoActual: initialMonto, classSettings, studentId, className, ...props }: MontoActualProps) {
-  // Check if we've reached the end date using class settings
-  const hasReachedEndDate = () => {
-    const now = new Date();
-    const endDate = new Date(classSettings.end_date.getTime());
-    endDate.setHours(23, 59, 59, 999);
-    
-    // Handle timezone conversion for Argentina (GMT-3)
-    if (classSettings.timezone && classSettings.timezone.includes('Argentina')) {
-      endDate.setTime(endDate.getTime() + (3 * 60 * 60 * 1000)); // Add 3 hours
-    }
-    // Handle timezone conversion for Sao Paulo (GMT-2)
-    else if (classSettings.timezone && classSettings.timezone.includes('Sao_Paulo')) {
-      endDate.setTime(endDate.getTime() + (2 * 60 * 60 * 1000)); // Add 2 hours
-    }
-    
-    return now >= endDate;
-  };
   
   const [montoMostrado, setMontoMostrado] = useState(initialMonto);
   
   const montoObjetivoRef = useRef(initialMonto);
   const animacionRef = useRef<number | null>(null);
-  const [enAnimacion, setEnAnimacion] = useState(false);
-  
 
   const animarHaciaValor = (valorInicial: number, valorFinal: number) => {
     if (animacionRef.current) {
       cancelAnimationFrame(animacionRef.current);
     }
 
-    setEnAnimacion(true);
     const diferencia = valorFinal - valorInicial;
     const duracion = 10000; // Animation duration close to fetch interval (10s) for continuous effect
     
@@ -59,7 +39,6 @@ export default function MontoActual({ montoActual: initialMonto, classSettings, 
         animacionRef.current = requestAnimationFrame(animar);
       } else {
         setMontoMostrado(valorFinal);
-        setEnAnimacion(false);
       }
     };
 
@@ -67,6 +46,24 @@ export default function MontoActual({ montoActual: initialMonto, classSettings, 
   };
 
   useEffect(() => {
+    // Check if we've reached the end date using class settings
+    const hasReachedEndDate = () => {
+      const now = new Date();
+      const endDate = new Date(classSettings.end_date.getTime());
+      endDate.setHours(23, 59, 59, 999);
+      
+      // Handle timezone conversion for Argentina (GMT-3)
+      if (classSettings.timezone && classSettings.timezone.includes('Argentina')) {
+        endDate.setTime(endDate.getTime() + (3 * 60 * 60 * 1000)); // Add 3 hours
+      }
+      // Handle timezone conversion for Sao Paulo (GMT-2)
+      else if (classSettings.timezone && classSettings.timezone.includes('Sao_Paulo')) {
+        endDate.setTime(endDate.getTime() + (2 * 60 * 60 * 1000)); // Add 2 hours
+      }
+      
+      return now >= endDate;
+    };
+
     // Don't start any timers if we've reached the end date
     if (hasReachedEndDate()) {
       setMontoMostrado(initialMonto);
@@ -112,7 +109,7 @@ export default function MontoActual({ montoActual: initialMonto, classSettings, 
         cancelAnimationFrame(animacionRef.current);
       }
     };
-  }, [initialMonto]); // Remove enAnimacion from dependencies
+  }, [initialMonto, studentId, classSettings]); // Dependencies for useEffect
 
   // ✅ Función más robusta para formatear
   const formatearConDecimales = (numero: number) => {

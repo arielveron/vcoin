@@ -6,7 +6,6 @@ import { createInvestment, updateInvestment, deleteInvestment } from './actions'
 import { useAdminFilters } from '@/hooks/useAdminFilters'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import { formatCurrency } from '@/utils/format'
-import { t } from '@/config/translations'
 import { WithFormattedDates } from '@/utils/format-dates'
 
 // Client-side types with formatted data
@@ -14,7 +13,16 @@ type InvestmentForClient = WithFormattedDates<InvestmentWithStudent, 'fecha' | '
   monto_formatted: string
 }
 type StudentForClient = WithFormattedDates<Student, 'created_at' | 'updated_at'>
-type ClassForClient = WithFormattedDates<any, 'end_date' | 'created_at' | 'updated_at'> // Using any for now
+type ClassForClient = WithFormattedDates<{ 
+  id: number; 
+  name: string; 
+  description?: string;
+  end_date: Date; 
+  timezone: string;
+  current_monthly_interest_rate?: number;
+  created_at: Date; 
+  updated_at: Date 
+}, 'end_date' | 'created_at' | 'updated_at'>
 
 interface InvestmentsAdminClientProps {
   investments: InvestmentForClient[]
@@ -65,7 +73,7 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
       } else if (!result.success) {
         alert(result.error || 'Failed to update investment')
       }
-    } catch (error) {
+    } catch {
       alert('Failed to update investment')
     }
   }
@@ -80,12 +88,10 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
       } else if (!result.success) {
         alert(result.error || 'Failed to delete investment')
       }
-    } catch (error) {
+    } catch {
       alert('Failed to delete investment')
     }
   }
-
-  const totalInvestments = investments.reduce((sum, inv) => sum + inv.monto, 0)
 
   // Filter investments based on current filters
   const filteredInvestments = investments.filter(investment => {

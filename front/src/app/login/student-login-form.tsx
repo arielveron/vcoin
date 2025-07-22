@@ -115,12 +115,13 @@ export default function StudentLoginForm() {
       }
       
       // If successful, studentLogin will redirect to /student
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Handle any unexpected errors (like redirects)
-      if (error.message && error.message.includes('NEXT_REDIRECT')) {
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      if (errorMessage.includes('NEXT_REDIRECT')) {
         throw error; // Let redirects bubble up
       }
-      setError(error.message || 'Login failed');
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

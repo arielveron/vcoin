@@ -122,7 +122,7 @@ export const updateStudentProfile = withStudentAuth(async (formData: FormData) =
   const current_password = formData.get('current_password') as string
   const new_password = formData.get('new_password') as string
 
-  const updateData: any = {}
+  const updateData: { email?: string; password?: string; current_password?: string } = {}
   
   if (email !== session.email) {
     updateData.email = email

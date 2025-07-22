@@ -136,7 +136,7 @@ export class ServerDataService {
       let currentRate: number;
       try {
         currentRate = await this.getCurrentInterestRate(classId);
-      } catch (error) {
+      } catch {
         // Hardcoded fallback rates for pseudo-db classes
         const fallbackRates: Record<number, number> = {
           1: 0.01, // Programación 2024
@@ -585,9 +585,6 @@ export class ServerDataService {
       // Import calculation function
       const { calculateMontoAFecha } = await import('@/logic/calculations');
       const startDate = new Date(firstInvestmentDate);
-
-      let debugSampleDates = 0;
-      const maxDebugSamples = 10; // Limit debug output
 
       for (let d = new Date(startDate); d <= finalDate; d.setDate(d.getDate() + 1)) {
         const currentDate = new Date(d);

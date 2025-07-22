@@ -42,7 +42,7 @@ export default function InterestRatesAdminClient({ interestRates: initialRates, 
       } else if (!result.success) {
         alert(result.error || 'Failed to create interest rate')
       }
-    } catch (error) {
+    } catch {
       alert('Failed to create interest rate')
     }
   }
@@ -58,7 +58,7 @@ export default function InterestRatesAdminClient({ interestRates: initialRates, 
       } else {
         alert(result.error || 'Failed to update interest rate')
       }
-    } catch (error) {
+    } catch {
       alert('Failed to update interest rate')
     }
   }
@@ -73,7 +73,7 @@ export default function InterestRatesAdminClient({ interestRates: initialRates, 
       } else {
         alert(result.error || 'Failed to delete interest rate')
       }
-    } catch (error) {
+    } catch {
       alert('Failed to delete interest rate')
     }
   }

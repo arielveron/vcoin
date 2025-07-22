@@ -9,7 +9,7 @@ import { t } from '@/config/translations'
 
 interface AdminDashboardClientProps {
   stats: AdminStats
-  user: any
+  user: { name?: string } | null
   classes: Class[]
   students: Student[]
 }
@@ -25,7 +25,7 @@ export default function AdminDashboardClient({ stats, user, classes, students }:
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">{t('dashboard.title')}</h1>
         <p className="mt-2 text-gray-600">
-          {t('dashboard.welcome', { name: user?.name })}
+          {t('dashboard.welcome', { name: user?.name || 'User' })}
         </p>
       </div>
 

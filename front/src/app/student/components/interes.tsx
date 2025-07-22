@@ -9,7 +9,7 @@ interface InteresProps {
   studentId: number; // Required student ID
 }
 
-export default async function Interes({ classSettings, studentId }: InteresProps) {
+export default async function Interes({ studentId }: InteresProps) {
   // Get current rate and rate change information
   const classId = await ServerDataService.getStudentClassId(studentId);
   const currentRate = await ServerDataService.getCurrentInterestRate(classId);

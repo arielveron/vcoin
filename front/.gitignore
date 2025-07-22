@@ -35,6 +35,13 @@ yarn-error.log*
 
 # keep dotenv environment example variables file
 !.env.example
+!.env.production.template
+
+# production environment files (never commit these)
+.env.local
+.env.production
+.env.prod
+.env.staging
 
 # vercel
 .vercel

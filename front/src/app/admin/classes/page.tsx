@@ -1,12 +1,8 @@
 import { auth } from '@/auth'
 import { AdminService } from '@/services/admin-service'
 import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
 import ClassesAdminClient from '@/app/admin/classes/classes-admin-client'
-import { withFormattedDates, DateFieldSets, WithFormattedDates } from '@/utils/format-dates'
-import { Class } from '@/types/database'
-
-// Define the type for the server component
-type ClassForClient = WithFormattedDates<Class, 'end_date' | 'created_at' | 'updated_at'>
 
 export default async function ClassesAdmin() {
   // Check authentication on server side
@@ -21,21 +17,22 @@ export default async function ClassesAdmin() {
   try {
     const classes = await adminService.getAllClasses()
     
-    // Add formatted dates while keeping original data for calculations
-    const classesForClient = withFormattedDates(classes, [...DateFieldSets.CLASS_FIELDS]) as unknown as ClassForClient[]
-    
     return (
-      <ClassesAdminClient 
-        initialClasses={classesForClient}
-      />
+      <Suspense fallback={<div>Loading classes...</div>}>
+        <ClassesAdminClient 
+          initialClasses={classes}
+        />
+      </Suspense>
     )
   } catch (error) {
     console.error('Error fetching classes:', error)
     
     return (
-      <ClassesAdminClient 
-        initialClasses={[]}
-      />
+      <Suspense fallback={<div>Loading classes...</div>}>
+        <ClassesAdminClient 
+          initialClasses={[]}
+        />
+      </Suspense>
     )
   }
 }

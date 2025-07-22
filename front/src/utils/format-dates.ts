@@ -11,7 +11,7 @@ import { formatDate } from './format'
  * @param dateFields - Array of field names that contain Date objects
  * @returns Array with original data + formatted date fields (field_name_formatted)
  */
-export function withFormattedDates<T extends Record<string, any>>(
+export function withFormattedDates<T extends Record<string, unknown>>(
   items: T[],
   dateFields: (keyof T)[]
 ): (T & Record<string, string>)[] {
@@ -19,7 +19,7 @@ export function withFormattedDates<T extends Record<string, any>>(
     const formatted: Record<string, string> = {}
     
     dateFields.forEach(field => {
-      const value = item[field] as any
+      const value = item[field]
       if (value instanceof Date) {
         formatted[`${String(field)}_formatted`] = formatDate(value)
       }

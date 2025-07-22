@@ -95,7 +95,7 @@ export default function StudentsAdminClient({ students: initialStudents, classes
       } else {
         alert(result.error || 'Error setting password')
       }
-    } catch (error) {
+    } catch {
       alert('Error setting password')
     } finally {
       setSettingPassword(false)

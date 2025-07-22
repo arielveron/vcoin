@@ -6,6 +6,7 @@ import {
   Class, 
   Student, 
   Investment, 
+  InvestmentWithStudent,
   CreateClassRequest, 
   CreateStudentRequest, 
   CreateInvestmentRequest,
@@ -156,7 +157,7 @@ export class AdminService {
   }
 
   // Investment management
-  async getAllInvestments(): Promise<any[]> {
+  async getAllInvestments(): Promise<InvestmentWithStudent[]> {
     return await this.investmentRepo.findWithStudentInfo();
   }
 

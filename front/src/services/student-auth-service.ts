@@ -111,7 +111,7 @@ export class StudentAuthService {
     const client = await pool.connect();
     try {
       const updates: string[] = [];
-      const values: any[] = [];
+      const values: unknown[] = [];
       let paramCount = 1;
 
       // If updating password, verify current password first

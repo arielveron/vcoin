@@ -3,15 +3,71 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
-    image: vcoin-front:latest
-    container_name: vcoin-front
+    image: vcoin:1.0.0
+    container_name: vcoin
     ports:
       - "3000:3000"
     environment:
+      # Application Configuration
       - NODE_ENV=production
+      
+      # Database Configuration - Use Docker secrets or external secret management in production
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      
+      # Next.js Configuration
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      
+      # NextAuth.js Configuration
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      
+      # Student Session Security
+      - SESSION_SECRET=${SESSION_SECRET}
+      
+      # Google OAuth2 Configuration
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      
+      # Login Throttling Configuration
+      - LOGIN_THROTTLE_MIN_DELAY=${LOGIN_THROTTLE_MIN_DELAY:-1000}
+      - LOGIN_THROTTLE_MAX_DELAY=${LOGIN_THROTTLE_MAX_DELAY:-30000}
+      - LOGIN_THROTTLE_MAX_TRACKED=${LOGIN_THROTTLE_MAX_TRACKED:-10000}
+      - LOGIN_THROTTLE_RESET_TIME=${LOGIN_THROTTLE_RESET_TIME:-300000}
+      - LOGIN_THROTTLE_CLEANUP_INTERVAL=${LOGIN_THROTTLE_CLEANUP_INTERVAL:-60000}
+    
+    env_file:
+      - .env.local
+    
     restart: unless-stopped
+    
+    # Security configurations
+    security_opt:
+      - no-new-privileges:true
+    
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
     logging:
       driver: "json-file"
       options:
-        max-size: "1m"
-        max-file: "3"
+        max-size: "10m"
+        max-file: "5"

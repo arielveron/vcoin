@@ -1,6 +1,7 @@
 import { auth } from '@/auth'
 import { AdminService } from '@/services/admin-service'
 import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
 import AdminDashboardClient from '@/app/admin/components/admin-dashboard-client'
 
 interface AdminDashboardProps {
@@ -30,12 +31,14 @@ export default async function AdminDashboard({ searchParams }: AdminDashboardPro
     ])
     
     return (
-      <AdminDashboardClient 
-        stats={stats}
-        user={session.user}
-        classes={classes}
-        students={students}
-      />
+      <Suspense fallback={<div>Loading admin dashboard...</div>}>
+        <AdminDashboardClient 
+          stats={stats}
+          user={session.user ? { name: session.user.name || undefined } : null}
+          classes={classes}
+          students={students}
+        />
+      </Suspense>
     )
   } catch (error) {
     console.error('Error fetching admin stats:', error)
@@ -55,12 +58,14 @@ export default async function AdminDashboard({ searchParams }: AdminDashboardPro
     ])
     
     return (
-      <AdminDashboardClient 
-        stats={emptyStats}
-        user={session.user}
-        classes={classes}
-        students={students}
-      />
+      <Suspense fallback={<div>Loading admin dashboard...</div>}>
+        <AdminDashboardClient 
+          stats={emptyStats}
+          user={session.user ? { name: session.user.name || undefined } : null}
+          classes={classes}
+          students={students}
+        />
+      </Suspense>
     )
   }
 }

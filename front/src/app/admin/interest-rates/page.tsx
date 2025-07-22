@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { AdminService } from '@/services/admin-service'
+import { Suspense } from 'react'
 import InterestRatesAdminClient from './interest-rates-admin-client'
 
 export default async function InterestRatesAdminPage() {
@@ -23,7 +24,9 @@ export default async function InterestRatesAdminPage() {
         </p>
       </div>
       
-      <InterestRatesAdminClient interestRates={interestRates} classes={classes} currentRates={currentRates} />
+      <Suspense fallback={<div>Loading interest rates...</div>}>
+        <InterestRatesAdminClient interestRates={interestRates} classes={classes} currentRates={currentRates} />
+      </Suspense>
     </div>
   )
 }

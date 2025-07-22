@@ -12,7 +12,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     })
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user }) {
       // Only allow specific admin emails or domains
       const adminEmails = process.env.ADMIN_EMAILS?.split(',') || []
       const adminDomains = process.env.ADMIN_DOMAINS?.split(',') || []
@@ -34,7 +34,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, user }) {
       // Add user ID to session
       if (session.user) {
-        (session.user as any).id = user.id
+        (session.user as { id?: string }).id = user.id
       }
       return session
     }

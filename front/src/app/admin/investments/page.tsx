@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { AdminService } from '@/services/admin-service'
+import { Suspense } from 'react'
 import InvestmentsAdminClient from './investments-admin-client'
 import { withFormattedDates, DateFieldSets, WithFormattedDates } from '@/utils/format-dates'
 import { InvestmentWithStudent, Student, Class } from '@/types/database'
@@ -26,14 +27,14 @@ export default async function InvestmentsAdminPage() {
   const classes = await adminService.getAllClasses()
 
   // Use hybrid approach: format dates + currency on server, keep original data
-  const investmentsForClient = withFormattedDates(investments, [...DateFieldSets.INVESTMENT_FIELDS])
+  const investmentsForClient = withFormattedDates(investments as unknown as Record<string, unknown>[], [...DateFieldSets.INVESTMENT_FIELDS])
     .map(investment => ({
       ...investment,
-      monto_formatted: formatCurrency(investment.monto)
+      monto_formatted: formatCurrency((investment as unknown as { monto: number }).monto)
     })) as InvestmentForClient[]
 
-  const studentsForClient = withFormattedDates(students, [...DateFieldSets.AUDIT_FIELDS]) as unknown as StudentForClient[]
-  const classesForClient = withFormattedDates(classes, [...DateFieldSets.CLASS_FIELDS]) as unknown as ClassForClient[]
+  const studentsForClient = withFormattedDates(students as unknown as Record<string, unknown>[], [...DateFieldSets.AUDIT_FIELDS]) as unknown as StudentForClient[]
+  const classesForClient = withFormattedDates(classes as unknown as Record<string, unknown>[], [...DateFieldSets.CLASS_FIELDS]) as unknown as ClassForClient[]
 
   return (
     <div className="space-y-6">
@@ -44,11 +45,13 @@ export default async function InvestmentsAdminPage() {
         </p>
       </div>
       
-      <InvestmentsAdminClient 
-        investments={investmentsForClient} 
-        students={studentsForClient} 
-        classes={classesForClient} 
-      />
+      <Suspense fallback={<div>Loading investments...</div>}>
+        <InvestmentsAdminClient 
+          investments={investmentsForClient} 
+          students={studentsForClient} 
+          classes={classesForClient} 
+        />
+      </Suspense>
     </div>
   )
 }

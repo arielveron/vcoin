@@ -79,7 +79,7 @@ export class SecureStudentSessionService {
       }
       
       return studentSession;
-    } catch (error) {
+    } catch {
       // Cannot destroy session from page components - user will need to log in again
       return null;
     }
@@ -125,7 +125,7 @@ export class SecureStudentSessionService {
       }
 
       return false; // Session is valid
-    } catch (error) {
+    } catch {
       return true; // Any error = treat as invalid session
     }
   }
@@ -137,7 +137,7 @@ export class SecureStudentSessionService {
     try {
       const session = await this.getSession();
       return session !== null;
-    } catch (error) {
+    } catch {
       // If there's any error reading the session, treat as no active session
       return false;
     }
@@ -192,7 +192,7 @@ export class SecureStudentSessionService {
       decrypted += decipher.final('utf8');
       
       return JSON.parse(decrypted);
-    } catch (error) {
+    } catch {
       return null;
     }
   }

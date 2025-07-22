@@ -66,8 +66,9 @@ export default function StudentProfileForm({ session }: StudentProfileFormProps)
       if (email !== session.email) {
         router.refresh();
       }
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Failed to update profile' });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile';
+      setMessage({ type: 'error', text: errorMessage });
     } finally {
       setLoading(false);
     }
