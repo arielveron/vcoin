@@ -1,6 +1,8 @@
-import { auth } from "@/auth"
+import { auth, hasAuthConfig, hasGoogleConfig } from "@/auth"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+
+const isAuthConfigured = hasAuthConfig && hasGoogleConfig
 
 export default auth((req: NextRequest & { auth: any }) => {
   const { pathname } = req.nextUrl
@@ -9,6 +11,11 @@ export default auth((req: NextRequest & { auth: any }) => {
   if (pathname.startsWith('/admin')) {
     // Allow access to auth pages
     if (pathname.startsWith('/admin/auth/')) {
+      return NextResponse.next()
+    }
+
+    // If auth is not configured, let the page component handle the error display
+    if (!isAuthConfigured) {
       return NextResponse.next()
     }
 

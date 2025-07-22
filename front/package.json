@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "setup": "tsx src/scripts/setup-vcoin-admin.ts",
+    "setup:env": "tsx src/scripts/setup-env.ts",
     "db:setup": "tsx src/scripts/setup-db.ts",
     "db:init": "tsx src/scripts/setup-db.ts",
     "db:test": "tsx src/scripts/test-db.ts"

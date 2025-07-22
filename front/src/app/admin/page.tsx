@@ -1,19 +1,20 @@
-import { auth } from '@/auth'
 import { AdminService } from '@/services/admin-service'
-import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import AdminDashboardClient from '@/app/admin/components/admin-dashboard-client'
+import { checkAdminAuth } from '@/utils/admin-auth'
 
 interface AdminDashboardProps {
   searchParams: Promise<{ qc?: string; qs?: string }>
 }
 
 export default async function AdminDashboard({ searchParams }: AdminDashboardProps) {
-  // Check authentication on server side
-  const session = await auth()
-  if (!session) {
-    redirect('/admin/auth/signin')
+  // Check authentication and configuration
+  const authResult = await checkAdminAuth()
+  if ('error' in authResult) {
+    return authResult.error
   }
+
+  const { session } = authResult
 
   // Parse filters from query parameters
   const params = await searchParams
