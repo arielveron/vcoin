@@ -338,7 +338,7 @@ npm run setup     # Complete database + auth setup
 - **Adding new entities**: Follow the Repository → Service → Admin Client → Actions pattern
 - **Interest rate changes**: Use admin panel, automatic historical tracking
 - **New calculations**: Extend `/src/logic/calculations.ts` with proper date handling
-- **Database changes**: Update `/src/scripts/init-database.sql` and run setup
+- **Database changes**: Create database tables with SQL scripts in `/src/scripts/init-database.sql` and in `/src/scripts/setup-db.ts`. Never create new migrations. Mantain database integrity with proper foreign keys and constraints. Keep the database schema in sync with the application code. Mantain a single source of truth for the database schema.
 - **Student password management**: Use admin panel or `StudentAuthService` methods
 - **New admin features**: Create `page.tsx` (server), `*-admin-client.tsx` (client), `actions.ts` (forms)
 - **New server actions**: Use `withAdminAuth()` or `withStudentAuth()` wrappers from `/src/utils/server-actions.ts`
