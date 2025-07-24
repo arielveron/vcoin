@@ -29,11 +29,18 @@ async function setupDatabase() {
     console.log('- classes: Contains class information');
     console.log('- students: Contains student information linked to classes');
     console.log('- investments: Contains investment records linked to students');
+    console.log('- interest_rate_history: Contains historical interest rate changes');
+    console.log('- users: Contains admin users for NextAuth.js authentication');
+    console.log('- accounts: Contains OAuth provider accounts for NextAuth.js');
+    console.log('- sessions: Contains user sessions for NextAuth.js');
+    console.log('- verification_tokens: Contains verification tokens for NextAuth.js');
     console.log('');
     console.log('Initial data created:');
-    console.log('- Default class: "Programación 1"');
-    console.log('- Demo student: "Estudiante Demo"');
-    console.log('- 7 investment records migrated from pseudo-db');
+    console.log('- 3 classes with different settings and timezones');
+    console.log('- 6 demo students across different classes');
+    console.log('- Sample investment records for each student');
+    console.log('- Historical interest rate changes for each class');
+    console.log('- Authentication tables ready for NextAuth.js (no demo users)');
 
   } catch (error) {
     console.error('❌ Error setting up database:', error);

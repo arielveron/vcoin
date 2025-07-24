@@ -3,11 +3,11 @@ import Google from "next-auth/providers/google"
 import PostgresAdapter from "@auth/pg-adapter"
 import { pool } from '@/config/database'
 
-// Check if required auth environment variables are present
-const hasAuthConfig = !!(
-  process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET
-)
+// Use NEXTAUTH_SECRET as primary, AUTH_SECRET as fallback
+const authSecret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET
 
+// Check if required auth environment variables are present
+const hasAuthConfig = !!authSecret
 const hasGoogleConfig = !!(
   process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
 )
@@ -21,7 +21,8 @@ const hasDatabaseConfig = !!(
 const requiresDatabase = hasAuthConfig && hasGoogleConfig && hasDatabaseConfig && process.env.USE_DATABASE !== 'false'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+  trustHost: true,
+  secret: authSecret,
   adapter: requiresDatabase ? PostgresAdapter(pool) : undefined,
   providers: hasGoogleConfig ? [
     Google({

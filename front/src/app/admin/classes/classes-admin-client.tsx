@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { Class, CreateClassRequest } from '@/types/database'
-import { useRouter } from 'next/navigation'
 import { createClass, updateClass, deleteClass } from '@/app/admin/classes/actions'
 import { formatDate } from '@/utils/format'
 
@@ -20,7 +19,6 @@ export default function ClassesAdminClient({ initialClasses }: ClassesAdminClien
     end_date: new Date(),
     timezone: 'America/Argentina/Buenos_Aires'
   })
-  const router = useRouter()
 
   const handleEdit = (classItem: Class) => {
     setEditingClass(classItem)

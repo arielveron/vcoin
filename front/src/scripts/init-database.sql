@@ -15,6 +15,11 @@ DROP TABLE IF EXISTS investments CASCADE;
 DROP TABLE IF EXISTS interest_rate_history CASCADE;
 DROP TABLE IF EXISTS students CASCADE;
 DROP TABLE IF EXISTS classes CASCADE;
+-- Auth tables (NextAuth.js integration)
+DROP TABLE IF EXISTS accounts CASCADE;
+DROP TABLE IF EXISTS sessions CASCADE;
+DROP TABLE IF EXISTS verification_tokens CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
 -- Create classes table
 -- Each class represents a group of students with their own investment settings
@@ -69,6 +74,49 @@ CREATE TABLE interest_rate_history (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Create authentication tables for NextAuth.js integration
+-- Users table for NextAuth.js (admin users)
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    email VARCHAR(255) UNIQUE,
+    "emailVerified" TIMESTAMP WITH TIME ZONE,
+    image TEXT
+);
+
+-- Accounts table for NextAuth.js (OAuth provider accounts)
+CREATE TABLE accounts (
+    id SERIAL PRIMARY KEY,
+    "userId" INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type VARCHAR(255) NOT NULL,
+    provider VARCHAR(255) NOT NULL,
+    "providerAccountId" VARCHAR(255) NOT NULL,
+    refresh_token TEXT,
+    access_token TEXT,
+    expires_at BIGINT,
+    id_token TEXT,
+    scope TEXT,
+    session_state TEXT,
+    token_type TEXT,
+    UNIQUE(provider, "providerAccountId")
+);
+
+-- Sessions table for NextAuth.js
+CREATE TABLE sessions (
+    id SERIAL PRIMARY KEY,
+    "sessionToken" VARCHAR(255) NOT NULL UNIQUE,
+    "userId" INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
+-- Verification tokens table for NextAuth.js
+CREATE TABLE verification_tokens (
+    identifier VARCHAR(255) NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    expires TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (identifier, token)
+);
+
 -- Create indexes for better query performance
 CREATE INDEX idx_students_class_id ON students(class_id);
 CREATE INDEX idx_students_email ON students(email);
@@ -82,6 +130,11 @@ CREATE INDEX idx_classes_timezone ON classes(timezone);
 CREATE INDEX idx_interest_rate_history_class_id ON interest_rate_history(class_id);
 CREATE INDEX idx_interest_rate_history_effective_date ON interest_rate_history(effective_date);
 CREATE INDEX idx_interest_rate_history_class_effective_date ON interest_rate_history(class_id, effective_date);
+
+-- Create indexes for authentication tables
+CREATE INDEX accounts_user_id_idx ON accounts("userId");
+CREATE INDEX sessions_session_token_idx ON sessions("sessionToken");
+CREATE INDEX sessions_user_id_idx ON sessions("userId");
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()

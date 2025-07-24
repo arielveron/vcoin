@@ -3,6 +3,10 @@ import { Suspense } from 'react'
 import AdminDashboardClient from '@/app/admin/components/admin-dashboard-client'
 import { checkAdminAuth } from '@/utils/admin-auth'
 
+// Force dynamic rendering to avoid build-time evaluation
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 interface AdminDashboardProps {
   searchParams: Promise<{ qc?: string; qs?: string }>
 }
@@ -10,6 +14,7 @@ interface AdminDashboardProps {
 export default async function AdminDashboard({ searchParams }: AdminDashboardProps) {
   // Check authentication and configuration
   const authResult = await checkAdminAuth()
+  
   if ('error' in authResult) {
     return authResult.error
   }

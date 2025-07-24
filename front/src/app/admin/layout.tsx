@@ -3,6 +3,9 @@
 import { Suspense } from "react"
 import AdminNav from "./components/admin-nav"
 
+// Force all admin pages to be dynamic for runtime evaluation
+export const dynamic = 'force-dynamic'
+
 export default function AdminLayout({
   children,
 }: {
