@@ -155,7 +155,33 @@ export const translations = {
     noCategories: 'No se encontraron categorías. Crea tu primera categoría arriba.',
     deleteConfirm: '¿Estás seguro de que quieres eliminar esta categoría?',
     create: 'Crear',
-    update: 'Actualizar'
+    update: 'Actualizar',
+    
+    // Icon related
+    iconConfiguration: 'Configuración de Icono',
+    selectIcon: 'Seleccionar Icono',
+    iconSize: 'Tamaño del Icono',
+    iconColor: 'Color del Icono',
+    iconAnimation: 'Animación',
+    noAnimation: 'Sin animación',
+    spin: 'Girar',
+    pulse: 'Pulsar',
+    bounce: 'Rebotar',
+    wiggle: 'Mover',
+    heartbeat: 'Latido',
+    float: 'Flotar',
+    shake: 'Sacudir',
+    iconPreview: 'Vista Previa del Icono',
+    searchIcons: 'Buscar iconos...',
+    allIcons: 'Todos los Iconos',
+    achievements: 'Logros',
+    academic: 'Académico',
+    rewards: 'Recompensas',
+    finance: 'Finanzas',
+    seasonal: 'Estacional',
+    general: 'General',
+    clearIcon: 'Limpiar',
+    noIcon: 'Sin icono'
   },
 
   // Common

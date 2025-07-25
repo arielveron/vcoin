@@ -49,7 +49,7 @@ export interface InvestmentCategory {
   };
   icon_config?: {
     name: string;           // Icon component name
-    library: 'lucide' | 'heroicons' | 'tabler' | 'phosphor' | 'iconoir';
+    library: 'lucide' | 'heroicons-solid' | 'heroicons-outline' | 'tabler' | 'phosphor';
     size?: number;          // Size in pixels
     animationClass?: string; // 'animate-spin', 'animate-pulse', etc
     color?: string;         // Icon color

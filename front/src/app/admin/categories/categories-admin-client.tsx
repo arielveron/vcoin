@@ -4,6 +4,10 @@ import { useState } from 'react';
 import { InvestmentCategory, CreateInvestmentCategoryRequest } from '@/types/database';
 import { createCategory, updateCategory, deleteCategory } from './actions';
 import StylePreview from '@/components/admin/style-preview';
+import IconPicker from '@/components/admin/icon-picker';
+import IconPreview from '@/components/admin/icon-preview';
+import IconRenderer from '@/components/icon-renderer';
+import { ICON_ANIMATIONS } from '@/lib/icon-animations';
 
 const PREMIUM_EFFECTS = [
   { value: '', label: 'None' },
@@ -45,10 +49,20 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
       fontWeight: 'font-normal',
       textColor: 'text-gray-900'
     },
+    icon_config: null,
     is_active: true,
     sort_order: 0
   });
   const [liveFormData, setLiveFormData] = useState<CreateInvestmentCategoryRequest>(formData);
+
+  // Add separate state for icon preview
+  const [iconPreviewConfig, setIconPreviewConfig] = useState<{
+    name?: string;
+    library?: string;
+    size?: number;
+    color?: string;
+    animationClass?: string;
+  }>({});
 
   const handleEdit = (category: InvestmentCategory) => {
     setEditingCategory(category);
@@ -56,11 +70,26 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
       name: category.name,
       level: category.level,
       text_style: category.text_style,
+      icon_config: category.icon_config,
       is_active: category.is_active,
       sort_order: category.sort_order
     };
     setFormData(editData);
     setLiveFormData(editData);
+    
+    // Set icon preview
+    if (category.icon_config) {
+      setIconPreviewConfig({
+        name: category.icon_config.name,
+        library: category.icon_config.library,
+        size: category.icon_config.size || 24,
+        color: category.icon_config.color,
+        animationClass: category.icon_config.animationClass
+      });
+    } else {
+      setIconPreviewConfig({});
+    }
+    
     setShowForm(true);
   };
 
@@ -121,11 +150,13 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
         fontWeight: 'font-normal',
         textColor: 'text-gray-900'
       },
+      icon_config: null,
       is_active: true,
       sort_order: 0
     };
     setFormData(defaultData);
     setLiveFormData(defaultData);
+    setIconPreviewConfig({});
     setEditingCategory(null);
     setShowForm(false);
   };
@@ -315,6 +346,146 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                   CSS properties separated by semicolons. Be careful with this!
                 </p>
               </div>
+            </div>
+
+            {/* Icon Configuration */}
+            <div className="border-t pt-4">
+              <h4 className="text-md font-medium text-gray-900 mb-3">Icon Configuration</h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Icon
+                  </label>
+                  <IconPicker
+                    value={iconPreviewConfig.name && iconPreviewConfig.library ? {
+                      name: iconPreviewConfig.name,
+                      library: iconPreviewConfig.library
+                    } : undefined}
+                    onChange={(icon) => {
+                      if (icon) {
+                        setIconPreviewConfig({
+                          ...iconPreviewConfig,
+                          name: icon.name,
+                          library: icon.library
+                        });
+                        setLiveFormData({
+                          ...liveFormData,
+                          icon_config: {
+                            name: icon.name,
+                            library: icon.library as 'lucide' | 'heroicons-solid' | 'heroicons-outline' | 'tabler' | 'phosphor',
+                            size: iconPreviewConfig.size || 24,
+                            color: iconPreviewConfig.color,
+                            animationClass: iconPreviewConfig.animationClass
+                          }
+                        });
+                      } else {
+                        setIconPreviewConfig({});
+                        setLiveFormData({
+                          ...liveFormData,
+                          icon_config: null
+                        });
+                      }
+                    }}
+                    color={iconPreviewConfig.color}
+                  />
+                  
+                  {/* Hidden form fields for icon data */}
+                  <input type="hidden" name="iconName" value={iconPreviewConfig.name || ''} />
+                  <input type="hidden" name="iconLibrary" value={iconPreviewConfig.library || ''} />
+                  <input type="hidden" name="iconSize" value={iconPreviewConfig.size || 24} />
+                  <input type="hidden" name="iconColor" value={iconPreviewConfig.color || ''} />
+                  <input type="hidden" name="iconAnimation" value={iconPreviewConfig.animationClass || ''} />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label htmlFor="iconSize" className="block text-sm font-medium text-gray-700">
+                    Icon Size
+                  </label>
+                  <select
+                    id="iconSize"
+                    value={iconPreviewConfig.size || 24}
+                    onChange={(e) => {
+                      const size = parseInt(e.target.value);
+                      setIconPreviewConfig({
+                        ...iconPreviewConfig,
+                        size
+                      });
+                      if (iconPreviewConfig.name && iconPreviewConfig.library) {
+                        setLiveFormData({
+                          ...liveFormData,
+                          icon_config: {
+                            ...liveFormData.icon_config!,
+                            size
+                          }
+                        });
+                      }
+                    }}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  >
+                    <option value={16}>Small (16px)</option>
+                    <option value={20}>Medium (20px)</option>
+                    <option value={24}>Default (24px)</option>
+                    <option value={32}>Large (32px)</option>
+                    <option value={48}>Extra Large (48px)</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label htmlFor="iconAnimation" className="block text-sm font-medium text-gray-700">
+                    Animation
+                  </label>
+                  <select
+                    id="iconAnimation"
+                    value={iconPreviewConfig.animationClass || ''}
+                    onChange={(e) => {
+                      setIconPreviewConfig({
+                        ...iconPreviewConfig,
+                        animationClass: e.target.value
+                      });
+                      if (iconPreviewConfig.name && iconPreviewConfig.library) {
+                        setLiveFormData({
+                          ...liveFormData,
+                          icon_config: {
+                            ...liveFormData.icon_config!,
+                            animationClass: e.target.value
+                          }
+                        });
+                      }
+                    }}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  >
+                    {ICON_ANIMATIONS.map(animation => (
+                      <option key={animation.name} value={animation.className}>
+                        {animation.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              {/* Icon Preview */}
+              {iconPreviewConfig.name && iconPreviewConfig.library && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Icon Preview
+                  </label>
+                  <IconPreview
+                    name={iconPreviewConfig.name}
+                    library={iconPreviewConfig.library}
+                    size={iconPreviewConfig.size || 24}
+                    color={iconPreviewConfig.color}
+                    animationClass={iconPreviewConfig.animationClass}
+                    showLabel={true}
+                    className="border border-gray-200 rounded bg-white"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 
               {/* Sort Order */}
               <div>
@@ -396,6 +567,9 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                     Level
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Icon
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Style Preview
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -421,6 +595,21 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getLevelBadgeColor(category.level)}`}>
                         {category.level}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        {category.icon_config ? (
+                          <IconRenderer
+                            name={category.icon_config.name}
+                            library={category.icon_config.library}
+                            size={category.icon_config.size || 20}
+                            color={category.icon_config.color}
+                            animationClass={category.icon_config.animationClass}
+                          />
+                        ) : (
+                          <span className="text-xs text-gray-400">No icon</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <StylePreview 
