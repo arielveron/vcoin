@@ -17,6 +17,8 @@ export const createCategory = withAdminAuth(async (formData: FormData) => {
   const fontSize = formData.get('fontSize') as string;
   const fontWeight = formData.get('fontWeight') as string;
   const textColor = formData.get('textColor') as string;
+  const effectClass = formData.get('effectClass') as string;
+  const customCSS = formData.get('customCSS') as string;
   const sortOrder = parseFormNumber(formData, 'sort_order') || 0;
   const isActive = formData.get('is_active') === 'on';
 
@@ -26,7 +28,9 @@ export const createCategory = withAdminAuth(async (formData: FormData) => {
     text_style: {
       fontSize,
       fontWeight,
-      textColor
+      textColor,
+      effectClass: effectClass || undefined,
+      customCSS: customCSS || undefined
     },
     is_active: isActive,
     sort_order: sortOrder
@@ -41,6 +45,8 @@ export const updateCategory = withAdminAuth(async (id: number, formData: FormDat
   const fontSize = formData.get('fontSize') as string;
   const fontWeight = formData.get('fontWeight') as string;
   const textColor = formData.get('textColor') as string;
+  const effectClass = formData.get('effectClass') as string;
+  const customCSS = formData.get('customCSS') as string;
   const sortOrder = parseFormNumber(formData, 'sort_order') || 0;
   const isActive = formData.get('is_active') === 'on';
 
@@ -48,11 +54,13 @@ export const updateCategory = withAdminAuth(async (id: number, formData: FormDat
   
   if (name) categoryData.name = name;
   if (level) categoryData.level = level;
-  if (fontSize || fontWeight || textColor) {
+  if (fontSize || fontWeight || textColor || effectClass || customCSS) {
     categoryData.text_style = {
       fontSize,
       fontWeight,
-      textColor
+      textColor,
+      effectClass: effectClass || undefined,
+      customCSS: customCSS || undefined
     };
   }
   categoryData.is_active = isActive;

@@ -3,6 +3,31 @@
 import { useState } from 'react';
 import { InvestmentCategory, CreateInvestmentCategoryRequest } from '@/types/database';
 import { createCategory, updateCategory, deleteCategory } from './actions';
+import StylePreview from '@/components/admin/style-preview';
+
+const PREMIUM_EFFECTS = [
+  { value: '', label: 'None' },
+  { value: 'effect-gradient-gold', label: 'Gold Gradient' },
+  { value: 'effect-gradient-silver', label: 'Silver Gradient' },
+  { value: 'effect-gradient-rainbow', label: 'Rainbow Gradient' },
+  { value: 'effect-gradient-fire', label: 'Fire Gradient' },
+  { value: 'effect-gradient-ice', label: 'Ice Gradient' },
+  { value: 'effect-glow-gold', label: 'Gold Glow' },
+  { value: 'effect-glow-silver', label: 'Silver Glow' },
+  { value: 'effect-glow-neon-blue', label: 'Neon Blue Glow' },
+  { value: 'effect-glow-neon-pink', label: 'Neon Pink Glow' },
+  { value: 'effect-glow-toxic', label: 'Toxic Glow' },
+  { value: 'effect-outline-fire', label: 'Fire Outline' },
+  { value: 'effect-outline-electric', label: 'Electric Outline' },
+  { value: 'effect-outline-shadow', label: 'Shadow Outline' },
+  { value: 'effect-shake', label: 'Shake' },
+  { value: 'effect-sparkle', label: 'Sparkle' },
+  { value: 'effect-holographic', label: 'Holographic' },
+  { value: 'effect-glitch', label: 'Glitch' },
+  { value: 'effect-premium-gold', label: 'Premium Gold (Combined)' },
+  { value: 'effect-premium-platinum', label: 'Premium Platinum (Combined)' },
+  { value: 'effect-premium-legendary', label: 'Legendary (All Effects)' }
+];
 
 interface CategoriesAdminClientProps {
   categories: InvestmentCategory[];
@@ -23,16 +48,19 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
     is_active: true,
     sort_order: 0
   });
+  const [liveFormData, setLiveFormData] = useState<CreateInvestmentCategoryRequest>(formData);
 
   const handleEdit = (category: InvestmentCategory) => {
     setEditingCategory(category);
-    setFormData({
+    const editData = {
       name: category.name,
       level: category.level,
       text_style: category.text_style,
       is_active: category.is_active,
       sort_order: category.sort_order
-    });
+    };
+    setFormData(editData);
+    setLiveFormData(editData);
     setShowForm(true);
   };
 
@@ -85,9 +113,9 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
   };
 
   const resetForm = () => {
-    setFormData({
+    const defaultData = {
       name: '',
-      level: 'bronze',
+      level: 'bronze' as const,
       text_style: {
         fontSize: 'text-sm',
         fontWeight: 'font-normal',
@@ -95,7 +123,9 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
       },
       is_active: true,
       sort_order: 0
-    });
+    };
+    setFormData(defaultData);
+    setLiveFormData(defaultData);
     setEditingCategory(null);
     setShowForm(false);
   };
@@ -178,7 +208,11 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                 <select
                   id="fontSize"
                   name="fontSize"
-                  defaultValue={formData.text_style?.fontSize || 'text-sm'}
+                  value={liveFormData.text_style?.fontSize || 'text-sm'}
+                  onChange={(e) => setLiveFormData({
+                    ...liveFormData,
+                    text_style: { ...liveFormData.text_style, fontSize: e.target.value }
+                  })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 >
                   <option value="text-xs">Extra Small</option>
@@ -197,7 +231,11 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                 <select
                   id="fontWeight"
                   name="fontWeight"
-                  defaultValue={formData.text_style?.fontWeight || 'font-normal'}
+                  value={liveFormData.text_style?.fontWeight || 'font-normal'}
+                  onChange={(e) => setLiveFormData({
+                    ...liveFormData,
+                    text_style: { ...liveFormData.text_style, fontWeight: e.target.value }
+                  })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 >
                   <option value="font-light">Light</option>
@@ -216,7 +254,11 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                 <select
                   id="textColor"
                   name="textColor"
-                  defaultValue={formData.text_style?.textColor || 'text-gray-900'}
+                  value={liveFormData.text_style?.textColor || 'text-gray-900'}
+                  onChange={(e) => setLiveFormData({
+                    ...liveFormData,
+                    text_style: { ...liveFormData.text_style, textColor: e.target.value }
+                  })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 >
                   <option value="text-gray-900">Gray</option>
@@ -227,6 +269,51 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                   <option value="text-purple-600">Purple</option>
                   <option value="text-indigo-600">Indigo</option>
                 </select>
+              </div>
+
+              {/* Premium Effect */}
+              <div>
+                <label htmlFor="effectClass" className="block text-sm font-medium text-gray-700">
+                  Premium Effect
+                </label>
+                <select
+                  id="effectClass"
+                  name="effectClass"
+                  value={liveFormData.text_style?.effectClass || ''}
+                  onChange={(e) => setLiveFormData({
+                    ...liveFormData,
+                    text_style: { ...liveFormData.text_style, effectClass: e.target.value }
+                  })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                  {PREMIUM_EFFECTS.map(effect => (
+                    <option key={effect.value} value={effect.value}>
+                      {effect.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Custom CSS */}
+              <div className="col-span-3">
+                <label htmlFor="customCSS" className="block text-sm font-medium text-gray-700">
+                  Custom CSS (Advanced)
+                </label>
+                <input
+                  type="text"
+                  id="customCSS"
+                  name="customCSS"
+                  placeholder="e.g., text-transform: uppercase; letter-spacing: 2px"
+                  value={liveFormData.text_style?.customCSS || ''}
+                  onChange={(e) => setLiveFormData({
+                    ...liveFormData,
+                    text_style: { ...liveFormData.text_style, customCSS: e.target.value }
+                  })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  CSS properties separated by semicolons. Be careful with this!
+                </p>
               </div>
 
               {/* Sort Order */}
@@ -256,6 +343,19 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
               <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900">
                 Active
               </label>
+            </div>
+
+            {/* Live Preview */}
+            <div className="border-t pt-4">
+              <h4 className="text-md font-medium text-gray-900 mb-3">Live Preview</h4>
+              <StylePreview 
+                category={{ 
+                  level: liveFormData.level, 
+                  text_style: liveFormData.text_style 
+                }} 
+                text="Sample Investment Text"
+                showEffectName={true}
+              />
             </div>
 
             {/* Form Buttons */}
@@ -322,12 +422,12 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                         {category.level}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span 
-                        className={`${category.text_style.fontSize || 'text-sm'} ${category.text_style.fontWeight || 'font-normal'} ${category.text_style.textColor || 'text-gray-900'}`}
-                      >
-                        Sample Text
-                      </span>
+                    <td className="px-6 py-4">
+                      <StylePreview 
+                        category={category} 
+                        text="Sample" 
+                        showEffectName={false}
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {category.sort_order}

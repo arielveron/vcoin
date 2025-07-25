@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../styles/premium-effects.css";
 
 :root {
   --background: #ffffff;

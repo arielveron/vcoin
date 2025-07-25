@@ -1,0 +1,295 @@
+/* Premium Visual Effects for Investment Categories */
+
+/* Base animations */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes color-shift {
+  0%, 100% { filter: hue-rotate(0deg); }
+  50% { filter: hue-rotate(180deg); }
+}
+
+@keyframes sparkle {
+  0%, 100% { 
+    opacity: 0; 
+    transform: scale(0) rotate(0deg);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1) rotate(180deg);
+  }
+}
+
+/* Gradient Effects */
+.effect-gradient-gold {
+  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+}
+
+.effect-gradient-silver {
+  background: linear-gradient(90deg, #C0C0C0, #E8E8E8, #C0C0C0);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+
+.effect-gradient-rainbow {
+  background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 5s linear infinite;
+}
+
+.effect-gradient-fire {
+  background: linear-gradient(90deg, #ff4500, #ff6347, #ff0000, #ff4500);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 2s linear infinite;
+}
+
+.effect-gradient-ice {
+  background: linear-gradient(90deg, #00CED1, #00FFFF, #E0FFFF, #00CED1);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+}
+
+/* Glow Effects */
+.effect-glow-gold {
+  text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700, 0 0 30px #FFD700;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.effect-glow-silver {
+  text-shadow: 0 0 10px #C0C0C0, 0 0 20px #C0C0C0, 0 0 30px #C0C0C0;
+  animation: pulse-glow 2.5s ease-in-out infinite;
+}
+
+.effect-glow-neon-blue {
+  text-shadow: 0 0 10px #00FFFF, 0 0 20px #00FFFF, 0 0 30px #00FFFF, 0 0 40px #00FFFF;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+.effect-glow-neon-pink {
+  text-shadow: 0 0 10px #FF1493, 0 0 20px #FF1493, 0 0 30px #FF1493, 0 0 40px #FF1493;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+.effect-glow-toxic {
+  text-shadow: 0 0 10px #00FF00, 0 0 20px #00FF00, 0 0 30px #00FF00;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Outline Effects */
+.effect-outline-fire {
+  -webkit-text-stroke: 2px #ff4500;
+  text-stroke: 2px #ff4500;
+  -webkit-text-fill-color: #ffff00;
+  text-fill-color: #ffff00;
+  filter: drop-shadow(0 0 3px #ff0000);
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+.effect-outline-electric {
+  -webkit-text-stroke: 2px #00FFFF;
+  text-stroke: 2px #00FFFF;
+  -webkit-text-fill-color: #FFFFFF;
+  text-fill-color: #FFFFFF;
+  filter: drop-shadow(0 0 5px #00FFFF);
+  animation: pulse-glow 0.5s ease-in-out infinite;
+}
+
+.effect-outline-shadow {
+  -webkit-text-stroke: 1px #000000;
+  text-stroke: 1px #000000;
+  text-shadow: 3px 3px 6px rgba(0,0,0,0.7);
+}
+
+/* Motion Effects */
+.effect-shake {
+  animation: shake 0.5s ease-in-out infinite;
+  display: inline-block; /* Needed for transform to work properly */
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* Special Effects */
+.effect-sparkle {
+  position: relative;
+  display: inline-block; /* Needed for positioning pseudo-elements */
+}
+
+.effect-sparkle::before {
+  content: '✨';
+  position: absolute;
+  top: -0.7em;
+  left: -0.7em;
+  font-size: 0.7em;
+  animation: sparkle 2s ease-in-out infinite;
+  pointer-events: none;
+  color: #FFD700;
+  filter: drop-shadow(0 0 3px #FFD700);
+  animation-delay: 0s;
+}
+
+.effect-sparkle::after {
+  content: '⭐';
+  position: absolute;
+  bottom: -0.7em;
+  right: -0.7em;
+  font-size: 0.5em;
+  animation: sparkle 2.5s ease-in-out infinite;
+  animation-delay: 1s;
+  pointer-events: none;
+  color: #FF69B4;
+  filter: drop-shadow(0 0 2px #FF69B4);
+}
+
+.effect-holographic {
+  background: linear-gradient(45deg, 
+    #ff0080, #ff8c00, #40e0d0, #ff0080, 
+    #ff8c00, #40e0d0, #ff0080);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: holographic 3s ease infinite;
+}
+
+@keyframes holographic {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.effect-glitch {
+  position: relative;
+  animation: glitch 2s infinite;
+}
+
+@keyframes glitch {
+  0%, 100% { 
+    text-shadow: 
+      2px 0 #ff00ff, 
+      -2px 0 #00ffff;
+  }
+  50% { 
+    text-shadow: 
+      -2px 0 #ff00ff, 
+      2px 0 #00ffff;
+  }
+}
+
+/* Combination Classes - These will be applied programmatically */
+.effect-premium-gold {
+  /* This class combines gradient gold and glow gold effects */
+  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite, pulse-glow 2s ease-in-out infinite;
+  text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700, 0 0 30px #FFD700;
+  display: inline-block;
+}
+
+.effect-premium-platinum {
+  /* This class combines holographic and sparkle effects */
+  background: linear-gradient(45deg, 
+    #ff0080, #ff8c00, #40e0d0, #ff0080, 
+    #ff8c00, #40e0d0, #ff0080);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: holographic 3s ease infinite;
+  position: relative;
+  display: inline-block;
+}
+
+.effect-premium-platinum::before,
+.effect-premium-platinum::after {
+  animation: sparkle 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.effect-premium-platinum::before {
+  content: '✨';
+  position: absolute;
+  top: -0.7em;
+  left: -0.7em;
+  font-size: 0.7em;
+  animation-delay: 0s;
+  color: #FFD700;
+  filter: drop-shadow(0 0 3px #FFD700);
+}
+
+.effect-premium-platinum::after {
+  content: '⭐';
+  position: absolute;
+  bottom: -0.7em;
+  right: -0.7em;
+  font-size: 0.5em;
+  animation-delay: 1s;
+  color: #FF69B4;
+  filter: drop-shadow(0 0 2px #FF69B4);
+}
+
+.effect-premium-legendary {
+  /* This class combines rainbow, neon pink glow, and sparkle */
+  background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 5s linear infinite, pulse-glow 1.5s ease-in-out infinite;
+  text-shadow: 0 0 10px #FF1493, 0 0 20px #FF1493, 0 0 30px #FF1493, 0 0 40px #FF1493;
+  position: relative;
+  display: inline-block;
+}
+
+.effect-premium-legendary::before,
+.effect-premium-legendary::after {
+  content: '✨';
+  position: absolute;
+  font-size: 0.7em;
+  animation: sparkle 2s ease-in-out infinite;
+  pointer-events: none;
+  color: #FFD700;
+  filter: drop-shadow(0 0 3px #FFD700);
+}
+
+.effect-premium-legendary::before {
+  top: -0.7em;
+  left: -0.7em;
+  animation-delay: 0s;
+}
+
+.effect-premium-legendary::after {
+  bottom: -0.7em;
+  right: -0.7em;
+  animation-delay: 1s;
+}

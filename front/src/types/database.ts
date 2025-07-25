@@ -45,6 +45,7 @@ export interface InvestmentCategory {
     fontStyle?: string;     // 'italic', 'not-italic'
     textColor?: string;     // 'text-red-600' or hex '#FF0000'
     effectClass?: string;   // Premium CSS class name
+    customCSS?: string;     // Add this - for inline styles
   };
   icon_config?: {
     name: string;           // Icon component name
