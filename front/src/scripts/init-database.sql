@@ -63,6 +63,24 @@ CREATE TABLE investments (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Investment Categories table
+-- Each category defines styling and icon configuration for investments
+CREATE TABLE investment_categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    level VARCHAR(20) NOT NULL CHECK (level IN ('bronze', 'silver', 'gold', 'platinum')),
+    text_style JSONB NOT NULL DEFAULT '{}',
+    icon_config JSONB,
+    is_active BOOLEAN DEFAULT true,
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add category reference to investments
+ALTER TABLE investments 
+ADD COLUMN category_id INTEGER REFERENCES investment_categories(id) ON DELETE SET NULL;
+
 -- Create interest_rate_history table
 -- This table tracks the historical changes of interest rates for each class
 CREATE TABLE interest_rate_history (
@@ -130,6 +148,9 @@ CREATE INDEX idx_classes_timezone ON classes(timezone);
 CREATE INDEX idx_interest_rate_history_class_id ON interest_rate_history(class_id);
 CREATE INDEX idx_interest_rate_history_effective_date ON interest_rate_history(effective_date);
 CREATE INDEX idx_interest_rate_history_class_effective_date ON interest_rate_history(class_id, effective_date);
+CREATE INDEX idx_investments_category_id ON investments(category_id);
+CREATE INDEX idx_investment_categories_active ON investment_categories(is_active);
+CREATE INDEX idx_investment_categories_sort ON investment_categories(sort_order);
 
 -- Create indexes for authentication tables
 CREATE INDEX accounts_user_id_idx ON accounts("userId");
@@ -150,6 +171,7 @@ CREATE TRIGGER update_classes_updated_at BEFORE UPDATE ON classes FOR EACH ROW E
 CREATE TRIGGER update_students_updated_at BEFORE UPDATE ON students FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_investments_updated_at BEFORE UPDATE ON investments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_interest_rate_history_updated_at BEFORE UPDATE ON interest_rate_history FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_investment_categories_updated_at BEFORE UPDATE ON investment_categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Insert initial test data
 -- Create classes with specific settings
@@ -157,6 +179,10 @@ INSERT INTO classes (name, description, end_date, timezone) VALUES
 ('Programación 2024', 'Clase de programación del año 2024 - 3 estudiantes', '2025-07-18', 'America/Argentina/Buenos_Aires'),
 ('Finanzas Básicas', 'Curso introductorio de finanzas - 2 estudiantes', '2025-08-15', 'America/Sao_Paulo'),
 ('Matemáticas Avanzadas', 'Curso avanzado de matemáticas - 1 estudiante', '2025-09-30', 'America/Argentina/Buenos_Aires');
+
+-- Insert default investment category
+INSERT INTO investment_categories (name, level, text_style, sort_order) 
+VALUES ('Standard', 'bronze', '{"fontSize": "text-sm", "fontWeight": "font-normal"}', 0);
 
 -- Insert test students with registro numbers
 -- Class 1 (Programación 2024, GMT-3, rate 0.01) - 3 students
@@ -344,3 +370,8 @@ SELECT
 FROM interest_rate_changes
 WHERE rate_direction != 'initial'
 ORDER BY class_id, effective_date DESC;
+
+-- Migrate existing investments to default category
+UPDATE investments 
+SET category_id = (SELECT id FROM investment_categories WHERE name = 'Standard')
+WHERE category_id IS NULL;

@@ -7,6 +7,7 @@ export const translations = {
     classes: 'Clases',
     students: 'Estudiantes', 
     investments: 'Inversiones',
+    categories: 'Categorías',
     interestRates: 'Tasas de Interés',
     signOut: 'Cerrar Sesión'
   },
@@ -119,6 +120,35 @@ export const translations = {
     selectEndDate: 'Seleccionar fecha de fin (opcional)',
     create: 'Crear',
     current: 'Actual'
+  },
+
+  // Categories
+  categories: {
+    title: 'Gestión de Categorías',
+    createNew: 'Crear Nueva Categoría',
+    categoryName: 'Nombre de la Categoría',
+    level: 'Nivel',
+    bronze: 'Bronce',
+    silver: 'Plata', 
+    gold: 'Oro',
+    platinum: 'Platino',
+    textStyling: 'Estilo de Texto',
+    fontSize: 'Tamaño de Fuente',
+    fontWeight: 'Peso de Fuente',
+    textColor: 'Color de Texto',
+    preview: 'Vista Previa',
+    sortOrder: 'Orden',
+    active: 'Activa',
+    inactive: 'Inactiva',
+    actions: 'Acciones',
+    edit: 'Editar',
+    delete: 'Eliminar',
+    save: 'Guardar',
+    cancel: 'Cancelar',
+    noCategories: 'No se encontraron categorías. Crea tu primera categoría arriba.',
+    deleteConfirm: '¿Estás seguro de que quieres eliminar esta categoría?',
+    create: 'Crear',
+    update: 'Actualizar'
   },
 
   // Common

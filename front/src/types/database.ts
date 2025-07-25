@@ -34,6 +34,40 @@ export interface InterestRateChange {
   updated_at: Date;
 }
 
+// Investment Category types
+export interface InvestmentCategory {
+  id: number;
+  name: string;
+  level: 'bronze' | 'silver' | 'gold' | 'platinum';
+  text_style: {
+    fontSize?: string;      // Tailwind classes: 'text-sm', 'text-lg', etc
+    fontWeight?: string;    // 'font-normal', 'font-semibold', 'font-bold'
+    fontStyle?: string;     // 'italic', 'not-italic'
+    textColor?: string;     // 'text-red-600' or hex '#FF0000'
+    effectClass?: string;   // Premium CSS class name
+  };
+  icon_config?: {
+    name: string;           // Icon component name
+    library: 'lucide' | 'heroicons' | 'tabler' | 'phosphor' | 'iconoir';
+    size?: number;          // Size in pixels
+    animationClass?: string; // 'animate-spin', 'animate-pulse', etc
+    color?: string;         // Icon color
+  } | null;
+  is_active: boolean;
+  sort_order: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface CreateInvestmentCategoryRequest {
+  name: string;
+  level: 'bronze' | 'silver' | 'gold' | 'platinum';
+  text_style?: InvestmentCategory['text_style'];
+  icon_config?: InvestmentCategory['icon_config'];
+  is_active?: boolean;
+  sort_order?: number;
+}
+
 export interface Class {
   id: number;
   name: string;
@@ -62,6 +96,7 @@ export interface Investment {
   fecha: Date; // PostgreSQL DATE field returns as Date object
   monto: number; // PostgreSQL INTEGER field returns as number
   concepto: string;
+  category_id?: number; // Reference to investment category
   created_at: Date;
   updated_at: Date;
 }
@@ -71,6 +106,12 @@ export interface InvestmentWithStudent extends Investment {
   student_name: string;
   student_email: string;
   class_name: string;
+  category?: InvestmentCategory | null;
+}
+
+// Update Investment interface to include category
+export interface InvestmentWithCategory extends Investment {
+  category?: InvestmentCategory | null;
 }
 
 export interface StudentWithInvestments extends Student {
@@ -99,6 +140,7 @@ export interface CreateInvestmentRequest {
   fecha: Date; // Date object for consistency
   monto: number;
   concepto: string;
+  category_id?: number; // Optional reference to investment category
 }
 
 // Interest Rate History interfaces

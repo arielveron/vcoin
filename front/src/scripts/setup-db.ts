@@ -29,6 +29,7 @@ async function setupDatabase() {
     console.log('- classes: Contains class information');
     console.log('- students: Contains student information linked to classes');
     console.log('- investments: Contains investment records linked to students');
+    console.log('- investment_categories: Contains visual categories for investments');
     console.log('- interest_rate_history: Contains historical interest rate changes');
     console.log('- users: Contains admin users for NextAuth.js authentication');
     console.log('- accounts: Contains OAuth provider accounts for NextAuth.js');
@@ -39,6 +40,7 @@ async function setupDatabase() {
     console.log('- 3 classes with different settings and timezones');
     console.log('- 6 demo students across different classes');
     console.log('- Sample investment records for each student');
+    console.log('- 1 default investment category (Standard)');
     console.log('- Historical interest rate changes for each class');
     console.log('- Authentication tables ready for NextAuth.js (no demo users)');
 

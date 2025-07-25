@@ -25,6 +25,7 @@ export default async function InvestmentsAdminPage() {
   const investments = await adminService.getAllInvestments()
   const students = await adminService.getAllStudents()
   const classes = await adminService.getAllClasses()
+  const categories = await adminService.getAllCategories(true) // Only active categories
 
   // Use hybrid approach: format dates + currency on server, keep original data
   const investmentsForClient = withFormattedDates(investments as unknown as Record<string, unknown>[], [...DateFieldSets.INVESTMENT_FIELDS])
@@ -49,7 +50,8 @@ export default async function InvestmentsAdminPage() {
         <InvestmentsAdminClient 
           investments={investmentsForClient} 
           students={studentsForClient} 
-          classes={classesForClient} 
+          classes={classesForClient}
+          categories={categories}
         />
       </Suspense>
     </div>

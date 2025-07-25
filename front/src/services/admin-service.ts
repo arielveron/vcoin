@@ -2,15 +2,18 @@ import { ClassRepository } from '../repos/class-repo';
 import { StudentRepository } from '../repos/student-repo';
 import { InvestmentRepository } from '../repos/investment-repo';
 import { InterestRateHistoryRepository } from '../repos/interest-rate-history-repo';
+import { InvestmentCategoryRepository } from '../repos/investment-category-repo';
 import { 
   Class, 
   Student, 
   Investment, 
   InvestmentWithStudent,
+  InvestmentCategory,
   CreateClassRequest, 
   CreateStudentRequest, 
   CreateInvestmentRequest,
-  CreateInterestRateRequest
+  CreateInterestRateRequest,
+  CreateInvestmentCategoryRequest
 } from '../types/database';
 
 export interface AdminStats {
@@ -54,12 +57,14 @@ export class AdminService {
   private studentRepo: StudentRepository;
   private investmentRepo: InvestmentRepository;
   private interestRateRepo: InterestRateHistoryRepository;
+  private categoryRepo: InvestmentCategoryRepository;
 
   constructor() {
     this.classRepo = new ClassRepository();
     this.studentRepo = new StudentRepository();
     this.investmentRepo = new InvestmentRepository();
     this.interestRateRepo = new InterestRateHistoryRepository();
+    this.categoryRepo = new InvestmentCategoryRepository();
   }
 
   // Dashboard stats
@@ -239,5 +244,26 @@ export class AdminService {
 
   async deleteInterestRate(id: number): Promise<boolean> {
     return await this.interestRateRepo.delete(id);
+  }
+
+  // Investment Category management
+  async getAllCategories(activeOnly = false): Promise<InvestmentCategory[]> {
+    return await this.categoryRepo.findAll(activeOnly);
+  }
+
+  async getCategoryById(id: number): Promise<InvestmentCategory | null> {
+    return await this.categoryRepo.findById(id);
+  }
+
+  async createCategory(data: CreateInvestmentCategoryRequest): Promise<InvestmentCategory> {
+    return await this.categoryRepo.create(data);
+  }
+
+  async updateCategory(id: number, data: Partial<CreateInvestmentCategoryRequest>): Promise<InvestmentCategory | null> {
+    return await this.categoryRepo.update(id, data);
+  }
+
+  async deleteCategory(id: number): Promise<boolean> {
+    return await this.categoryRepo.delete(id);
   }
 }

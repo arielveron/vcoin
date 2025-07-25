@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { InvestmentWithStudent, Student } from '@/types/database'
+import { InvestmentWithStudent, Student, InvestmentCategory } from '@/types/database'
 import { createInvestment, updateInvestment, deleteInvestment } from './actions'
 import { useAdminFilters } from '@/hooks/useAdminFilters'
 import FilterBadges from '@/app/admin/components/filter-badges'
@@ -28,9 +28,10 @@ interface InvestmentsAdminClientProps {
   investments: InvestmentForClient[]
   students: StudentForClient[]
   classes: ClassForClient[]
+  categories: InvestmentCategory[]
 }
 
-export default function InvestmentsAdminClient({ investments: initialInvestments, students, classes }: InvestmentsAdminClientProps) {
+export default function InvestmentsAdminClient({ investments: initialInvestments, students, classes, categories }: InvestmentsAdminClientProps) {
   const [investments, setInvestments] = useState(initialInvestments)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingInvestment, setEditingInvestment] = useState<InvestmentForClient | null>(null)
@@ -239,6 +240,26 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   placeholder="e.g., Final exam, Homework assignment"
                 />
+              </div>
+              <div>
+                <label htmlFor="category_id" className="block text-sm font-medium text-gray-700">
+                  Category
+                </label>
+                <select
+                  id="category_id"
+                  name="category_id"
+                  defaultValue={filters.classId ? '' : ''}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                  <option value="">Standard</option>
+                  {categories
+                    .filter(cat => cat.is_active)
+                    .map(category => (
+                      <option key={category.id} value={category.id}>
+                        {category.name} ({category.level})
+                      </option>
+                    ))}
+                </select>
               </div>
             </div>
             <div className="flex gap-2">

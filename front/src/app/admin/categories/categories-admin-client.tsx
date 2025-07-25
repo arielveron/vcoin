@@ -1,0 +1,363 @@
+'use client';
+
+import { useState } from 'react';
+import { InvestmentCategory, CreateInvestmentCategoryRequest } from '@/types/database';
+import { createCategory, updateCategory, deleteCategory } from './actions';
+
+interface CategoriesAdminClientProps {
+  categories: InvestmentCategory[];
+}
+
+export default function CategoriesAdminClient({ categories: initialCategories }: CategoriesAdminClientProps) {
+  const [categories, setCategories] = useState(initialCategories);
+  const [showForm, setShowForm] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<InvestmentCategory | null>(null);
+  const [formData, setFormData] = useState<CreateInvestmentCategoryRequest>({
+    name: '',
+    level: 'bronze',
+    text_style: {
+      fontSize: 'text-sm',
+      fontWeight: 'font-normal',
+      textColor: 'text-gray-900'
+    },
+    is_active: true,
+    sort_order: 0
+  });
+
+  const handleEdit = (category: InvestmentCategory) => {
+    setEditingCategory(category);
+    setFormData({
+      name: category.name,
+      level: category.level,
+      text_style: category.text_style,
+      is_active: category.is_active,
+      sort_order: category.sort_order
+    });
+    setShowForm(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formDataObj = new FormData(e.currentTarget);
+    
+    try {
+      if (editingCategory) {
+        const result = await updateCategory(editingCategory.id, formDataObj);
+        if (result.success && result.data) {
+          setCategories(categories.map(cat => 
+            cat.id === editingCategory.id ? result.data! : cat
+          ));
+          resetForm();
+        } else if (!result.success) {
+          alert(result.error || 'An error occurred');
+        } else {
+          alert('Update failed: No data returned');
+        }
+      } else {
+        const result = await createCategory(formDataObj);
+        if (result.success && result.data) {
+          setCategories([...categories, result.data]);
+          resetForm();
+        } else if (!result.success) {
+          alert(result.error || 'An error occurred');
+        } else {
+          alert('Create failed: No data returned');
+        }
+      }
+    } catch {
+      alert('An error occurred');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this category?')) return;
+    
+    try {
+      const result = await deleteCategory(id);
+      if (result.success) {
+        setCategories(categories.filter(cat => cat.id !== id));
+      } else {
+        alert(result.error || 'Failed to delete category');
+      }
+    } catch {
+      alert('Failed to delete category');
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      level: 'bronze',
+      text_style: {
+        fontSize: 'text-sm',
+        fontWeight: 'font-normal',
+        textColor: 'text-gray-900'
+      },
+      is_active: true,
+      sort_order: 0
+    });
+    setEditingCategory(null);
+    setShowForm(false);
+  };
+
+  const getLevelBadgeColor = (level: string) => {
+    switch (level) {
+      case 'bronze': return 'bg-orange-100 text-orange-800';
+      case 'silver': return 'bg-gray-100 text-gray-800';
+      case 'gold': return 'bg-yellow-100 text-yellow-800';
+      case 'platinum': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-lg font-medium text-gray-900">Categories</h2>
+          <p className="text-sm text-gray-500">
+            {categories.length} categories found
+          </p>
+        </div>
+        <button
+          onClick={() => setShowForm(true)}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+        >
+          Create New Category
+        </button>
+      </div>
+
+      {/* Create/Edit Form */}
+      {showForm && (
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            {editingCategory ? 'Edit Category' : 'Create New Category'}
+          </h3>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Name */}
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  Category Name
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  defaultValue={formData.name}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
+              </div>
+
+              {/* Level */}
+              <div>
+                <label htmlFor="level" className="block text-sm font-medium text-gray-700">
+                  Level
+                </label>
+                <select
+                  id="level"
+                  name="level"
+                  defaultValue={formData.level}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                  <option value="bronze">Bronze</option>
+                  <option value="silver">Silver</option>
+                  <option value="gold">Gold</option>
+                  <option value="platinum">Platinum</option>
+                </select>
+              </div>
+
+              {/* Font Size */}
+              <div>
+                <label htmlFor="fontSize" className="block text-sm font-medium text-gray-700">
+                  Font Size
+                </label>
+                <select
+                  id="fontSize"
+                  name="fontSize"
+                  defaultValue={formData.text_style?.fontSize || 'text-sm'}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                  <option value="text-xs">Extra Small</option>
+                  <option value="text-sm">Small</option>
+                  <option value="text-base">Base</option>
+                  <option value="text-lg">Large</option>
+                  <option value="text-xl">Extra Large</option>
+                </select>
+              </div>
+
+              {/* Font Weight */}
+              <div>
+                <label htmlFor="fontWeight" className="block text-sm font-medium text-gray-700">
+                  Font Weight
+                </label>
+                <select
+                  id="fontWeight"
+                  name="fontWeight"
+                  defaultValue={formData.text_style?.fontWeight || 'font-normal'}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                  <option value="font-light">Light</option>
+                  <option value="font-normal">Normal</option>
+                  <option value="font-medium">Medium</option>
+                  <option value="font-semibold">Semi Bold</option>
+                  <option value="font-bold">Bold</option>
+                </select>
+              </div>
+
+              {/* Text Color */}
+              <div>
+                <label htmlFor="textColor" className="block text-sm font-medium text-gray-700">
+                  Text Color
+                </label>
+                <select
+                  id="textColor"
+                  name="textColor"
+                  defaultValue={formData.text_style?.textColor || 'text-gray-900'}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                  <option value="text-gray-900">Gray</option>
+                  <option value="text-red-600">Red</option>
+                  <option value="text-blue-600">Blue</option>
+                  <option value="text-green-600">Green</option>
+                  <option value="text-yellow-600">Yellow</option>
+                  <option value="text-purple-600">Purple</option>
+                  <option value="text-indigo-600">Indigo</option>
+                </select>
+              </div>
+
+              {/* Sort Order */}
+              <div>
+                <label htmlFor="sort_order" className="block text-sm font-medium text-gray-700">
+                  Sort Order
+                </label>
+                <input
+                  id="sort_order"
+                  name="sort_order"
+                  type="number"
+                  defaultValue={formData.sort_order}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+
+            {/* Active Checkbox */}
+            <div className="flex items-center">
+              <input
+                id="is_active"
+                name="is_active"
+                type="checkbox"
+                defaultChecked={formData.is_active}
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900">
+                Active
+              </label>
+            </div>
+
+            {/* Form Buttons */}
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={resetForm}
+                className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                {editingCategory ? 'Update' : 'Create'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Categories List */}
+      <div className="bg-white shadow-sm rounded-lg border border-gray-200">
+        {categories.length === 0 ? (
+          <div className="p-6 text-center">
+            <p className="text-gray-500">No categories found. Create your first category above.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Level
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Style Preview
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Sort Order
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {categories.map((category) => (
+                  <tr key={category.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {category.name}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getLevelBadgeColor(category.level)}`}>
+                        {category.level}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span 
+                        className={`${category.text_style.fontSize || 'text-sm'} ${category.text_style.fontWeight || 'font-normal'} ${category.text_style.textColor || 'text-gray-900'}`}
+                      >
+                        Sample Text
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {category.sort_order}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${category.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {category.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                      <button
+                        onClick={() => handleEdit(category)}
+                        className="text-indigo-600 hover:text-indigo-900"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(category.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -13,6 +13,7 @@ const navigation = [
   { name: t('nav.classes'), href: '/admin/classes' },
   { name: t('nav.students'), href: '/admin/students' },
   { name: t('nav.investments'), href: '/admin/investments' },
+  { name: t('nav.categories'), href: '/admin/categories' },
   { name: t('nav.interestRates'), href: '/admin/interest-rates' },
 ]
 
