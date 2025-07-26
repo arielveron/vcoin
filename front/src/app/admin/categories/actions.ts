@@ -27,6 +27,8 @@ export const createCategory = withAdminAuth(async (formData: FormData) => {
   const iconLibrary = formData.get('iconLibrary') as string;
   const iconSize = formData.get('iconSize') ? parseInt(formData.get('iconSize') as string) : 24;
   const iconColor = formData.get('iconColor') as string;
+  const iconBackgroundColor = formData.get('iconBackgroundColor') as string;
+  const iconPadding = formData.get('iconPadding') ? parseInt(formData.get('iconPadding') as string) : 4;
   const iconAnimation = formData.get('iconAnimation') as string;
 
   const categoryData: CreateInvestmentCategoryRequest = {
@@ -44,6 +46,8 @@ export const createCategory = withAdminAuth(async (formData: FormData) => {
       library: iconLibrary as 'lucide' | 'heroicons-solid' | 'heroicons-outline' | 'tabler' | 'phosphor',
       size: iconSize,
       color: iconColor || undefined,
+      backgroundColor: iconBackgroundColor || undefined,
+      padding: iconPadding,
       animationClass: iconAnimation || undefined
     } : null,
     is_active: isActive,
@@ -69,6 +73,8 @@ export const updateCategory = withAdminAuth(async (id: number, formData: FormDat
   const iconLibrary = formData.get('iconLibrary') as string;
   const iconSize = formData.get('iconSize') ? parseInt(formData.get('iconSize') as string) : 24;
   const iconColor = formData.get('iconColor') as string;
+  const iconBackgroundColor = formData.get('iconBackgroundColor') as string;
+  const iconPadding = formData.get('iconPadding') ? parseInt(formData.get('iconPadding') as string) : 4;
   const iconAnimation = formData.get('iconAnimation') as string;
 
   const categoryData: Partial<CreateInvestmentCategoryRequest> = {};
@@ -92,6 +98,8 @@ export const updateCategory = withAdminAuth(async (id: number, formData: FormDat
       library: iconLibrary as 'lucide' | 'heroicons-solid' | 'heroicons-outline' | 'tabler' | 'phosphor',
       size: iconSize,
       color: iconColor || undefined,
+      backgroundColor: iconBackgroundColor || undefined,
+      padding: iconPadding,
       animationClass: iconAnimation || undefined
     };
   } else {

@@ -52,7 +52,9 @@ export interface InvestmentCategory {
     library: 'lucide' | 'heroicons-solid' | 'heroicons-outline' | 'tabler' | 'phosphor';
     size?: number;          // Size in pixels
     animationClass?: string; // 'animate-spin', 'animate-pulse', etc
-    color?: string;         // Icon color
+    color?: string;         // Icon foreground color
+    backgroundColor?: string; // Icon background color
+    padding?: number;       // Padding around icon when using background
   } | null;
   is_active: boolean;
   sort_order: number;

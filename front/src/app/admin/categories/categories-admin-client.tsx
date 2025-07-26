@@ -61,6 +61,8 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
     library?: string;
     size?: number;
     color?: string;
+    backgroundColor?: string;
+    padding?: number;
     animationClass?: string;
   }>({});
 
@@ -84,6 +86,8 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
         library: category.icon_config.library,
         size: category.icon_config.size || 24,
         color: category.icon_config.color,
+        backgroundColor: category.icon_config.backgroundColor,
+        padding: category.icon_config.padding || 4,
         animationClass: category.icon_config.animationClass
       });
     } else {
@@ -376,6 +380,8 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                             library: icon.library as 'lucide' | 'heroicons-solid' | 'heroicons-outline' | 'tabler' | 'phosphor',
                             size: iconPreviewConfig.size || 24,
                             color: iconPreviewConfig.color,
+                            backgroundColor: iconPreviewConfig.backgroundColor,
+                            padding: iconPreviewConfig.padding || 4,
                             animationClass: iconPreviewConfig.animationClass
                           }
                         });
@@ -395,6 +401,8 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                   <input type="hidden" name="iconLibrary" value={iconPreviewConfig.library || ''} />
                   <input type="hidden" name="iconSize" value={iconPreviewConfig.size || 24} />
                   <input type="hidden" name="iconColor" value={iconPreviewConfig.color || ''} />
+                  <input type="hidden" name="iconBackgroundColor" value={iconPreviewConfig.backgroundColor || ''} />
+                  <input type="hidden" name="iconPadding" value={iconPreviewConfig.padding || 4} />
                   <input type="hidden" name="iconAnimation" value={iconPreviewConfig.animationClass || ''} />
                 </div>
               </div>
@@ -466,6 +474,144 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                 </div>
               </div>
               
+              {/* Color Configuration */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div>
+                  <label htmlFor="iconColor" className="block text-sm font-medium text-gray-700">
+                    Icon Color (Foreground)
+                  </label>
+                  <div className="flex gap-2 mt-1">
+                    <input
+                      type="color"
+                      id="iconColor"
+                      value={iconPreviewConfig.color || '#000000'}
+                      onChange={(e) => {
+                        setIconPreviewConfig({
+                          ...iconPreviewConfig,
+                          color: e.target.value
+                        });
+                        if (iconPreviewConfig.name && iconPreviewConfig.library) {
+                          setLiveFormData({
+                            ...liveFormData,
+                            icon_config: {
+                              ...liveFormData.icon_config!,
+                              color: e.target.value
+                            }
+                          });
+                        }
+                      }}
+                      className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      placeholder="#000000"
+                      value={iconPreviewConfig.color || ''}
+                      onChange={(e) => {
+                        setIconPreviewConfig({
+                          ...iconPreviewConfig,
+                          color: e.target.value
+                        });
+                        if (iconPreviewConfig.name && iconPreviewConfig.library) {
+                          setLiveFormData({
+                            ...liveFormData,
+                            icon_config: {
+                              ...liveFormData.icon_config!,
+                              color: e.target.value
+                            }
+                          });
+                        }
+                      }}
+                      className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label htmlFor="iconBackgroundColor" className="block text-sm font-medium text-gray-700">
+                    Background Color
+                  </label>
+                  <div className="flex gap-2 mt-1">
+                    <input
+                      type="color"
+                      id="iconBackgroundColor"
+                      value={iconPreviewConfig.backgroundColor || '#ffffff'}
+                      onChange={(e) => {
+                        setIconPreviewConfig({
+                          ...iconPreviewConfig,
+                          backgroundColor: e.target.value
+                        });
+                        if (iconPreviewConfig.name && iconPreviewConfig.library) {
+                          setLiveFormData({
+                            ...liveFormData,
+                            icon_config: {
+                              ...liveFormData.icon_config!,
+                              backgroundColor: e.target.value
+                            }
+                          });
+                        }
+                      }}
+                      className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      placeholder="#ffffff or leave empty"
+                      value={iconPreviewConfig.backgroundColor || ''}
+                      onChange={(e) => {
+                        setIconPreviewConfig({
+                          ...iconPreviewConfig,
+                          backgroundColor: e.target.value
+                        });
+                        if (iconPreviewConfig.name && iconPreviewConfig.library) {
+                          setLiveFormData({
+                            ...liveFormData,
+                            icon_config: {
+                              ...liveFormData.icon_config!,
+                              backgroundColor: e.target.value
+                            }
+                          });
+                        }
+                      }}
+                      className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Leave empty for transparent background</p>
+                </div>
+                
+                <div>
+                  <label htmlFor="iconPadding" className="block text-sm font-medium text-gray-700">
+                    Background Padding
+                  </label>
+                  <select
+                    id="iconPadding"
+                    value={iconPreviewConfig.padding || 4}
+                    onChange={(e) => {
+                      const padding = parseInt(e.target.value);
+                      setIconPreviewConfig({
+                        ...iconPreviewConfig,
+                        padding
+                      });
+                      if (iconPreviewConfig.name && iconPreviewConfig.library) {
+                        setLiveFormData({
+                          ...liveFormData,
+                          icon_config: {
+                            ...liveFormData.icon_config!,
+                            padding
+                          }
+                        });
+                      }
+                    }}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  >
+                    <option value={0}>None (0px)</option>
+                    <option value={2}>Small (2px)</option>
+                    <option value={4}>Default (4px)</option>
+                    <option value={6}>Medium (6px)</option>
+                    <option value={8}>Large (8px)</option>
+                    <option value={12}>Extra Large (12px)</option>
+                  </select>
+                </div>
+              </div>
+              
               {/* Icon Preview */}
               {iconPreviewConfig.name && iconPreviewConfig.library && (
                 <div className="mt-4">
@@ -477,6 +623,8 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                     library={iconPreviewConfig.library}
                     size={iconPreviewConfig.size || 24}
                     color={iconPreviewConfig.color}
+                    backgroundColor={iconPreviewConfig.backgroundColor}
+                    padding={iconPreviewConfig.padding}
                     animationClass={iconPreviewConfig.animationClass}
                     showLabel={true}
                     className="border border-gray-200 rounded bg-white"
@@ -604,6 +752,8 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                             library={category.icon_config.library}
                             size={category.icon_config.size || 20}
                             color={category.icon_config.color}
+                            backgroundColor={category.icon_config.backgroundColor}
+                            padding={category.icon_config.padding}
                             animationClass={category.icon_config.animationClass}
                           />
                         ) : (

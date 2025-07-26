@@ -9,6 +9,8 @@ interface IconRendererProps {
   library?: string;
   size?: number;
   color?: string;
+  backgroundColor?: string;
+  padding?: number;
   className?: string;
   animationClass?: string;
 }
@@ -18,6 +20,8 @@ export default function IconRenderer({
   library, 
   size = 24, 
   color,
+  backgroundColor,
+  padding = 4,
   className,
   animationClass 
 }: IconRendererProps) {
@@ -34,7 +38,26 @@ export default function IconRenderer({
     style: color?.startsWith('#') ? { color } : undefined
   };
 
-  return createElement(iconDef.component, iconProps);
+  const iconElement = createElement(iconDef.component, iconProps);
+
+  // If background color is specified, wrap the icon
+  if (backgroundColor) {
+    return (
+      <div
+        className={cn("inline-flex items-center justify-center rounded", className)}
+        style={{
+          backgroundColor,
+          padding: `${padding}px`,
+          minWidth: size + (padding * 2),
+          minHeight: size + (padding * 2)
+        }}
+      >
+        {iconElement}
+      </div>
+    );
+  }
+
+  return iconElement;
 }
 
 // Memoized version for performance

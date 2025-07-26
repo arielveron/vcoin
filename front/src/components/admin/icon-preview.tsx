@@ -9,6 +9,8 @@ interface IconPreviewProps {
   library?: string;
   size?: number;
   color?: string;
+  backgroundColor?: string;
+  padding?: number;
   animationClass?: string;
   showLabel?: boolean;
   className?: string;
@@ -19,6 +21,8 @@ export default function IconPreview({
   library,
   size = 32,
   color,
+  backgroundColor,
+  padding,
   animationClass,
   showLabel = true,
   className
@@ -45,6 +49,8 @@ export default function IconPreview({
         library={library}
         size={size}
         color={color}
+        backgroundColor={backgroundColor}
+        padding={padding}
         animationClass={animationClass}
       />
       {showLabel && (
