@@ -58,12 +58,13 @@ export class ServerDataService {
     
     if (dbAvailable && this.service) {
       try {
-        const investments = await this.service.getInvestmentsByStudent(studentId);
+        const investments = await this.service.getInvestmentsByStudentWithCategories(studentId);
         return investments.map((investment) => ({
           id: investment.id,
           fecha: investment.fecha, // Keep as Date from database
           monto: investment.monto,
           concepto: investment.concepto,
+          category: investment.category, // Include category information
         }));
       } catch (error) {
         console.error('Database error, falling back to pseudo-db:', error);
@@ -78,6 +79,7 @@ export class ServerDataService {
         fecha: fondo.fecha,
         monto: fondo.monto,
         concepto: fondo.concepto,
+        category: null, // No category in pseudo-db
       }));
   }
 

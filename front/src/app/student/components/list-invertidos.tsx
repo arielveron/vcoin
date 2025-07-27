@@ -85,7 +85,7 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
                     <IconRenderer
                       name={category.icon_config.name}
                       library={category.icon_config.library}
-                      size={category.icon_config.size || 16}
+                      size={12} // Tiny size for list view
                       color={category.icon_config.color}
                       animationClass={category.icon_config.animationClass}
                       className="flex-shrink-0"

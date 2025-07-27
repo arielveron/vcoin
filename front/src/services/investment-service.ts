@@ -8,6 +8,7 @@ import {
   CreateInvestmentRequest, 
   CreateStudentRequest, 
   CreateClassRequest,
+  InvestmentWithStudent,
   StudentWithInvestments 
 } from '../types/database';
 
@@ -35,6 +36,10 @@ export class InvestmentService {
 
   async getInvestmentsByStudent(studentId: number): Promise<Investment[]> {
     return await this.investmentRepo.findByStudentId(studentId);
+  }
+
+  async getInvestmentsByStudentWithCategories(studentId: number): Promise<InvestmentWithStudent[]> {
+    return await this.investmentRepo.findByStudentIdWithCategories(studentId);
   }
 
   async getTotalInvestedByStudent(studentId: number): Promise<number> {

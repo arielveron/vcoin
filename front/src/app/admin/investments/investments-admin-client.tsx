@@ -7,6 +7,7 @@ import { useAdminFilters } from '@/hooks/useAdminFilters'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import { formatCurrency } from '@/utils/format'
 import { WithFormattedDates } from '@/utils/format-dates'
+import IconRenderer from '@/components/icon-renderer'
 
 // Client-side types with formatted data
 type InvestmentForClient = WithFormattedDates<InvestmentWithStudent, 'fecha' | 'created_at' | 'updated_at'> & {
@@ -347,6 +348,26 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 />
               </div>
+              <div>
+                <label htmlFor="edit-category_id" className="block text-sm font-medium text-gray-700">
+                  Category
+                </label>
+                <select
+                  id="edit-category_id"
+                  name="category_id"
+                  defaultValue={editingInvestment.category_id || ''}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                  <option value="">Standard</option>
+                  {categories
+                    .filter(cat => cat.is_active)
+                    .map(category => (
+                      <option key={category.id} value={category.id}>
+                        {category.name} ({category.level})
+                      </option>
+                    ))}
+                </select>
+              </div>
             </div>
             <div className="flex gap-2">
               <button
@@ -385,6 +406,9 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
                 Concept
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Category
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -408,6 +432,32 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900">
                   {investment.concepto}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {investment.category ? (
+                    <div className="flex items-center gap-2">
+                      {investment.category.icon_config?.name && (
+                        <IconRenderer 
+                          name={investment.category.icon_config.name}
+                          size={16}
+                          color={investment.category.icon_config.color}
+                        />
+                      )}
+                      <span 
+                        className={`${investment.category.text_style?.fontSize || 'text-sm'} ${investment.category.text_style?.effectClass || ''}`}
+                        style={{
+                          color: investment.category.icon_config?.color
+                        }}
+                      >
+                        {investment.category.name}
+                      </span>
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        {investment.category.level}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">Standard</span>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button

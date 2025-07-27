@@ -52,12 +52,14 @@ export const updateInvestment = withAdminAuth(async (id: number, formData: FormD
   const fecha = parseFormDate(formData, 'fecha')
   const monto = parseFormFloat(formData, 'monto')
   const concepto = formData.get('concepto') as string
+  const category_id = formData.get('category_id') ? parseFormNumber(formData, 'category_id') : undefined
 
   const investmentData: CreateInvestmentRequest = {
     student_id,
     fecha,
     monto,
-    concepto
+    concepto,
+    category_id
   }
 
   return await adminService.updateInvestment(id, investmentData)
