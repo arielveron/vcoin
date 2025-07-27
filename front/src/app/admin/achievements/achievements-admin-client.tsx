@@ -6,6 +6,7 @@ import IconRenderer from '@/components/icon-renderer';
 import AchievementAwardForm from './achievement-award-form';
 import { sortAchievements } from '@/utils/achievement-sorting';
 import { getStudentAchievements } from './actions';
+import { Trophy, Users, BookOpen, CheckCircle, AlertCircle, Clock, Pause } from 'lucide-react';
 
 interface BackgroundJobStatus {
   daily: { 
@@ -101,21 +102,34 @@ export default function AchievementsAdminClient({
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'success': return '✅';
-      case 'error': return '❌';
-      case 'running': return '🔄';
-      case 'not_run': return '⏸️';
-      default: return '❓';
+      case 'success': return <CheckCircle className="h-4 w-4" />;
+      case 'error': return <AlertCircle className="h-4 w-4" />;
+      case 'running': return <Clock className="h-4 w-4" />;
+      case 'not_run': return <Pause className="h-4 w-4" />;
+      default: return <AlertCircle className="h-4 w-4" />;
     }
   };
 
   return (
-    <div className="space-y-8">
-      {/* Background Jobs Monitoring */}
+    <div className="space-y-6">
+      {/* Header - Responsive */}
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+        <div>
+          <h2 className="text-xl lg:text-2xl font-semibold text-gray-900">Achievement Management</h2>
+          <p className="text-gray-600">
+            {achievements.length} achievements • Monitor student progress and background jobs
+          </p>
+        </div>
+      </div>
+
+      {/* Background Jobs Monitoring - Responsive */}
       {backgroundJobStatus && (
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Background Job Status</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white shadow rounded-lg p-4 lg:p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <Clock className="h-5 w-5 mr-2 text-gray-600" />
+            Background Job Status
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {Object.entries(backgroundJobStatus).map(([jobType, status]) => {
               if (jobType === 'lastUpdated') return null;
               
@@ -148,12 +162,15 @@ export default function AchievementsAdminClient({
         </div>
       )}
 
-      {/* Achievement Overview */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Achievement Overview</h2>
+      {/* Achievement Overview - Responsive */}
+      <div className="bg-white shadow rounded-lg p-4 lg:p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <Trophy className="h-5 w-5 mr-2 text-yellow-600" />
+          Achievement Overview
+        </h3>
         
-        {/* Filter Tabs */}
-        <div className="flex space-x-1 mb-6">
+        {/* Filter Tabs - Mobile-friendly */}
+        <div className="flex flex-wrap gap-2 mb-6">
           {[
             { key: 'all', label: 'All Achievements' },
             { key: 'automatic', label: 'Automatic' },
@@ -162,10 +179,10 @@ export default function AchievementsAdminClient({
             <button
               key={key}
               onClick={() => setFilter(key as typeof filter)}
-              className={`px-4 py-2 text-sm font-medium rounded-md ${
+              className={`px-4 py-2 text-sm font-medium rounded-md min-h-[44px] ${
                 filter === key
                   ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-500 hover:text-gray-700'
+                  : 'text-gray-500 hover:text-gray-700 bg-gray-50'
               }`}
             >
               {label} ({achievements.filter(a => key === 'all' || a.trigger_type === key).length})
@@ -173,8 +190,8 @@ export default function AchievementsAdminClient({
           ))}
         </div>
 
-        {/* Achievement Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Achievement Grid - Responsive */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredAchievements.map((achievement) => (
             <div key={achievement.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
               <div className="flex items-start space-x-3">
@@ -222,12 +239,15 @@ export default function AchievementsAdminClient({
         </div>
       </div>
 
-      {/* Manual Achievement Awarding */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Award Manual Achievements</h2>
+      {/* Manual Achievement Awarding - Responsive */}
+      <div className="bg-white shadow rounded-lg p-4 lg:p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <Users className="h-5 w-5 mr-2 text-blue-600" />
+          Award Manual Achievements
+        </h3>
         
-        {/* Student and Class Selection */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Student and Class Selection - Responsive */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Filter by Class (Optional)
@@ -239,7 +259,7 @@ export default function AchievementsAdminClient({
                 setSelectedClass(classId);
                 setSelectedStudent(null); // Reset student selection
               }}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 lg:py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Classes</option>
               {classes.map((cls) => (
@@ -257,7 +277,7 @@ export default function AchievementsAdminClient({
             <select
               value={selectedStudent || ''}
               onChange={(e) => setSelectedStudent(e.target.value ? parseInt(e.target.value) : null)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 lg:py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Choose a student...</option>
               {filteredStudents.map((student) => (
@@ -269,13 +289,14 @@ export default function AchievementsAdminClient({
           </div>
         </div>
 
-        {/* Manual Achievements */}
+        {/* Manual Achievements - Responsive */}
         {selectedStudent && (
           <div>
-            <h3 className="text-md font-medium text-gray-900 mb-3">
+            <h4 className="text-md font-medium text-gray-900 mb-3 flex items-center">
+              <BookOpen className="h-4 w-4 mr-2 text-green-600" />
               Manual Achievements for {students.find(s => s.id === selectedStudent)?.name}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            </h4>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {manualAchievements.map((achievement) => {
                 const isGranted = studentAchievements.some(sa => sa.id === achievement.id && sa.unlocked);
                 return (

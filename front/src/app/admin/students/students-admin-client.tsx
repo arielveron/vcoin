@@ -5,7 +5,10 @@ import { Student, Class } from '@/types/database'
 import { createStudent, updateStudent, deleteStudent, setStudentPassword } from './actions'
 import { useAdminFilters } from '@/hooks/useAdminFilters'
 import FilterBadges from '@/app/admin/components/filter-badges'
+import ResponsiveTable from '@/components/admin/responsive-table'
+import MobileFilters from '@/components/admin/mobile-filters'
 import { t } from '@/config/translations'
+import { User, Mail, Edit, Key, Trash2, Plus, X } from 'lucide-react'
 
 interface StudentsAdminClientProps {
   students: Student[]
@@ -107,34 +110,169 @@ export default function StudentsAdminClient({ students: initialStudents, classes
     ? students.filter(student => student.class_id === filters.classId)
     : students
 
+  // Define columns for ResponsiveTable
+  const columns = [
+    {
+      key: 'student',
+      header: 'Estudiante',
+      render: (student: Student) => (
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <User className="h-4 w-4 text-indigo-600" />
+          </div>
+          <div>
+            <div className="text-sm font-medium text-gray-900">{student.name}</div>
+            <div className="text-sm text-gray-500">Registro: {student.registro}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      hideOnMobile: true,
+      render: (student: Student) => (
+        <div className="flex items-center space-x-2">
+          <Mail className="h-4 w-4 text-gray-400" />
+          <span>{student.email || 'Sin email'}</span>
+        </div>
+      )
+    },
+    {
+      key: 'class',
+      header: 'Clase',
+      render: (student: Student) => {
+        const studentClass = classes.find(c => c.id === student.class_id)
+        return studentClass?.name || 'Sin clase asignada'
+      }
+    },
+    {
+      key: 'password_status',
+      header: 'Password Status',
+      render: (student: Student) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+          student.password_hash 
+            ? 'bg-green-100 text-green-800' 
+            : 'bg-red-100 text-red-800'
+        }`}>
+          {student.password_hash ? 'Set' : 'Not Set'}
+        </span>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (student: Student) => (
+        <div className="flex space-x-1">
+          <button
+            onClick={() => setEditingStudent(student)}
+            className="text-indigo-600 hover:text-indigo-900 p-1"
+            aria-label="Edit student"
+          >
+            <Edit className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setPasswordDialogStudent(student)}
+            className="text-green-600 hover:text-green-900 p-1"
+            aria-label="Set password"
+          >
+            <Key className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => handleDeleteStudent(student.id)}
+            className="text-red-600 hover:text-red-900 p-1"
+            aria-label="Delete student"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      )
+    }
+  ]
+
+  // Custom mobile card
+  const mobileCard = (student: Student) => {
+    const studentClass = classes.find(c => c.id === student.class_id)
+    return (
+      <div>
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+              <User className="h-5 w-5 text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">{student.name}</h3>
+              <p className="text-sm text-gray-500">Registro: {student.registro}</p>
+            </div>
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setEditingStudent(student)}
+              className="text-indigo-600 p-1"
+            >
+              <Edit className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setPasswordDialogStudent(student)}
+              className="text-green-600 p-1"
+            >
+              <Key className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => handleDeleteStudent(student.id)}
+              className="text-red-600 p-1"
+            >
+              <Trash2 className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+        
+        {student.email && (
+          <div className="flex items-center space-x-2 mb-2">
+            <Mail className="h-4 w-4 text-gray-400" />
+            <span className="text-sm text-gray-600">{student.email}</span>
+          </div>
+        )}
+        
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-600">
+            Clase: {studentClass?.name || 'Sin clase asignada'}
+          </span>
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            student.password_hash 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {student.password_hash ? 'Set' : 'Not Set'}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Filter Badges */}
       <FilterBadges classes={classes} students={students} />
 
       {/* Header with Create Button */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">{t('students.title')}</h2>
+          <h2 className="text-xl lg:text-2xl font-semibold text-gray-900">{t('students.title')}</h2>
           <p className="text-gray-600">Total: {filteredStudents.length} {t('students.studentsInClass')}</p>
         </div>
-        <div className="flex gap-2">
-          <select
-            value={filters.classId || ''}
-            onChange={(e) => updateFilters({ classId: e.target.value ? parseInt(e.target.value) : null })}
-            className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          >
-            <option value="">{t('filters.allClasses')}</option>
-            {classes.map((cls) => (
-              <option key={cls.id} value={cls.id}>
-                {cls.name}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <MobileFilters
+            classes={classes}
+            currentClassId={filters.classId}
+            onClassChange={(classId) => updateFilters({ classId })}
+            onClearFilters={() => updateFilters({ classId: null })}
+          />
           <button
             onClick={() => setShowCreateForm(true)}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+            className="flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 min-h-[44px]"
           >
+            <Plus className="h-4 w-4 mr-2" />
             {t('students.createNew')}
           </button>
         </div>
@@ -142,259 +280,225 @@ export default function StudentsAdminClient({ students: initialStudents, classes
 
       {/* Create Form */}
       {showCreateForm && (
-        <div className="bg-white p-6 rounded-lg shadow border">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">{t('students.createNew')}</h3>
-          <form key={`create-${filters.classId || 'all'}`} action={handleCreateStudent} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  {t('students.studentName')}
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  required
-                  placeholder={t('students.enterStudentName')}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="registro" className="block text-sm font-medium text-gray-700">
-                  Número de Registro
-                </label>
-                <input
-                  type="number"
-                  id="registro"
-                  name="registro"
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  {t('students.email')}
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  required
-                  placeholder={t('students.enterEmail')}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="class_id" className="block text-sm font-medium text-gray-700">
-                  {t('students.class')}
-                </label>
-                <select
-                  id="class_id"
-                  name="class_id"
-                  required
-                  defaultValue={filters.classId ? filters.classId.toString() : ''}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-0 lg:top-10 mx-auto p-0 lg:p-5 border w-full lg:w-2xl h-full lg:h-auto shadow-lg lg:rounded-md bg-white">
+            <div className="flex flex-col h-full lg:h-auto">
+              <div className="flex items-center justify-between p-4 border-b lg:border-0">
+                <h3 className="text-lg font-medium text-gray-900">{t('students.createNew')}</h3>
+                <button
+                  onClick={() => setShowCreateForm(false)}
+                  className="lg:hidden p-2 text-gray-400 hover:text-gray-600"
                 >
-                  <option value="">{t('students.selectClass')}</option>
-                  {classes.map((cls) => (
-                    <option key={cls.id} value={cls.id}>
-                      {cls.name}
-                    </option>
-                  ))}
-                </select>
+                  <X className="h-5 w-5" />
+                </button>
               </div>
+              
+              <form key={`create-${filters.classId || 'all'}`} action={handleCreateStudent} 
+                    className="flex-1 overflow-y-auto p-4 lg:p-0 space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                      {t('students.studentName')}
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      required
+                      placeholder={t('students.enterStudentName')}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="registro" className="block text-sm font-medium text-gray-700">
+                      Número de Registro
+                    </label>
+                    <input
+                      type="number"
+                      id="registro"
+                      name="registro"
+                      required
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                      {t('students.email')}
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      required
+                      placeholder={t('students.enterEmail')}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="class_id" className="block text-sm font-medium text-gray-700">
+                      {t('students.class')}
+                    </label>
+                    <select
+                      id="class_id"
+                      name="class_id"
+                      required
+                      defaultValue={filters.classId ? filters.classId.toString() : ''}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    >
+                      <option value="">{t('students.selectClass')}</option>
+                      {classes.map((cls) => (
+                        <option key={cls.id} value={cls.id}>
+                          {cls.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="flex flex-col-reverse lg:flex-row gap-2 pt-4 border-t lg:border-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateForm(false)}
+                    className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                  >
+                    {t('students.cancel')}
+                  </button>
+                  <button
+                    type="submit"
+                    className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                  >
+                    {t('students.create')}
+                  </button>
+                </div>
+              </form>
             </div>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-              >
-                {t('students.create')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowCreateForm(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
-              >
-                {t('students.cancel')}
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
       )}
 
       {/* Edit Form */}
       {editingStudent && (
-        <div className="bg-white p-6 rounded-lg shadow border">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">{t('students.edit')}</h3>
-          <form action={handleUpdateStudent} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700">
-                  {t('students.studentName')}
-                </label>
-                <input
-                  type="text"
-                  id="edit-name"
-                  name="name"
-                  defaultValue={editingStudent.name}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="edit-registro" className="block text-sm font-medium text-gray-700">
-                  Número de Registro
-                </label>
-                <input
-                  type="number"
-                  id="edit-registro"
-                  name="registro"
-                  defaultValue={editingStudent.registro}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="edit-email" className="block text-sm font-medium text-gray-700">
-                  {t('students.email')}
-                </label>
-                <input
-                  type="email"
-                  id="edit-email"
-                  name="email"
-                  defaultValue={editingStudent.email || ''}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="edit-class_id" className="block text-sm font-medium text-gray-700">
-                  {t('students.class')}
-                </label>
-                <select
-                  id="edit-class_id"
-                  name="class_id"
-                  defaultValue={editingStudent.class_id}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-0 lg:top-10 mx-auto p-0 lg:p-5 border w-full lg:w-2xl h-full lg:h-auto shadow-lg lg:rounded-md bg-white">
+            <div className="flex flex-col h-full lg:h-auto">
+              <div className="flex items-center justify-between p-4 border-b lg:border-0">
+                <h3 className="text-lg font-medium text-gray-900">{t('students.edit')}</h3>
+                <button
+                  onClick={() => setEditingStudent(null)}
+                  className="lg:hidden p-2 text-gray-400 hover:text-gray-600"
                 >
-                  {classes.map((cls) => (
-                    <option key={cls.id} value={cls.id}>
-                      {cls.name}
-                    </option>
-                  ))}
-                </select>
+                  <X className="h-5 w-5" />
+                </button>
               </div>
+              
+              <form action={handleUpdateStudent} 
+                    className="flex-1 overflow-y-auto p-4 lg:p-0 space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700">
+                      {t('students.studentName')}
+                    </label>
+                    <input
+                      type="text"
+                      id="edit-name"
+                      name="name"
+                      defaultValue={editingStudent.name}
+                      required
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-registro" className="block text-sm font-medium text-gray-700">
+                      Número de Registro
+                    </label>
+                    <input
+                      type="number"
+                      id="edit-registro"
+                      name="registro"
+                      defaultValue={editingStudent.registro}
+                      required
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-email" className="block text-sm font-medium text-gray-700">
+                      {t('students.email')}
+                    </label>
+                    <input
+                      type="email"
+                      id="edit-email"
+                      name="email"
+                      defaultValue={editingStudent.email || ''}
+                      required
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-class_id" className="block text-sm font-medium text-gray-700">
+                      {t('students.class')}
+                    </label>
+                    <select
+                      id="edit-class_id"
+                      name="class_id"
+                      defaultValue={editingStudent.class_id}
+                      required
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    >
+                      {classes.map((cls) => (
+                        <option key={cls.id} value={cls.id}>
+                          {cls.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="flex flex-col-reverse lg:flex-row gap-2 pt-4 border-t lg:border-0">
+                  <button
+                    type="button"
+                    onClick={() => setEditingStudent(null)}
+                    className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                  >
+                    {t('students.cancel')}
+                  </button>
+                  <button
+                    type="submit"
+                    className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                  >
+                    {t('students.save')}
+                  </button>
+                </div>
+              </form>
             </div>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-              >
-                {t('students.save')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditingStudent(null)}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
-              >
-                {t('students.cancel')}
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
       )}
 
-      {/* Students Table */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Estudiante
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('students.email')}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('students.class')}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Password Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('students.actions')}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredStudents.map((student) => {
-              const studentClass = classes.find(c => c.id === student.class_id)
-              return (
-                <tr key={student.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {student.name}
-                      </div>
-                      <div className="text-sm text-gray-500">Registro: {student.registro}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {student.email || 'Sin email'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {studentClass?.name || 'Sin clase asignada'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      student.password_hash 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {student.password_hash ? 'Set' : 'Not Set'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => setEditingStudent(student)}
-                      className="text-indigo-600 hover:text-indigo-900 mr-3"
-                    >
-                      {t('students.edit')}
-                    </button>
-                    <button
-                      onClick={() => setPasswordDialogStudent(student)}
-                      className="text-green-600 hover:text-green-900 mr-3"
-                    >
-                      Set Password
-                    </button>
-                    <button
-                      onClick={() => handleDeleteStudent(student.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      {t('students.delete')}
-                    </button>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-        {filteredStudents.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            {t('students.noStudents')}
-          </div>
-        )}
-      </div>
+      {/* Responsive Students Table */}
+      <ResponsiveTable
+        data={filteredStudents}
+        columns={columns}
+        mobileCard={mobileCard}
+        emptyMessage={t('students.noStudents')}
+      />
 
-      {/* Password Dialog */}
+      {/* Password Dialog - Mobile-friendly */}
       {passwordDialogStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Set Password for {passwordDialogStudent.name}
-            </h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Set Password for {passwordDialogStudent.name}
+              </h3>
+              <button
+                onClick={() => {
+                  setPasswordDialogStudent(null)
+                  setNewPassword('')
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
             <div className="space-y-4">
               <div>
                 <label htmlFor="new-password" className="block text-sm font-medium text-gray-700">
@@ -405,34 +509,35 @@ export default function StudentsAdminClient({ students: initialStudents, classes
                   id="new-password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3"
                   placeholder="Enter new password"
                   minLength={6}
                 />
               </div>
-              <div className="text-sm text-gray-600">
-                <p>Student login credentials:</p>
+              <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
+                <p className="font-medium mb-2">Student login credentials:</p>
                 <p><strong>Class ID:</strong> {passwordDialogStudent.class_id}</p>
                 <p><strong>Registry:</strong> {passwordDialogStudent.registro}</p>
                 <p><strong>Password:</strong> [The password you set above]</p>
               </div>
             </div>
-            <div className="flex gap-2 mt-6">
-              <button
-                onClick={handleSetPassword}
-                disabled={!newPassword || settingPassword}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {settingPassword ? 'Setting...' : 'Set Password'}
-              </button>
+            
+            <div className="flex flex-col-reverse sm:flex-row gap-2 mt-6">
               <button
                 onClick={() => {
                   setPasswordDialogStudent(null)
                   setNewPassword('')
                 }}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                className="w-full sm:w-auto px-4 py-3 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
               >
                 Cancel
+              </button>
+              <button
+                onClick={handleSetPassword}
+                disabled={!newPassword || settingPassword}
+                className="w-full sm:w-auto px-4 py-3 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {settingPassword ? 'Setting...' : 'Set Password'}
               </button>
             </div>
           </div>

@@ -40,10 +40,10 @@ export default function AchievementCelebration({
       }, autoCloseDelay);
     }
 
-    // Stop confetti after 3 seconds
+    // Stop confetti after 4 seconds (longer duration for better visibility)
     const confettiTimer = setTimeout(() => {
       setShowConfetti(false);
-    }, 3000);
+    }, 4000);
 
     return () => {
       if (timer) clearTimeout(timer);
@@ -94,8 +94,12 @@ export default function AchievementCelebration({
           width={window.innerWidth}
           height={window.innerHeight}
           recycle={false}
-          numberOfPieces={200}
-          gravity={0.3}
+          numberOfPieces={300}
+          gravity={0.2}
+          colors={['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8']}
+          wind={0.05}
+          initialVelocityY={15}
+          initialVelocityX={5}
         />
       )}
 

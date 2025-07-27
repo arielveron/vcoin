@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { Achievement, InvestmentCategory } from '@/types/database';
 import IconRenderer from '@/components/icon-renderer';
+import ResponsiveTable from '@/components/admin/responsive-table';
 import { createAchievement, updateAchievement, deleteAchievement } from './actions';
+import { Trophy, Plus, Edit, Trash2, Star } from 'lucide-react';
 
 interface Props {
   achievements: Achievement[];
@@ -154,29 +156,6 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
       console.error('Delete achievement error:', error);
       alert('Error deleting achievement: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
-  };
-
-  const openEditModal = (achievement: Achievement) => {
-    setEditingAchievement(achievement);
-    setFormData({
-      name: achievement.name,
-      description: achievement.description,
-      category: achievement.category,
-      rarity: achievement.rarity,
-      icon_name: achievement.icon_config.name,
-      icon_library: achievement.icon_config.library,
-      icon_size: achievement.icon_config.size || 24,
-      icon_color: achievement.icon_config.color || '#10B981',
-      animation_class: achievement.icon_config.animationClass || '',
-      trigger_type: achievement.trigger_type,
-      metric: achievement.trigger_config?.metric,
-      operator: achievement.trigger_config?.operator || '>=',
-      value: achievement.trigger_config?.value,
-      category_id: achievement.trigger_config?.category_id,
-      points: achievement.points,
-      sort_order: achievement.sort_order,
-      is_active: achievement.is_active
-    });
   };
 
   const renderAchievementForm = (onSubmit: (formData: FormData) => void, submitLabel: string) => (
@@ -562,137 +541,276 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
     </form>
   );
 
+  const getRarityBadgeColor = (rarity: string) => {
+    switch (rarity) {
+      case 'common': return 'bg-gray-100 text-gray-800';
+      case 'rare': return 'bg-blue-100 text-blue-800';
+      case 'epic': return 'bg-purple-100 text-purple-800';
+      case 'legendary': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getCategoryBadgeColor = (category: string) => {
+    switch (category) {
+      case 'academic': return 'bg-green-100 text-green-800';
+      case 'consistency': return 'bg-blue-100 text-blue-800';
+      case 'milestone': return 'bg-purple-100 text-purple-800';
+      case 'special': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Define columns for ResponsiveTable
+  const columns = [
+    {
+      key: 'achievement',
+      header: 'Achievement',
+      render: (achievement: Achievement) => (
+        <div className="flex items-center space-x-3">
+          <div className="flex-shrink-0">
+            <IconRenderer
+              name={achievement.icon_config.name}
+              library={achievement.icon_config.library}
+              size={achievement.icon_config.size || 24}
+              color={achievement.icon_config.color}
+              animationClass={achievement.icon_config.animationClass}
+            />
+          </div>
+          <div>
+            <div className="text-sm font-medium text-gray-900">{achievement.name}</div>
+            <div className="text-sm text-gray-500 truncate max-w-xs">{achievement.description}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'category',
+      header: 'Category',
+      hideOnMobile: true,
+      render: (achievement: Achievement) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCategoryBadgeColor(achievement.category)}`}>
+          {achievement.category}
+        </span>
+      )
+    },
+    {
+      key: 'rarity',
+      header: 'Rarity',
+      render: (achievement: Achievement) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRarityBadgeColor(achievement.rarity)}`}>
+          {achievement.rarity}
+        </span>
+      )
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      hideOnMobile: true,
+      render: (achievement: Achievement) => (
+        <span className={`inline-flex px-2 py-1 text-xs rounded ${
+          achievement.trigger_type === 'manual' 
+            ? 'bg-orange-100 text-orange-700'
+            : 'bg-green-100 text-green-700'
+        }`}>
+          {achievement.trigger_type}
+        </span>
+      )
+    },
+    {
+      key: 'points',
+      header: 'Points',
+      render: (achievement: Achievement) => (
+        <div className="flex items-center space-x-1">
+          <Star className="h-4 w-4 text-yellow-500" />
+          <span className="text-sm font-medium">{achievement.points}</span>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      hideOnMobile: true,
+      render: (achievement: Achievement) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+          achievement.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`}>
+          {achievement.is_active ? 'Active' : 'Inactive'}
+        </span>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (achievement: Achievement) => (
+        <div className="flex space-x-2">
+          <button
+            onClick={() => {
+              setEditingAchievement(achievement);
+              setFormData({
+                name: achievement.name,
+                description: achievement.description,
+                category: achievement.category,
+                rarity: achievement.rarity,
+                icon_name: achievement.icon_config.name,
+                icon_library: achievement.icon_config.library,
+                icon_size: achievement.icon_config.size || 24,
+                icon_color: achievement.icon_config.color || '#10B981',
+                animation_class: achievement.icon_config.animationClass || '',
+                trigger_type: achievement.trigger_type,
+                metric: achievement.trigger_config?.metric,
+                operator: achievement.trigger_config?.operator,
+                value: achievement.trigger_config?.value,
+                category_id: achievement.trigger_config?.category_id,
+                points: achievement.points,
+                sort_order: achievement.sort_order,
+                is_active: achievement.is_active,
+              });
+            }}
+            className="text-indigo-600 hover:text-indigo-900 p-1"
+            aria-label="Edit achievement"
+          >
+            <Edit className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => handleDelete(achievement.id)}
+            className="text-red-600 hover:text-red-900 p-1"
+            aria-label="Delete achievement"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  // Custom mobile card
+  const mobileCard = (achievement: Achievement) => (
+    <div>
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex items-center space-x-3">
+          <div className="flex-shrink-0">
+            <IconRenderer
+              name={achievement.icon_config.name}
+              library={achievement.icon_config.library}
+              size={32}
+              color={achievement.icon_config.color}
+              animationClass={achievement.icon_config.animationClass}
+            />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">{achievement.name}</h3>
+            <p className="text-sm text-gray-500">{achievement.description}</p>
+          </div>
+        </div>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => {
+              setEditingAchievement(achievement);
+              setFormData({
+                name: achievement.name,
+                description: achievement.description,
+                category: achievement.category,
+                rarity: achievement.rarity,
+                icon_name: achievement.icon_config.name,
+                icon_library: achievement.icon_config.library,
+                icon_size: achievement.icon_config.size || 24,
+                icon_color: achievement.icon_config.color || '#10B981',
+                animation_class: achievement.icon_config.animationClass || '',
+                trigger_type: achievement.trigger_type,
+                metric: achievement.trigger_config?.metric,
+                operator: achievement.trigger_config?.operator,
+                value: achievement.trigger_config?.value,
+                category_id: achievement.trigger_config?.category_id,
+                points: achievement.points,
+                sort_order: achievement.sort_order,
+                is_active: achievement.is_active,
+              });
+            }}
+            className="text-indigo-600 p-1"
+          >
+            <Edit className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => handleDelete(achievement.id)}
+            className="text-red-600 p-1"
+          >
+            <Trash2 className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+      
+      <div className="space-y-2 mb-3">
+        <div className="flex items-center justify-between">
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRarityBadgeColor(achievement.rarity)}`}>
+            {achievement.rarity}
+          </span>
+          <div className="flex items-center space-x-1">
+            <Star className="h-4 w-4 text-yellow-500" />
+            <span className="text-sm font-medium">{achievement.points} pts</span>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCategoryBadgeColor(achievement.category)}`}>
+            {achievement.category}
+          </span>
+          <span className={`inline-flex px-2 py-1 text-xs rounded ${
+            achievement.trigger_type === 'manual' 
+              ? 'bg-orange-100 text-orange-700'
+              : 'bg-green-100 text-green-700'
+          }`}>
+            {achievement.trigger_type}
+          </span>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-600">Status:</span>
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            achievement.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}>
+            {achievement.is_active ? 'Active' : 'Inactive'}
+          </span>
+        </div>
+      </div>
+      
+      {achievement.trigger_config && (
+        <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+          <strong>Trigger:</strong> {achievement.trigger_config.metric} {achievement.trigger_config.operator} {achievement.trigger_config.value}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
-      {/* Header with Create Button */}
-      <div className="flex justify-between items-center">
+      {/* Header - Responsive */}
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">
-            Achievements ({achievementList.length})
+          <h2 className="text-xl lg:text-2xl font-semibold text-gray-900 flex items-center">
+            <Trophy className="h-6 w-6 mr-2 text-yellow-600" />
+            Achievement Management ({achievementList.length})
           </h2>
-          <p className="text-sm text-gray-500">
-            Manage achievement definitions and triggers
+          <p className="text-gray-600">
+            Create and manage achievement definitions and triggers
           </p>
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]"
         >
+          <Plus className="h-4 w-4 mr-2" />
           Create Achievement
         </button>
       </div>
 
       {/* Achievements Table */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Achievement
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Category
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Rarity
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Type
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Points
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {achievementList.map((achievement) => (
-              <tr key={achievement.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <IconRenderer
-                      name={achievement.icon_config.name}
-                      library={achievement.icon_config.library}
-                      size={achievement.icon_config.size}
-                      color={achievement.icon_config.color}
-                      className="w-8 h-8 mr-3"
-                    />
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {achievement.name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {achievement.description}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                    {achievement.category}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    achievement.rarity === 'legendary' ? 'bg-yellow-100 text-yellow-800' :
-                    achievement.rarity === 'epic' ? 'bg-purple-100 text-purple-800' :
-                    achievement.rarity === 'rare' ? 'bg-blue-100 text-blue-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {achievement.rarity}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    achievement.trigger_type === 'manual' 
-                      ? 'bg-orange-100 text-orange-800'
-                      : 'bg-green-100 text-green-800'
-                  }`}>
-                    {achievement.trigger_type}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {achievement.points}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    achievement.is_active 
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {achievement.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    onClick={() => openEditModal(achievement)}
-                    className="text-indigo-600 hover:text-indigo-900 mr-3"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(achievement.id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {achievementList.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-gray-500">No achievements found</p>
-          </div>
-        )}
-      </div>
+      <ResponsiveTable
+        data={achievementList}
+        columns={columns}
+        mobileCard={mobileCard}
+        emptyMessage="No achievements found"
+      />
 
       {/* Create Modal */}
       {isCreateModalOpen && (

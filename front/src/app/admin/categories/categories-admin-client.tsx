@@ -7,7 +7,9 @@ import StylePreview from '@/components/admin/style-preview';
 import IconPicker from '@/components/admin/icon-picker';
 import IconPreview from '@/components/admin/icon-preview';
 import IconRenderer from '@/components/icon-renderer';
+import ResponsiveTable from '@/components/admin/responsive-table';
 import { ICON_ANIMATIONS } from '@/lib/icon-animations';
+import { Edit, Trash2, Plus, X, Tag, Eye, Settings, ToggleLeft, ToggleRight } from 'lucide-react';
 
 const PREMIUM_EFFECTS = [
   { value: '', label: 'None' },
@@ -175,36 +177,228 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
     }
   };
 
+  // Define columns for ResponsiveTable
+  const columns = [
+    {
+      key: 'name',
+      header: 'Name',
+      render: (category: InvestmentCategory) => (
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <Tag className="h-4 w-4 text-purple-600" />
+          </div>
+          <div>
+            <div className="text-sm font-medium text-gray-900">{category.name}</div>
+            <div className="text-sm text-gray-500">Order: {category.sort_order}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'level',
+      header: 'Level',
+      render: (category: InvestmentCategory) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getLevelBadgeColor(category.level)}`}>
+          {category.level}
+        </span>
+      )
+    },
+    {
+      key: 'icon',
+      header: 'Icon',
+      hideOnMobile: true,
+      render: (category: InvestmentCategory) => (
+        <div className="flex items-center gap-2">
+          {category.icon_config ? (
+            <IconRenderer
+              name={category.icon_config.name}
+              library={category.icon_config.library}
+              size={category.icon_config.size || 20}
+              color={category.icon_config.color}
+              backgroundColor={category.icon_config.backgroundColor}
+              padding={category.icon_config.padding}
+              animationClass={category.icon_config.animationClass}
+            />
+          ) : (
+            <span className="text-xs text-gray-400">No icon</span>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'preview',
+      header: 'Style',
+      hideOnMobile: true,
+      render: (category: InvestmentCategory) => (
+        <StylePreview 
+          category={category} 
+          text="Sample" 
+          showEffectName={false}
+        />
+      )
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (category: InvestmentCategory) => (
+        <div className="flex items-center space-x-2">
+          {category.is_active ? (
+            <ToggleRight className="h-5 w-5 text-green-500" />
+          ) : (
+            <ToggleLeft className="h-5 w-5 text-gray-400" />
+          )}
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${category.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {category.is_active ? 'Active' : 'Inactive'}
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (category: InvestmentCategory) => (
+        <div className="flex space-x-2">
+          <button
+            onClick={() => handleEdit(category)}
+            className="text-indigo-600 hover:text-indigo-900 p-1"
+            aria-label="Edit category"
+          >
+            <Edit className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => handleDelete(category.id)}
+            className="text-red-600 hover:text-red-900 p-1"
+            aria-label="Delete category"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  // Custom mobile card
+  const mobileCard = (category: InvestmentCategory) => (
+    <div>
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+            <Tag className="h-5 w-5 text-purple-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">{category.name}</h3>
+            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getLevelBadgeColor(category.level)}`}>
+              {category.level}
+            </span>
+          </div>
+        </div>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => handleEdit(category)}
+            className="text-indigo-600 p-1"
+          >
+            <Edit className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => handleDelete(category.id)}
+            className="text-red-600 p-1"
+          >
+            <Trash2 className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+      
+      <div className="space-y-3 mb-3">
+        <div className="flex items-center space-x-2">
+          <Settings className="h-4 w-4 text-gray-400" />
+          <span className="text-sm text-gray-600">Sort Order: {category.sort_order}</span>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          {category.is_active ? (
+            <ToggleRight className="h-5 w-5 text-green-500" />
+          ) : (
+            <ToggleLeft className="h-5 w-5 text-gray-400" />
+          )}
+          <span className="text-sm text-gray-600">
+            {category.is_active ? 'Active' : 'Inactive'}
+          </span>
+        </div>
+      </div>
+      
+      <div className="space-y-3">
+        {category.icon_config && (
+          <div className="flex items-center space-x-2">
+            <Eye className="h-4 w-4 text-gray-400" />
+            <IconRenderer
+              name={category.icon_config.name}
+              library={category.icon_config.library}
+              size={category.icon_config.size || 20}
+              color={category.icon_config.color}
+              backgroundColor={category.icon_config.backgroundColor}
+              padding={category.icon_config.padding}
+              animationClass={category.icon_config.animationClass}
+            />
+            <span className="text-sm text-gray-600">Icon configured</span>
+          </div>
+        )}
+        
+        <div>
+          <div className="flex items-center space-x-2 mb-2">
+            <Eye className="h-4 w-4 text-gray-400" />
+            <span className="text-sm text-gray-600">Style Preview:</span>
+          </div>
+          <StylePreview 
+            category={category} 
+            text="Sample Investment Text" 
+            showEffectName={false}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+      {/* Header - Responsive */}
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
-          <h2 className="text-lg font-medium text-gray-900">Categories</h2>
-          <p className="text-sm text-gray-500">
-            {categories.length} categories found
+          <h2 className="text-xl lg:text-2xl font-semibold text-gray-900">Investment Categories</h2>
+          <p className="text-gray-600">
+            {categories.length} categories • Manage visual styles and icons
           </p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+          className="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium min-h-[44px]"
         >
-          Create New Category
+          <Plus className="h-4 w-4 mr-2" />
+          Create Category
         </button>
       </div>
 
-      {/* Create/Edit Form */}
+      {/* Create/Edit Form - Mobile-friendly */}
       {showForm && (
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            {editingCategory ? 'Edit Category' : 'Create New Category'}
-          </h3>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-0 lg:top-10 mx-auto p-0 lg:p-5 border w-full lg:w-4xl h-full lg:h-auto shadow-lg lg:rounded-md bg-white">
+            <div className="flex flex-col h-full lg:h-auto">
+              <div className="flex items-center justify-between p-4 border-b lg:border-0">
+                <h3 className="text-lg font-medium text-gray-900">
+                  {editingCategory ? 'Edit Category' : 'Create New Category'}
+                </h3>
+                <button
+                  onClick={resetForm}
+                  className="lg:hidden p-2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 lg:p-0 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Name */}
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                   Category Name
                 </label>
                 <input
@@ -213,20 +407,20 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                   type="text"
                   required
                   defaultValue={formData.name}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
                 />
               </div>
 
               {/* Level */}
               <div>
-                <label htmlFor="level" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="level" className="block text-sm font-medium text-gray-700 mb-2">
                   Level
                 </label>
                 <select
                   id="level"
                   name="level"
                   defaultValue={formData.level}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
                 >
                   <option value="bronze">Bronze</option>
                   <option value="silver">Silver</option>
@@ -248,7 +442,7 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                     ...liveFormData,
                     text_style: { ...liveFormData.text_style, fontSize: e.target.value }
                   })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
                 >
                   <option value="text-xs">Extra Small</option>
                   <option value="text-sm">Small</option>
@@ -353,10 +547,10 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
             </div>
 
             {/* Icon Configuration */}
-            <div className="border-t pt-4">
-              <h4 className="text-md font-medium text-gray-900 mb-3">Icon Configuration</h4>
+            <div className="border-t pt-6">
+              <h4 className="text-md font-medium text-gray-900 mb-4">Icon Configuration</h4>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Select Icon
@@ -407,9 +601,9 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                 <div>
-                  <label htmlFor="iconSize" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="iconSize" className="block text-sm font-medium text-gray-700 mb-2">
                     Icon Size
                   </label>
                   <select
@@ -475,12 +669,12 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
               </div>
               
               {/* Color Configuration */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
                 <div>
-                  <label htmlFor="iconColor" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="iconColor" className="block text-sm font-medium text-gray-700 mb-2">
                     Icon Color (Foreground)
                   </label>
-                  <div className="flex gap-2 mt-1">
+                  <div className="flex gap-2">
                     <input
                       type="color"
                       id="iconColor"
@@ -633,11 +827,11 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
 
               {/* Sort Order */}
               <div>
-                <label htmlFor="sort_order" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="sort_order" className="block text-sm font-medium text-gray-700 mb-2">
                   Sort Order
                 </label>
                 <input
@@ -645,13 +839,13 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
                   name="sort_order"
                   type="number"
                   defaultValue={formData.sort_order}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
                 />
               </div>
             </div>
 
             {/* Active Checkbox */}
-            <div className="flex items-center">
+            <div className="flex items-center mt-6">
               <input
                 id="is_active"
                 name="is_active"
@@ -678,125 +872,34 @@ export default function CategoriesAdminClient({ categories: initialCategories }:
             </div>
 
             {/* Form Buttons */}
-            <div className="flex justify-end space-x-3">
+            <div className="flex flex-col-reverse lg:flex-row gap-2 pt-4 border-t lg:border-0">
               <button
                 type="button"
                 onClick={resetForm}
-                className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
               >
-                {editingCategory ? 'Update' : 'Create'}
+                {editingCategory ? 'Update Category' : 'Create Category'}
               </button>
             </div>
           </form>
         </div>
-      )}
-
-      {/* Categories List */}
-      <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-        {categories.length === 0 ? (
-          <div className="p-6 text-center">
-            <p className="text-gray-500">No categories found. Create your first category above.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Level
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Icon
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Style Preview
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Sort Order
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {categories.map((category) => (
-                  <tr key={category.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {category.name}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getLevelBadgeColor(category.level)}`}>
-                        {category.level}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {category.icon_config ? (
-                          <IconRenderer
-                            name={category.icon_config.name}
-                            library={category.icon_config.library}
-                            size={category.icon_config.size || 20}
-                            color={category.icon_config.color}
-                            backgroundColor={category.icon_config.backgroundColor}
-                            padding={category.icon_config.padding}
-                            animationClass={category.icon_config.animationClass}
-                          />
-                        ) : (
-                          <span className="text-xs text-gray-400">No icon</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <StylePreview 
-                        category={category} 
-                        text="Sample" 
-                        showEffectName={false}
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {category.sort_order}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${category.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {category.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      <button
-                        onClick={() => handleEdit(category)}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(category.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
+    </div>
+  )}
+
+      {/* Responsive Categories Table */}
+      <ResponsiveTable
+        data={categories}
+        columns={columns}
+        mobileCard={mobileCard}
+        emptyMessage="No categories found. Create your first category above."
+      />
     </div>
   );
 }

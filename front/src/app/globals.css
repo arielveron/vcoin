@@ -51,6 +51,17 @@ body {
   20%, 40%, 60%, 80% { transform: translateX(2px); }
 }
 
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 .animate-wiggle {
   animation: wiggle 1s ease-in-out infinite;
 }
@@ -65,6 +76,10 @@ body {
 
 .animate-shake {
   animation: shake 0.5s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
 }
 
 /* Hover-only animations */

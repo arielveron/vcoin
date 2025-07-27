@@ -14,7 +14,11 @@ type InvestmentForClient = WithFormattedDates<InvestmentWithStudent, 'fecha' | '
 type StudentForClient = WithFormattedDates<Student, 'created_at' | 'updated_at'>
 type ClassForClient = WithFormattedDates<Class, 'end_date' | 'created_at' | 'updated_at'>
 
-export default async function InvestmentsAdminPage() {
+interface InvestmentsPageProps {
+  searchParams: Promise<{ qc?: string, qs?: string }>
+}
+
+export default async function InvestmentsAdminPage({ searchParams }: InvestmentsPageProps) {
   const session = await auth()
   
   if (!session) {
@@ -22,8 +26,14 @@ export default async function InvestmentsAdminPage() {
   }
 
   const adminService = new AdminService()
+  const params = await searchParams
+  const classId = params.qc ? parseInt(params.qc) : null
+  
+  // Get data based on filters
   const investments = await adminService.getAllInvestments()
-  const students = await adminService.getAllStudents()
+  const students = classId 
+    ? await adminService.getStudentsByClass(classId)
+    : await adminService.getAllStudents()
   const classes = await adminService.getAllClasses()
   const categories = await adminService.getAllCategories(true) // Only active categories
 

@@ -5,9 +5,12 @@ import { InvestmentWithStudent, Student, InvestmentCategory } from '@/types/data
 import { createInvestment, updateInvestment, deleteInvestment } from './actions'
 import { useAdminFilters } from '@/hooks/useAdminFilters'
 import FilterBadges from '@/app/admin/components/filter-badges'
+import ResponsiveTable from '@/components/admin/responsive-table'
+import MobileFilters from '@/components/admin/mobile-filters'
 import { formatCurrency } from '@/utils/format'
 import { WithFormattedDates } from '@/utils/format-dates'
 import IconRenderer from '@/components/icon-renderer'
+import { Calendar, DollarSign, User, Tag, Edit, Trash2, Plus, X, TrendingUp, BarChart3 } from 'lucide-react'
 
 // Client-side types with formatted data
 type InvestmentForClient = WithFormattedDates<InvestmentWithStudent, 'fecha' | 'created_at' | 'updated_at'> & {
@@ -38,11 +41,6 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
   const [editingInvestment, setEditingInvestment] = useState<InvestmentForClient | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { filters, updateFilters } = useAdminFilters()
-
-  const handleCloseCreateForm = () => {
-    setShowCreateForm(false)
-    // Reset form by triggering a re-render
-  }
 
   const handleCreateInvestment = async (formData: FormData) => {
     setIsSubmitting(true)
@@ -110,379 +108,532 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
     ? students.filter(student => student.class_id === filters.classId)
     : students
 
+  // Define columns for ResponsiveTable
+  const columns = [
+    {
+      key: 'student',
+      header: 'Student',
+      render: (investment: InvestmentForClient) => (
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <User className="h-4 w-4 text-indigo-600" />
+          </div>
+          <div>
+            <div className="text-sm font-medium text-gray-900">{investment.student_name}</div>
+            <div className="text-sm text-gray-500">{investment.class_name}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'fecha',
+      header: 'Date',
+      render: (investment: InvestmentForClient) => (
+        <div className="flex items-center space-x-2">
+          <Calendar className="h-4 w-4 text-gray-400" />
+          <span>{investment.fecha_formatted}</span>
+        </div>
+      )
+    },
+    {
+      key: 'monto',
+      header: 'Amount',
+      render: (investment: InvestmentForClient) => (
+        <div className="flex items-center space-x-2">
+          <DollarSign className="h-4 w-4 text-green-500" />
+          <span className="font-medium text-green-600">{investment.monto_formatted}</span>
+        </div>
+      )
+    },
+    {
+      key: 'concepto',
+      header: 'Concept',
+      hideOnMobile: true,
+      render: (investment: InvestmentForClient) => investment.concepto
+    },
+    {
+      key: 'category',
+      header: 'Category',
+      render: (investment: InvestmentForClient) => (
+        <div>
+          {investment.category ? (
+            <div className="flex items-center gap-2">
+              {investment.category.icon_config?.name && (
+                <IconRenderer 
+                  name={investment.category.icon_config.name}
+                  size={16}
+                  color={investment.category.icon_config.color}
+                />
+              )}
+              <span 
+                className={`text-sm ${investment.category.text_style?.effectClass || ''}`}
+                style={{
+                  color: investment.category.icon_config?.color
+                }}
+              >
+                {investment.category.name}
+              </span>
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                {investment.category.level}
+              </span>
+            </div>
+          ) : (
+            <span className="text-gray-400">Standard</span>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (investment: InvestmentForClient) => (
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setEditingInvestment(investment)}
+            className="text-indigo-600 hover:text-indigo-900 p-1"
+            aria-label="Edit investment"
+          >
+            <Edit className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => handleDeleteInvestment(investment.id)}
+            className="text-red-600 hover:text-red-900 p-1"
+            aria-label="Delete investment"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      )
+    }
+  ]
+
+  // Custom mobile card
+  const mobileCard = (investment: InvestmentForClient) => (
+    <div>
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+            <User className="h-5 w-5 text-indigo-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">{investment.student_name}</h3>
+            <p className="text-sm text-gray-500">{investment.class_name}</p>
+          </div>
+        </div>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setEditingInvestment(investment)}
+            className="text-indigo-600 p-1"
+          >
+            <Edit className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => handleDeleteInvestment(investment.id)}
+            className="text-red-600 p-1"
+          >
+            <Trash2 className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+      
+      <div className="space-y-2 mb-3">
+        <div className="flex items-center space-x-2">
+          <DollarSign className="h-5 w-5 text-green-500" />
+          <span className="text-xl font-bold text-green-600">{investment.monto_formatted}</span>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Calendar className="h-4 w-4 text-gray-400" />
+          <span className="text-sm text-gray-600">{investment.fecha_formatted}</span>
+        </div>
+      </div>
+      
+      <div className="text-sm text-gray-700 mb-2">
+        <strong>Concept:</strong> {investment.concepto}
+      </div>
+      
+      <div>
+        {investment.category ? (
+          <div className="flex items-center gap-2">
+            <Tag className="h-4 w-4 text-gray-400" />
+            {investment.category.icon_config?.name && (
+              <IconRenderer 
+                name={investment.category.icon_config.name}
+                size={16}
+                color={investment.category.icon_config.color}
+              />
+            )}
+            <span 
+              className={`text-sm ${investment.category.text_style?.effectClass || ''}`}
+              style={{
+                color: investment.category.icon_config?.color
+              }}
+            >
+              {investment.category.name}
+            </span>
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+              {investment.category.level}
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Tag className="h-4 w-4 text-gray-400" />
+            <span className="text-gray-400">Standard</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
   return (
     <div className="space-y-6">
-      {/* Filter Badges */}
       <FilterBadges classes={classes} students={students} />
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">Total Investments</h3>
-          <p className="text-3xl font-bold text-blue-600">{filteredInvestments.length}</p>
+      {/* Summary Stats - Responsive */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
+          <div className="flex items-center space-x-3">
+            <BarChart3 className="h-8 w-8 text-blue-600" />
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Total Investments</h3>
+              <p className="text-2xl lg:text-3xl font-bold text-blue-600">{filteredInvestments.length}</p>
+            </div>
+          </div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">Total Amount</h3>
-          <p className="text-3xl font-bold text-green-600">{formatCurrency(filteredInvestments.reduce((sum, inv) => sum + inv.monto, 0))}</p>
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
+          <div className="flex items-center space-x-3">
+            <DollarSign className="h-8 w-8 text-green-600" />
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Total Amount</h3>
+              <p className="text-2xl lg:text-3xl font-bold text-green-600">{formatCurrency(filteredInvestments.reduce((sum, inv) => sum + inv.monto, 0))}</p>
+            </div>
+          </div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">Average Investment</h3>
-          <p className="text-3xl font-bold text-purple-600">
-            {filteredInvestments.length > 0 ? formatCurrency(filteredInvestments.reduce((sum, inv) => sum + inv.monto, 0) / filteredInvestments.length) : '$0,00'}
-          </p>
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
+          <div className="flex items-center space-x-3">
+            <TrendingUp className="h-8 w-8 text-purple-600" />
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Average Investment</h3>
+              <p className="text-2xl lg:text-3xl font-bold text-purple-600">
+                {filteredInvestments.length > 0 ? formatCurrency(filteredInvestments.reduce((sum, inv) => sum + inv.monto, 0) / filteredInvestments.length) : '$0,00'}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Header with Create Button */}
-      <div className="flex justify-between items-center">
+      {/* Header with Controls - Responsive */}
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">All Investments</h2>
-          <p className="text-gray-600">Manage student investment records</p>
+          <h2 className="text-xl lg:text-2xl font-semibold text-gray-900">All Investments</h2>
+          <p className="text-gray-600">Total: {filteredInvestments.length} investments</p>
         </div>
-        <div className="flex gap-2">
-          <select
-            value={filters.classId || ''}
-            onChange={(e) => updateFilters({ classId: e.target.value ? parseInt(e.target.value) : null })}
-            className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          >
-            <option value="">All Classes</option>
-            {classes.map((cls) => (
-              <option key={cls.id} value={cls.id}>
-                {cls.name}
-              </option>
-            ))}
-          </select>
-          {filters.classId && (
+        <div className="flex flex-col sm:flex-row gap-2">
+          {/* Desktop Filters - Hidden on mobile */}
+          <div className="hidden lg:flex items-center space-x-3">
+            <select
+              value={filters.classId || ''}
+              onChange={(e) => updateFilters({ classId: e.target.value ? parseInt(e.target.value) : null })}
+              className="rounded-md border-gray-300 text-sm py-2 px-3 focus:border-indigo-500 focus:ring-indigo-500"
+            >
+              <option value="">All Classes</option>
+              {classes.map((cls) => (
+                <option key={cls.id} value={cls.id}>{cls.name}</option>
+              ))}
+            </select>
+            
             <select
               value={filters.studentId || ''}
               onChange={(e) => updateFilters({ studentId: e.target.value ? parseInt(e.target.value) : null })}
-              className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="rounded-md border-gray-300 text-sm py-2 px-3 focus:border-indigo-500 focus:ring-indigo-500"
             >
               <option value="">All Students</option>
               {filteredStudents.map((student) => (
                 <option key={student.id} value={student.id}>
-                  {student.name} (Registry: {student.registro})
+                  {student.registro} - {student.name}
                 </option>
               ))}
             </select>
-          )}
+          </div>
+          
+          {/* Mobile Filters - Shown on mobile */}
+          <div className="lg:hidden">
+            <MobileFilters
+              classes={classes}
+              students={filteredStudents}
+              currentClassId={filters.classId}
+              currentStudentId={filters.studentId}
+              onClassChange={(classId) => updateFilters({ classId })}
+              onStudentChange={(studentId) => updateFilters({ studentId })}
+              onClearFilters={() => updateFilters({ classId: null })}
+              showStudentFilter={true}
+            />
+          </div>
+          
           <button
             onClick={() => setShowCreateForm(true)}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+            className="flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 min-h-[44px]"
           >
-            Add New Investment
+            <Plus className="h-4 w-4 mr-2" />
+            Add Investment
           </button>
         </div>
       </div>
 
-      {/* Create Form */}
+      {/* Create Form - Mobile-friendly */}
       {showCreateForm && (
-        <div className="bg-white p-6 rounded-lg shadow border">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Investment</h3>
-          <form key={`create-${filters.studentId || 'all'}`} action={handleCreateInvestment} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="student_id" className="block text-sm font-medium text-gray-700">
-                  Student
-                </label>
-                <select
-                  id="student_id"
-                  name="student_id"
-                  required
-                  defaultValue={filters.studentId ? filters.studentId.toString() : ''}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-0 lg:top-10 mx-auto p-0 lg:p-5 border w-full lg:w-2xl h-full lg:h-auto shadow-lg lg:rounded-md bg-white">
+            <div className="flex flex-col h-full lg:h-auto">
+              <div className="flex items-center justify-between p-4 border-b lg:border-0">
+                <h3 className="text-lg font-medium text-gray-900">Create New Investment</h3>
+                <button
+                  onClick={() => setShowCreateForm(false)}
+                  className="lg:hidden p-2 text-gray-400 hover:text-gray-600"
                 >
-                  <option value="">Select a student</option>
-                  {filteredStudents.map((student) => (
-                    <option key={student.id} value={student.id}>
-                      {student.name} (Registry: {student.registro})
-                    </option>
-                  ))}
-                </select>
+                  <X className="h-5 w-5" />
+                </button>
               </div>
-              <div>
-                <label htmlFor="fecha" className="block text-sm font-medium text-gray-700">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  id="fecha"
-                  name="fecha"
-                  required
-                  defaultValue={new Date().toLocaleDateString('en-CA')}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="monto" className="block text-sm font-medium text-gray-700">
-                  Amount
-                </label>
-                <input
-                  type="number"
-                  id="monto"
-                  name="monto"
-                  required
-                  min="0.01"
-                  step="0.01"
-                  placeholder="0.00"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="concepto" className="block text-sm font-medium text-gray-700">
-                  Concept
-                </label>
-                <input
-                  type="text"
-                  id="concepto"
-                  name="concepto"
-                  required
-                  maxLength={255}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  placeholder="e.g., Final exam, Homework assignment"
-                />
-              </div>
-              <div>
-                <label htmlFor="category_id" className="block text-sm font-medium text-gray-700">
-                  Category
-                </label>
-                <select
-                  id="category_id"
-                  name="category_id"
-                  defaultValue={filters.classId ? '' : ''}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                >
-                  <option value="">Standard</option>
-                  {categories
-                    .filter(cat => cat.is_active)
-                    .map(category => (
-                      <option key={category.id} value={category.id}>
-                        {category.name} ({category.level})
-                      </option>
-                    ))}
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              
+              <form 
+                key={`create-${filters.studentId || 'all'}`} 
+                action={handleCreateInvestment} 
+                className="flex-1 overflow-y-auto p-4 lg:p-0 space-y-4"
               >
-                {isSubmitting ? 'Creating...' : 'Create Investment'}
-              </button>
-              <button
-                type="button"
-                onClick={handleCloseCreateForm}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Edit Form */}
-      {editingInvestment && (
-        <div className="bg-white p-6 rounded-lg shadow border">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Edit Investment</h3>
-          <form action={handleUpdateInvestment} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="edit-student_id" className="block text-sm font-medium text-gray-700">
-                  Student
-                </label>
-                <select
-                  id="edit-student_id"
-                  name="student_id"
-                  defaultValue={editingInvestment.student_id}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                >
-                  {students.map((student) => (
-                    <option key={student.id} value={student.id}>
-                      {student.name} (Registry: {student.registro})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="edit-fecha" className="block text-sm font-medium text-gray-700">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  id="edit-fecha"
-                  name="fecha"
-                  defaultValue={new Date(editingInvestment.fecha).toISOString().split('T')[0]}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="edit-monto" className="block text-sm font-medium text-gray-700">
-                  Amount
-                </label>
-                <input
-                  type="number"
-                  id="edit-monto"
-                  name="monto"
-                  defaultValue={editingInvestment.monto}
-                  required
-                  min="0"
-                  step="0.01"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="edit-concepto" className="block text-sm font-medium text-gray-700">
-                  Concept
-                </label>
-                <input
-                  type="text"
-                  id="edit-concepto"
-                  name="concepto"
-                  defaultValue={editingInvestment.concepto}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="edit-category_id" className="block text-sm font-medium text-gray-700">
-                  Category
-                </label>
-                <select
-                  id="edit-category_id"
-                  name="category_id"
-                  defaultValue={editingInvestment.category_id || ''}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                >
-                  <option value="">Standard</option>
-                  {categories
-                    .filter(cat => cat.is_active)
-                    .map(category => (
-                      <option key={category.id} value={category.id}>
-                        {category.name} ({category.level})
-                      </option>
-                    ))}
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-              >
-                Update Investment
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditingInvestment(null)}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Investments Table */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Student
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Amount
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Concept
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Category
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredInvestments.map((investment) => (
-              <tr key={investment.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {investment.student_name}
-                    </div>
-                    <div className="text-sm text-gray-500">{investment.class_name}</div>
+                    <label htmlFor="student_id" className="block text-sm font-medium text-gray-700">
+                      Student
+                    </label>
+                    <select
+                      id="student_id"
+                      name="student_id"
+                      required
+                      defaultValue={filters.studentId ? filters.studentId.toString() : ''}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    >
+                      <option value="">Select a student</option>
+                      {filteredStudents.map((student) => (
+                        <option key={student.id} value={student.id}>
+                          {student.name} (Registry: {student.registro})
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {investment.fecha_formatted}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {investment.monto_formatted}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-900">
-                  {investment.concepto}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {investment.category ? (
-                    <div className="flex items-center gap-2">
-                      {investment.category.icon_config?.name && (
-                        <IconRenderer 
-                          name={investment.category.icon_config.name}
-                          size={16}
-                          color={investment.category.icon_config.color}
-                        />
-                      )}
-                      <span 
-                        className={`${investment.category.text_style?.fontSize || 'text-sm'} ${investment.category.text_style?.effectClass || ''}`}
-                        style={{
-                          color: investment.category.icon_config?.color
-                        }}
-                      >
-                        {investment.category.name}
-                      </span>
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                        {investment.category.level}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-gray-400">Standard</span>
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <div>
+                    <label htmlFor="fecha" className="block text-sm font-medium text-gray-700">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      id="fecha"
+                      name="fecha"
+                      required
+                      defaultValue={new Date().toLocaleDateString('en-CA')}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="monto" className="block text-sm font-medium text-gray-700">
+                      Amount
+                    </label>
+                    <input
+                      type="number"
+                      id="monto"
+                      name="monto"
+                      required
+                      min="0.01"
+                      step="0.01"
+                      placeholder="0.00"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="concepto" className="block text-sm font-medium text-gray-700">
+                      Concept
+                    </label>
+                    <input
+                      type="text"
+                      id="concepto"
+                      name="concepto"
+                      required
+                      maxLength={255}
+                      placeholder="e.g., Final exam, Homework assignment"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    />
+                  </div>
+                  <div className="lg:col-span-2">
+                    <label htmlFor="category_id" className="block text-sm font-medium text-gray-700">
+                      Category
+                    </label>
+                    <select
+                      id="category_id"
+                      name="category_id"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    >
+                      <option value="">Standard</option>
+                      {categories
+                        .filter(cat => cat.is_active)
+                        .map(category => (
+                          <option key={category.id} value={category.id}>
+                            {category.name} ({category.level})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col-reverse lg:flex-row gap-2 pt-4 border-t lg:border-0">
                   <button
-                    onClick={() => setEditingInvestment(investment)}
-                    className="text-indigo-600 hover:text-indigo-900 mr-3"
+                    type="button"
+                    onClick={() => setShowCreateForm(false)}
+                    className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
                   >
-                    Edit
+                    Cancel
                   </button>
                   <button
-                    onClick={() => handleDeleteInvestment(investment.id)}
-                    className="text-red-600 hover:text-red-900"
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50"
                   >
-                    Delete
+                    {isSubmitting ? 'Creating...' : 'Create Investment'}
                   </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {filteredInvestments.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No investments found. Create your first investment above.
+                </div>
+              </form>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Edit Form - Mobile-friendly */}
+      {editingInvestment && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-0 lg:top-10 mx-auto p-0 lg:p-5 border w-full lg:w-2xl h-full lg:h-auto shadow-lg lg:rounded-md bg-white">
+            <div className="flex flex-col h-full lg:h-auto">
+              <div className="flex items-center justify-between p-4 border-b lg:border-0">
+                <h3 className="text-lg font-medium text-gray-900">Edit Investment</h3>
+                <button
+                  onClick={() => setEditingInvestment(null)}
+                  className="lg:hidden p-2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <form 
+                action={handleUpdateInvestment} 
+                className="flex-1 overflow-y-auto p-4 lg:p-0 space-y-4"
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="edit-student_id" className="block text-sm font-medium text-gray-700">
+                      Student
+                    </label>
+                    <select
+                      id="edit-student_id"
+                      name="student_id"
+                      defaultValue={editingInvestment.student_id}
+                      required
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    >
+                      {students.map((student) => (
+                        <option key={student.id} value={student.id}>
+                          {student.name} (Registry: {student.registro})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="edit-fecha" className="block text-sm font-medium text-gray-700">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      id="edit-fecha"
+                      name="fecha"
+                      defaultValue={new Date(editingInvestment.fecha).toISOString().split('T')[0]}
+                      required
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-monto" className="block text-sm font-medium text-gray-700">
+                      Amount
+                    </label>
+                    <input
+                      type="number"
+                      id="edit-monto"
+                      name="monto"
+                      defaultValue={editingInvestment.monto}
+                      required
+                      min="0"
+                      step="0.01"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-concepto" className="block text-sm font-medium text-gray-700">
+                      Concept
+                    </label>
+                    <input
+                      type="text"
+                      id="edit-concepto"
+                      name="concepto"
+                      defaultValue={editingInvestment.concepto}
+                      required
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    />
+                  </div>
+                  <div className="lg:col-span-2">
+                    <label htmlFor="edit-category_id" className="block text-sm font-medium text-gray-700">
+                      Category
+                    </label>
+                    <select
+                      id="edit-category_id"
+                      name="category_id"
+                      defaultValue={editingInvestment.category_id || ''}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
+                    >
+                      <option value="">Standard</option>
+                      {categories
+                        .filter(cat => cat.is_active)
+                        .map(category => (
+                          <option key={category.id} value={category.id}>
+                            {category.name} ({category.level})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col-reverse lg:flex-row gap-2 pt-4 border-t lg:border-0">
+                  <button
+                    type="button"
+                    onClick={() => setEditingInvestment(null)}
+                    className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                  >
+                    Update Investment
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Responsive Investments Table */}
+      <ResponsiveTable
+        data={filteredInvestments}
+        columns={columns}
+        mobileCard={mobileCard}
+        emptyMessage="No investments found. Create your first investment above."
+      />
     </div>
   )
 }

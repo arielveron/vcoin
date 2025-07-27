@@ -138,7 +138,7 @@ export function AchievementDashboard({
                 Logros Desbloqueados ({unlockedAchievements.length})
               </h3>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {unlockedAchievements.map((achievement) => (
                 <AchievementBadge
                   key={achievement.id}
@@ -160,7 +160,7 @@ export function AchievementDashboard({
                 Próximos Logros ({lockedAchievements.length})
               </h3>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {lockedAchievements.map((achievement) => (
                 <AchievementBadge
                   key={achievement.id}
