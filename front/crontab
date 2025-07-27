@@ -1,0 +1,18 @@
+# Achievement System Cron Jobs
+# 
+# Check for new achievements every 5 minutes
+# This handles time-sensitive achievements like streak validation
+*/5 * * * * cd /app && npm run achievement:check >> /var/log/achievement.log 2>&1
+
+# Weekly achievement processing (every Sunday at 2 AM)
+# This handles weekly summaries and cleanup
+0 2 * * 0 cd /app && npm run achievement:weekly >> /var/log/achievement-weekly.log 2>&1
+
+# Daily streak validation (every day at midnight)
+# Ensures streaks are properly maintained/broken
+0 0 * * * cd /app && npm run achievement:daily >> /var/log/achievement-daily.log 2>&1
+
+# Keep logs clean - remove logs older than 7 days
+0 1 * * * find /var/log -name "achievement*.log" -mtime +7 -delete
+
+# Don't remove this line

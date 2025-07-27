@@ -3,8 +3,10 @@
 import { AdminService } from '@/services/admin-service'
 import { CreateInvestmentRequest } from '@/types/database'
 import { withAdminAuth, validateRequired, parseFormNumber, parseFormFloat, parseFormDate } from '@/utils/server-actions'
+import { AchievementEngine } from '@/services/achievement-engine'
 
 const adminService = new AdminService()
+const achievementEngine = new AchievementEngine()
 
 export const createInvestment = withAdminAuth(async (formData: FormData) => {
   const missing = validateRequired(formData, ['student_id', 'fecha', 'monto', 'concepto'])
@@ -26,7 +28,18 @@ export const createInvestment = withAdminAuth(async (formData: FormData) => {
     category_id
   }
 
-  return await adminService.createInvestment(investmentData)
+  // Create the investment
+  const investment = await adminService.createInvestment(investmentData)
+  
+  // Check achievements for the student (non-blocking)
+  try {
+    await achievementEngine.checkAchievementsForStudent(student_id, investment.id)
+  } catch (error) {
+    // Don't fail the investment creation if achievement checking fails
+    console.error('Achievement checking failed:', error)
+  }
+  
+  return investment
 }, 'create investment')
 
 export const updateInvestment = withAdminAuth(async (id: number, formData: FormData) => {

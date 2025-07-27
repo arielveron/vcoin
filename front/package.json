@@ -11,7 +11,11 @@
     "setup:env": "tsx src/scripts/setup-env.ts",
     "db:setup": "tsx src/scripts/setup-db.ts",
     "db:init": "tsx src/scripts/setup-db.ts",
-    "db:test": "tsx src/scripts/test-db.ts"
+    "db:test": "tsx src/scripts/test-db.ts",
+    "achievement:check": "tsx scripts/achievement-processor.ts all",
+    "achievement:daily": "tsx scripts/achievement-processor.ts time",
+    "achievement:weekly": "tsx scripts/achievement-processor.ts weekly",
+    "test:achievements": "tsx scripts/test-achievements.ts"
   },
   "dependencies": {
     "@auth/pg-adapter": "^1.10.0",
@@ -29,6 +33,7 @@
     "next-auth": "^5.0.0-beta.29",
     "pg": "^8.16.3",
     "react": "^19.0.0",
+    "react-confetti": "^6.4.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {

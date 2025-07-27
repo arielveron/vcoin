@@ -1,0 +1,84 @@
+# Enhanced Dockerfile with Background Achievement Processing
+FROM node:18-alpine AS base
+
+# Install cron and other dependencies needed for background processing
+RUN apk add --no-cache \
+    curl \
+    tzdata \
+    bash
+
+# Install dependencies only when needed
+FROM base AS deps
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Build the application
+RUN npm run build
+
+# Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Create app user for security
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy built application
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Copy scripts and cron configuration
+COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copy and setup cron job
+COPY crontab /etc/crontabs/root
+RUN chmod 0644 /etc/crontabs/root
+
+# Create log directory
+RUN mkdir -p /var/log && chown -R nextjs:nodejs /var/log
+
+# Expose port
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Create startup script that runs both Next.js and cron
+COPY <<EOF /app/start.sh
+#!/bin/bash
+
+# Start cron daemon in background
+echo "🕐 Starting cron daemon..."
+crond -l 2 -f &
+
+# Start the Next.js application
+echo "🚀 Starting Next.js application..."
+exec node server.js
+EOF
+
+RUN chmod +x /app/start.sh
+RUN chown nextjs:nodejs /app/start.sh
+
+USER nextjs
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Start both cron and Next.js
+CMD ["/app/start.sh"]

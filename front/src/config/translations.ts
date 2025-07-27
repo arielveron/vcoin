@@ -184,6 +184,48 @@ export const translations = {
     noIcon: 'Sin icono'
   },
 
+  // Achievements
+  achievements: {
+    title: 'Logros',
+    unlocked: 'Desbloqueado',
+    locked: 'Bloqueado',
+    progress: 'Progreso',
+    points: 'Puntos',
+    totalPoints: 'Puntos Totales',
+    complete: 'Completo',
+    
+    // Categories
+    academic: 'Académico',
+    consistency: 'Consistencia',
+    milestone: 'Hitos',
+    special: 'Especial',
+    
+    // Rarities
+    common: 'Común',
+    rare: 'Raro',
+    epic: 'Épico',
+    legendary: 'Legendario',
+    
+    // UI
+    achievementUnlocked: '¡Logro Desbloqueado!',
+    allAchievements: 'Todos los Logros',
+    viewDetails: 'Ver Detalles',
+    
+    // Admin
+    manageAchievements: 'Gestionar Logros',
+    achievementManagement: 'Administrar Logros',
+    createAchievement: 'Crear Logro',
+    editAchievement: 'Editar Logro',
+    triggerType: 'Tipo de Activación',
+    automatic: 'Automático',
+    manual: 'Manual',
+    metric: 'Métrica',
+    condition: 'Condición',
+    value: 'Valor',
+    awardAchievement: 'Otorgar Logro',
+    backgroundJobs: 'Trabajos en Segundo Plano'
+  },
+
   // Common
   common: {
     loading: 'Cargando...',

@@ -1,20 +1,24 @@
-import { ClassRepository } from '../repos/class-repo';
-import { StudentRepository } from '../repos/student-repo';
-import { InvestmentRepository } from '../repos/investment-repo';
-import { InterestRateHistoryRepository } from '../repos/interest-rate-history-repo';
-import { InvestmentCategoryRepository } from '../repos/investment-category-repo';
-import { 
-  Class, 
-  Student, 
-  Investment, 
+import { ClassRepository } from "../repos/class-repo";
+import { StudentRepository } from "../repos/student-repo";
+import { InvestmentRepository } from "../repos/investment-repo";
+import { InterestRateHistoryRepository } from "../repos/interest-rate-history-repo";
+import { InvestmentCategoryRepository } from "../repos/investment-category-repo";
+import { AchievementRepository } from "../repos/achievement-repo";
+import {
+  Class,
+  Student,
+  Investment,
   InvestmentWithStudent,
   InvestmentCategory,
-  CreateClassRequest, 
-  CreateStudentRequest, 
+  Achievement,
+  AchievementWithProgress,
+  CreateClassRequest,
+  CreateStudentRequest,
   CreateInvestmentRequest,
   CreateInterestRateRequest,
-  CreateInvestmentCategoryRequest
-} from '../types/database';
+  CreateInvestmentCategoryRequest,
+  CreateAchievementRequest,
+} from "../types/database";
 
 export interface AdminStats {
   totalClasses: number;
@@ -26,30 +30,32 @@ export interface AdminStats {
 
 // Helper function for consistent date formatting (es-AR)
 function formatDateConsistent(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date
-  return d.toLocaleDateString('es-AR', {
-    year: 'numeric',
-    month: '2-digit', 
-    day: '2-digit'
-  })
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toLocaleDateString("es-AR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
 }
 
 // Helper function for consistent percentage formatting (es-AR)
 function formatPercentageConsistent(rate: number): string {
-  return (rate * 100).toLocaleString('es-AR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }) + '%'
+  return (
+    (rate * 100).toLocaleString("es-AR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }) + "%"
+  );
 }
 
 // Helper function for consistent currency formatting (es-AR)
 function formatCurrencyConsistent(amount: number): string {
-  return amount.toLocaleString('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
+  return amount.toLocaleString("es-AR", {
+    style: "currency",
+    currency: "ARS",
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })
+    maximumFractionDigits: 2,
+  });
 }
 
 export class AdminService {
@@ -58,6 +64,7 @@ export class AdminService {
   private investmentRepo: InvestmentRepository;
   private interestRateRepo: InterestRateHistoryRepository;
   private categoryRepo: InvestmentCategoryRepository;
+  private achievementRepo: AchievementRepository;
 
   constructor() {
     this.classRepo = new ClassRepository();
@@ -65,6 +72,7 @@ export class AdminService {
     this.investmentRepo = new InvestmentRepository();
     this.interestRateRepo = new InterestRateHistoryRepository();
     this.categoryRepo = new InvestmentCategoryRepository();
+    this.achievementRepo = new AchievementRepository();
   }
 
   // Dashboard stats
@@ -72,10 +80,16 @@ export class AdminService {
     const [classes, students, investments, totalAmount] = await Promise.all([
       this.classRepo.findAll(),
       classId ? this.studentRepo.findByClassId(classId) : this.studentRepo.findAll(),
-      studentId ? this.investmentRepo.findByStudentId(studentId) : 
-        classId ? this.getInvestmentsByClass(classId) : this.investmentRepo.findAll(),
-      studentId ? this.getTotalInvestmentAmountByStudent(studentId) :
-        classId ? this.getTotalInvestmentAmountByClass(classId) : this.investmentRepo.getTotalInvestmentAmount()
+      studentId
+        ? this.investmentRepo.findByStudentId(studentId)
+        : classId
+        ? this.getInvestmentsByClass(classId)
+        : this.investmentRepo.findAll(),
+      studentId
+        ? this.getTotalInvestmentAmountByStudent(studentId)
+        : classId
+        ? this.getTotalInvestmentAmountByClass(classId)
+        : this.investmentRepo.getTotalInvestmentAmount(),
     ]);
 
     return {
@@ -83,16 +97,16 @@ export class AdminService {
       totalStudents: students.length,
       totalInvestments: investments.length,
       totalInvestmentAmount: totalAmount,
-      totalInvestmentAmountFormatted: formatCurrencyConsistent(totalAmount)
+      totalInvestmentAmountFormatted: formatCurrencyConsistent(totalAmount),
     };
   }
 
   // Helper methods for filtered data
   private async getInvestmentsByClass(classId: number) {
     const students = await this.studentRepo.findByClassId(classId);
-    const studentIds = students.map(s => s.id);
+    const studentIds = students.map((s) => s.id);
     const allInvestments = await this.investmentRepo.findAll();
-    return allInvestments.filter(inv => studentIds.includes(inv.student_id));
+    return allInvestments.filter((inv) => studentIds.includes(inv.student_id));
   }
 
   private async getTotalInvestmentAmountByClass(classId: number): Promise<number> {
@@ -126,7 +140,7 @@ export class AdminService {
     // Check if class has students before deleting
     const students = await this.studentRepo.findByClassId(id);
     if (students.length > 0) {
-      throw new Error('Cannot delete class with existing students');
+      throw new Error("Cannot delete class with existing students");
     }
     return await this.classRepo.delete(id);
   }
@@ -156,7 +170,7 @@ export class AdminService {
     // Check if student has investments before deleting
     const investments = await this.investmentRepo.findByStudentId(id);
     if (investments.length > 0) {
-      throw new Error('Cannot delete student with existing investments');
+      throw new Error("Cannot delete student with existing investments");
     }
     return await this.studentRepo.delete(id);
   }
@@ -174,7 +188,7 @@ export class AdminService {
     // Validate student exists
     const student = await this.studentRepo.findById(data.student_id);
     if (!student) {
-      throw new Error('Student not found');
+      throw new Error("Student not found");
     }
     return await this.investmentRepo.create(data);
   }
@@ -191,36 +205,33 @@ export class AdminService {
   async getAllInterestRates() {
     const rates = await this.interestRateRepo.findAll();
     // Add formatted versions for consistent rendering
-    return rates.map(rate => ({
+    return rates.map((rate) => ({
       ...rate,
       monthly_interest_rate_formatted: formatPercentageConsistent(rate.monthly_interest_rate),
       effective_date_formatted: formatDateConsistent(rate.effective_date),
       created_at_formatted: formatDateConsistent(rate.created_at),
-      updated_at_formatted: formatDateConsistent(rate.updated_at)
+      updated_at_formatted: formatDateConsistent(rate.updated_at),
     }));
   }
 
   async getAllInterestRatesWithCurrentRates() {
-    const [rates, classes] = await Promise.all([
-      this.getAllInterestRates(),
-      this.getAllClasses()
-    ]);
+    const [rates, classes] = await Promise.all([this.getAllInterestRates(), this.getAllClasses()]);
 
     // Get current rates for each class
-    const currentRates = classes.map(cls => {
+    const currentRates = classes.map((cls) => {
       const classRates = rates
-        .filter(rate => rate.class_id === cls.id)
+        .filter((rate) => rate.class_id === cls.id)
         .sort((a, b) => new Date(b.effective_date).getTime() - new Date(a.effective_date).getTime());
-      
+
       const currentRate = classRates[0]?.monthly_interest_rate || 0;
       const lastUpdated = classRates[0]?.effective_date;
-      
+
       return {
         class: cls,
         currentRate,
         currentRateFormatted: formatPercentageConsistent(currentRate),
         lastUpdated,
-        lastUpdatedFormatted: lastUpdated ? formatDateConsistent(lastUpdated) : null
+        lastUpdatedFormatted: lastUpdated ? formatDateConsistent(lastUpdated) : null,
       };
     });
 
@@ -265,5 +276,45 @@ export class AdminService {
 
   async deleteCategory(id: number): Promise<boolean> {
     return await this.categoryRepo.delete(id);
+  }
+
+  // Achievement management methods
+  async getAllAchievements(): Promise<Achievement[]> {
+    return await this.achievementRepo.findAll();
+  }
+
+  async getAchievementById(id: number): Promise<Achievement | null> {
+    return await this.achievementRepo.findById(id);
+  }
+
+  async createAchievement(data: CreateAchievementRequest): Promise<Achievement> {
+    return await this.achievementRepo.create(data);
+  }
+
+  async updateAchievement(id: number, data: Partial<CreateAchievementRequest>): Promise<Achievement | null> {
+    return await this.achievementRepo.update(id, data);
+  }
+
+  async deleteAchievement(id: number): Promise<boolean> {
+    return await this.achievementRepo.delete(id);
+  }
+
+  async getStudentAchievements(studentId: number): Promise<AchievementWithProgress[]> {
+    return await this.achievementRepo.getStudentAchievements(studentId);
+  }
+
+  async getAchievementStats(): Promise<{
+    totalAchievements: number;
+    totalUnlocked: number;
+    topStudents: Array<{ student_id: number; total_points: number; achievement_count: number }>;
+  }> {
+    // This could be expanded with more detailed statistics
+    const achievements = await this.achievementRepo.findAll();
+
+    return {
+      totalAchievements: achievements.length,
+      totalUnlocked: 0, // TODO: Implement proper counting
+      topStudents: [], // TODO: Implement leaderboard
+    };
   }
 }

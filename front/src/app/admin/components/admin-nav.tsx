@@ -15,6 +15,8 @@ const navigation = [
   { name: t('nav.investments'), href: '/admin/investments' },
   { name: t('nav.categories'), href: '/admin/categories' },
   { name: t('nav.interestRates'), href: '/admin/interest-rates' },
+  { name: t('achievements.manageAchievements'), href: '/admin/achievements' },
+  { name: t('achievements.achievementManagement'), href: '/admin/achievements/manage' },
 ]
 
 export default function AdminNav() {

@@ -1,6 +1,7 @@
 import { InvestmentService } from '@/services/investment-service';
 import { fondos, students, classes, ClassSettings } from '@/db/pseudo-db';
 import { InterestRateHistoryRepository } from '@/repos/interest-rate-history-repo';
+import { AchievementRepository } from '@/repos/achievement-repo';
 
 // Default fallback settings (should rarely be used as pseudo-db has complete data)
 const defaultClassSettings: ClassSettings = {
@@ -13,6 +14,7 @@ const defaultClassSettings: ClassSettings = {
 export class ServerDataService {
   private static service: InvestmentService | null = null;
   private static rateHistoryRepo: InterestRateHistoryRepository | null = null;
+  private static achievementRepo: AchievementRepository | null = null;
   private static dbAvailable: boolean | null = null;
 
   private static async checkDatabaseAvailability(): Promise<boolean> {
@@ -666,6 +668,37 @@ export class ServerDataService {
     } catch (error) {
       console.error('Error getting rate for historical date:', error);
       return 0.01; // Fallback to 1%
+    }
+  }
+
+  // Achievement-related methods
+  static async getStudentAchievements(studentId: number) {
+    try {
+      if (!this.achievementRepo) {
+        this.achievementRepo = new AchievementRepository();
+      }
+      return await this.achievementRepo.getStudentAchievements(studentId);
+    } catch (error) {
+      console.error('Error getting student achievements, using fallback:', error);
+      // Return empty achievements if database unavailable
+      return [];
+    }
+  }
+
+  static async getStudentAchievementStats(studentId: number) {
+    try {
+      if (!this.achievementRepo) {
+        this.achievementRepo = new AchievementRepository();
+      }
+      return await this.achievementRepo.getStudentStats(studentId);
+    } catch (error) {
+      console.error('Error getting student achievement stats, using fallback:', error);
+      // Return default stats if database unavailable
+      return {
+        total_points: 0,
+        achievements_unlocked: 0,
+        achievements_total: 0
+      };
     }
   }
 }

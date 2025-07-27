@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { StudentAuthService } from '@/services/student-auth-service'
 import { SecureStudentSessionService } from '@/services/secure-student-session-service'
 import { LoginThrottleService } from '@/services/login-throttle-service'
+import { AchievementEngine } from '@/services/achievement-engine'
 import { withStudentAuth, withErrorHandling, validateRequired, ActionResult } from '@/utils/server-actions'
 
 export const studentLogin = async (formData: FormData): Promise<ActionResult> => {
@@ -79,6 +80,15 @@ export const studentLogin = async (formData: FormData): Promise<ActionResult> =>
 
     // Create secure session
     await SecureStudentSessionService.createSession(studentSession)
+
+    // Check for login-based achievements (non-blocking)
+    try {
+      const achievementEngine = new AchievementEngine()
+      await achievementEngine.checkAchievementsForStudent(studentSession.student_id)
+    } catch (error) {
+      // Don't fail login if achievement checking fails
+      console.error('Achievement checking failed during login:', error)
+    }
 
     // Redirect to student dashboard
     redirect('/student')

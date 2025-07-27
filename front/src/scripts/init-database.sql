@@ -11,6 +11,10 @@
 -- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Drop tables if they exist (for development reset)
+DROP TABLE IF EXISTS achievement_progress CASCADE;
+DROP TABLE IF EXISTS student_achievements CASCADE;
+DROP TABLE IF EXISTS achievements CASCADE;
+DROP TABLE IF EXISTS investment_categories CASCADE;
 DROP TABLE IF EXISTS investments CASCADE;
 DROP TABLE IF EXISTS interest_rate_history CASCADE;
 DROP TABLE IF EXISTS students CASCADE;
@@ -80,6 +84,52 @@ CREATE TABLE investment_categories (
 -- Add category reference to investments
 ALTER TABLE investments 
 ADD COLUMN category_id INTEGER REFERENCES investment_categories(id) ON DELETE SET NULL;
+
+-- Achievement definitions
+CREATE TABLE achievements (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT NOT NULL,
+    category VARCHAR(50) NOT NULL CHECK (category IN ('academic', 'consistency', 'milestone', 'special')),
+    rarity VARCHAR(20) NOT NULL CHECK (rarity IN ('common', 'rare', 'epic', 'legendary')),
+    
+    -- Icon configuration (reusing same structure as categories)
+    icon_config JSONB NOT NULL,
+    
+    -- Trigger configuration
+    trigger_type VARCHAR(20) NOT NULL CHECK (trigger_type IN ('automatic', 'manual')),
+    trigger_config JSONB,
+    
+    -- Visual configuration
+    celebration_config JSONB DEFAULT '{"animation": "confetti", "duration": 3000}',
+    
+    -- Metadata
+    points INTEGER DEFAULT 0,
+    sort_order INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Student achievements (unlocked)
+CREATE TABLE student_achievements (
+    student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+    achievement_id INTEGER REFERENCES achievements(id) ON DELETE CASCADE,
+    unlocked_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    seen BOOLEAN DEFAULT false,
+    celebration_shown BOOLEAN DEFAULT false,
+    metadata JSONB DEFAULT '{}', -- Store context like streak count, amount reached, etc.
+    PRIMARY KEY (student_id, achievement_id)
+);
+
+-- Achievement progress tracking (for progressive achievements)
+CREATE TABLE achievement_progress (
+    student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+    achievement_id INTEGER REFERENCES achievements(id) ON DELETE CASCADE,
+    current_value NUMERIC DEFAULT 0,
+    last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    PRIMARY KEY (student_id, achievement_id)
+);
 
 -- Create interest_rate_history table
 -- This table tracks the historical changes of interest rates for each class
@@ -152,6 +202,13 @@ CREATE INDEX idx_investments_category_id ON investments(category_id);
 CREATE INDEX idx_investment_categories_active ON investment_categories(is_active);
 CREATE INDEX idx_investment_categories_sort ON investment_categories(sort_order);
 
+-- Indexes for achievements
+CREATE INDEX idx_achievements_active ON achievements(is_active);
+CREATE INDEX idx_achievements_category ON achievements(category);
+CREATE INDEX idx_student_achievements_student ON student_achievements(student_id);
+CREATE INDEX idx_student_achievements_unseen ON student_achievements(student_id, seen) WHERE NOT seen;
+CREATE INDEX idx_achievement_progress_student ON achievement_progress(student_id);
+
 -- Create indexes for authentication tables
 CREATE INDEX accounts_user_id_idx ON accounts("userId");
 CREATE INDEX sessions_session_token_idx ON sessions("sessionToken");
@@ -172,6 +229,7 @@ CREATE TRIGGER update_students_updated_at BEFORE UPDATE ON students FOR EACH ROW
 CREATE TRIGGER update_investments_updated_at BEFORE UPDATE ON investments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_interest_rate_history_updated_at BEFORE UPDATE ON interest_rate_history FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_investment_categories_updated_at BEFORE UPDATE ON investment_categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_achievements_updated_at BEFORE UPDATE ON achievements FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Insert initial test data
 -- Create classes with specific settings
@@ -251,6 +309,69 @@ INSERT INTO interest_rate_history (class_id, monthly_interest_rate, effective_da
 -- Class 3 (Matemáticas Avanzadas) - Initial rate and changes
 (3, 0.07, '2025-01-01'),   -- Initial rate
 (3, 0.075, '2025-05-15');  -- Rate increased to 7.5%
+
+-- Insert default achievements
+INSERT INTO achievements (name, description, category, rarity, icon_config, trigger_type, trigger_config, points) VALUES
+-- Academic achievements
+('First Steps', 'Receive your first investment', 'academic', 'common', 
+ '{"name": "Trophy", "library": "lucide", "size": 24, "color": "#10B981"}', 
+ 'automatic', '{"metric": "investment_count", "operator": ">=", "value": 1}', 10),
+
+('Getting Started', 'Receive 5 investments', 'academic', 'common',
+ '{"name": "Star", "library": "lucide", "size": 24, "color": "#3B82F6"}',
+ 'automatic', '{"metric": "investment_count", "operator": ">=", "value": 5}', 25),
+
+('Active Learner', 'Receive 10 investments', 'academic', 'rare',
+ '{"name": "GraduationCap", "library": "lucide", "size": 28, "color": "#8B5CF6"}',
+ 'automatic', '{"metric": "investment_count", "operator": ">=", "value": 10}', 50),
+
+('Scholar', 'Receive 25 investments', 'academic', 'epic',
+ '{"name": "Award", "library": "lucide", "size": 32, "color": "#EC4899", "animationClass": "animate-pulse"}',
+ 'automatic', '{"metric": "investment_count", "operator": ">=", "value": 25}', 100),
+
+-- Consistency achievements
+('On a Roll', 'Receive investments 3 days in a row', 'consistency', 'rare',
+ '{"name": "Flame", "library": "lucide", "size": 24, "color": "#F59E0B", "animationClass": "animate-bounce"}',
+ 'automatic', '{"metric": "streak_days", "operator": ">=", "value": 3}', 30),
+
+('Dedicated', 'Receive investments 7 days in a row', 'consistency', 'epic',
+ '{"name": "Flame", "library": "lucide", "size": 28, "color": "#EF4444", "animationClass": "animate-pulse"}',
+ 'automatic', '{"metric": "streak_days", "operator": ">=", "value": 7}', 75),
+
+('Unstoppable', 'Receive investments 14 days in a row', 'consistency', 'legendary',
+ '{"name": "Zap", "library": "lucide", "size": 32, "color": "#F59E0B", "animationClass": "animate-bounce"}',
+ 'automatic', '{"metric": "streak_days", "operator": ">=", "value": 14}', 150),
+
+-- Milestone achievements
+('Saver', 'Accumulate 10,000 VCoins', 'milestone', 'common',
+ '{"name": "Coins", "library": "lucide", "size": 24, "color": "#10B981"}',
+ 'automatic', '{"metric": "total_invested", "operator": ">=", "value": 10000}', 20),
+
+('Investor', 'Accumulate 50,000 VCoins', 'milestone', 'rare',
+ '{"name": "DollarSign", "library": "lucide", "size": 28, "color": "#3B82F6"}',
+ 'automatic', '{"metric": "total_invested", "operator": ">=", "value": 50000}', 50),
+
+('Wealthy', 'Accumulate 100,000 VCoins', 'milestone', 'epic',
+ '{"name": "Gem", "library": "lucide", "size": 32, "color": "#8B5CF6", "animationClass": "animate-spin"}',
+ 'automatic', '{"metric": "total_invested", "operator": ">=", "value": 100000}', 100),
+
+('Millionaire', 'Accumulate 1,000,000 VCoins', 'milestone', 'legendary',
+ '{"name": "Crown", "library": "lucide", "size": 36, "color": "#EAB308", "animationClass": "animate-bounce"}',
+ 'automatic', '{"metric": "total_invested", "operator": ">=", "value": 1000000}', 500),
+
+-- Category-specific achievements
+('Exam Master', 'Receive 5 investments in exam category', 'academic', 'rare',
+ '{"name": "Award", "library": "lucide", "size": 28, "color": "#06B6D4"}',
+ 'automatic', '{"metric": "category_count", "operator": ">=", "value": 5, "category_name": "Exams"}', 40),
+
+-- Special achievements (manual)
+('Teacher''s Pet', 'Awarded by professor for exceptional performance', 'special', 'epic',
+ '{"name": "Heart", "library": "lucide", "size": 32, "color": "#EC4899", "animationClass": "animate-heartbeat"}',
+ 'manual', null, 200),
+
+('Class Champion', 'Finish in top 3 of the class', 'special', 'legendary',
+ '{"name": "Crown", "library": "lucide", "size": 40, "color": "#FFD700", "animationClass": "animate-float"}',
+ 'manual', null, 1000);
 
 -- Create views for interest rate management
 
@@ -350,6 +471,7 @@ SELECT 'Classes created: ' || COUNT(*) as classes_count FROM classes;
 SELECT 'Students created: ' || COUNT(*) as students_count FROM students;
 SELECT 'Investments created: ' || COUNT(*) as investments_count FROM investments;
 SELECT 'Interest rate history records: ' || COUNT(*) as rate_history_count FROM interest_rate_history;
+SELECT 'Achievements created: ' || COUNT(*) as achievements_count FROM achievements;
 
 -- Display current interest rates by class
 SELECT 

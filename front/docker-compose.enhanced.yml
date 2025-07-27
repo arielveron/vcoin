@@ -1,0 +1,113 @@
+# Enhanced Docker Compose with Background Achievement Processing
+services:
+  vcoin-front:
+    build: 
+      context: .
+      dockerfile: Dockerfile.enhanced  # Use enhanced dockerfile with cron
+    image: vcoin:1.1.0  # Bump version for enhanced features
+    container_name: vcoin-enhanced
+    ports:
+      - "3000:3000"
+    environment:
+      # Application Configuration
+      - NODE_ENV=production
+      
+      # Database Configuration - Use Docker secrets or external secret management in production
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      
+      # Next.js Configuration
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      
+      # NextAuth.js Configuration (new AUTH_SECRET for v5)
+      - AUTH_SECRET=${AUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      
+      # Student Session Security
+      - SESSION_SECRET=${SESSION_SECRET}
+      
+      # Google OAuth2 Configuration
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      
+      # Login Throttling Configuration
+      - LOGIN_THROTTLE_MIN_DELAY=${LOGIN_THROTTLE_MIN_DELAY:-1000}
+      - LOGIN_THROTTLE_MAX_DELAY=${LOGIN_THROTTLE_MAX_DELAY:-30000}
+      - LOGIN_THROTTLE_MAX_TRACKED=${LOGIN_THROTTLE_MAX_TRACKED:-10000}
+      - LOGIN_THROTTLE_RESET_TIME=${LOGIN_THROTTLE_RESET_TIME:-300000}
+      - LOGIN_THROTTLE_CLEANUP_INTERVAL=${LOGIN_THROTTLE_CLEANUP_INTERVAL:-60000}
+      
+      # Achievement Processing Configuration
+      - ACHIEVEMENT_PROCESSING_ENABLED=${ACHIEVEMENT_PROCESSING_ENABLED:-true}
+      - ACHIEVEMENT_LOG_LEVEL=${ACHIEVEMENT_LOG_LEVEL:-info}
+    
+    env_file:
+      - .env.local
+    
+    restart: unless-stopped
+    depends_on:
+      - db
+    
+    # Security configurations
+    security_opt:
+      - no-new-privileges:true
+    
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          memory: 768M  # Increased for background processing
+          cpus: '0.75'  # Increased for background processing
+        reservations:
+          memory: 384M
+          cpus: '0.5'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Enhanced logging with rotation
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"  # Keep more log files for debugging
+        
+    # Volume for persistent achievement logs
+    volumes:
+      - achievement-logs:/var/log
+      
+  db:
+    image: postgres:15-alpine  # Use specific version for stability
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Health check for database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+# Named volumes for persistence
+volumes:
+  achievement-logs:
+    driver: local

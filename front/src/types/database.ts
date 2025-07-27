@@ -194,3 +194,85 @@ export interface StudentProfileUpdateRequest {
   password?: string;
   current_password?: string;
 }
+
+// Achievement types
+export interface Achievement {
+  id: number;
+  name: string;
+  description: string;
+  category: 'academic' | 'consistency' | 'milestone' | 'special';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  icon_config: {
+    name: string;
+    library: 'lucide' | 'heroicons-solid' | 'heroicons-outline' | 'tabler' | 'phosphor';
+    size?: number;
+    color?: string;
+    animationClass?: string;
+  };
+  trigger_type: 'automatic' | 'manual';
+  trigger_config?: {
+    metric: 'investment_count' | 'total_invested' | 'streak_days' | 'category_count';
+    operator: '>' | '>=' | '=' | '<' | '<=';
+    value: number;
+    category_name?: string; // For category-specific achievements
+    category_id?: number;
+  } | null;
+  celebration_config?: {
+    animation?: 'confetti' | 'fireworks' | 'stars' | 'coins';
+    duration?: number;
+    sound?: boolean;
+  };
+  points: number;
+  sort_order: number;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface StudentAchievement {
+  student_id: number;
+  achievement_id: number;
+  unlocked_at: Date;
+  seen: boolean;
+  celebration_shown: boolean;
+  metadata?: {
+    triggerValue?: number; // The value that triggered the achievement
+    context?: string; // Additional context
+  };
+}
+
+export interface AchievementProgress {
+  student_id: number;
+  achievement_id: number;
+  current_value: number;
+  last_updated: Date;
+}
+
+export interface AchievementWithProgress extends Achievement {
+  unlocked?: boolean;
+  unlocked_at?: Date;
+  progress?: number; // Percentage 0-100
+  current_value?: number;
+  required_value?: number;
+}
+
+export interface CreateAchievementRequest {
+  name: string;
+  description: string;
+  category: Achievement['category'];
+  rarity: Achievement['rarity'];
+  icon_config: Achievement['icon_config'];
+  trigger_type: Achievement['trigger_type'];
+  trigger_config?: Achievement['trigger_config'];
+  celebration_config?: Achievement['celebration_config'];
+  points?: number;
+  sort_order?: number;
+  is_active?: boolean;
+}
+
+// Achievement notification for UI
+export interface AchievementNotification {
+  achievement: Achievement;
+  unlocked_at: Date;
+  isNew: boolean;
+}

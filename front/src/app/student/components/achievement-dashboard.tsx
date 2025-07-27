@@ -1,0 +1,204 @@
+'use client';
+
+import { useState, useMemo } from 'react';
+import { AchievementWithProgress } from '@/types/database';
+import AchievementBadge from '@/components/achievement-badge';
+import { cn } from '@/lib/utils';
+
+interface AchievementDashboardProps {
+  achievements: AchievementWithProgress[];
+  studentStats: {
+    total_points: number;
+    achievements_unlocked: number;
+    achievements_total: number;
+    rank?: number;
+  };
+}
+
+const CATEGORY_FILTERS = [
+  { key: 'all', label: 'Todos', icon: '🏆' },
+  { key: 'academic', label: 'Académicos', icon: '📚' },
+  { key: 'consistency', label: 'Constancia', icon: '🎯' },
+  { key: 'milestone', label: 'Hitos', icon: '🚀' },
+  { key: 'special', label: 'Especiales', icon: '⭐' }
+] as const;
+
+type CategoryKey = typeof CATEGORY_FILTERS[number]['key'];
+
+export function AchievementDashboard({ achievements, studentStats }: AchievementDashboardProps) {
+  const [selectedCategory, setSelectedCategory] = useState<CategoryKey>('all');
+
+  // Filter achievements by category
+  const filteredAchievements = useMemo(() => {
+    if (selectedCategory === 'all') {
+      return achievements;
+    }
+    return achievements.filter(achievement => achievement.category === selectedCategory);
+  }, [achievements, selectedCategory]);
+
+  // Group achievements by unlock status
+  const { unlockedAchievements, lockedAchievements } = useMemo(() => {
+    const unlocked = filteredAchievements.filter(a => a.unlocked);
+    const locked = filteredAchievements.filter(a => !a.unlocked);
+    
+    // Sort unlocked by unlock date (newest first)
+    unlocked.sort((a, b) => {
+      if (!a.unlocked_at || !b.unlocked_at) return 0;
+      return new Date(b.unlocked_at).getTime() - new Date(a.unlocked_at).getTime();
+    });
+    
+    // Sort locked by progress (highest first)
+    locked.sort((a, b) => (b.progress || 0) - (a.progress || 0));
+    
+    return { unlockedAchievements: unlocked, lockedAchievements: locked };
+  }, [filteredAchievements]);
+
+  const completionRate = Math.round(
+    (studentStats.achievements_unlocked / studentStats.achievements_total) * 100
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Overview */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-600">{studentStats.total_points}</div>
+            <div className="text-sm text-gray-600">Puntos Totales</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-green-600">
+              {studentStats.achievements_unlocked}/{studentStats.achievements_total}
+            </div>
+            <div className="text-sm text-gray-600">Logros Desbloqueados</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-purple-600">{completionRate}%</div>
+            <div className="text-sm text-gray-600">Completado</div>
+          </div>
+          {studentStats.rank && (
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-600">#{studentStats.rank}</div>
+              <div className="text-sm text-gray-600">Ranking</div>
+            </div>
+          )}
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="mt-4">
+          <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Progreso General</span>
+            <span>{completionRate}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${completionRate}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Category Filters */}
+      <div className="bg-white rounded-lg shadow-sm border p-4">
+        <div className="flex flex-wrap gap-2">
+          {CATEGORY_FILTERS.map((category) => (
+            <button
+              key={category.key}
+              onClick={() => setSelectedCategory(category.key)}
+              className={cn(
+                "flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200",
+                "border text-sm font-medium",
+                selectedCategory === category.key
+                  ? "bg-blue-500 text-white border-blue-500 shadow-md"
+                  : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+              )}
+            >
+              <span className="text-lg">{category.icon}</span>
+              <span>{category.label}</span>
+              <span className="text-xs opacity-75">
+                ({achievements.filter(a => 
+                  category.key === 'all' || a.category === category.key
+                ).length})
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Achievements Grid */}
+      <div className="space-y-6">
+        {/* Unlocked Achievements */}
+        {unlockedAchievements.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex items-center space-x-2 mb-4">
+              <div className="text-xl">🏆</div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Logros Desbloqueados ({unlockedAchievements.length})
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {unlockedAchievements.map((achievement) => (
+                <AchievementBadge
+                  key={achievement.id}
+                  achievement={achievement}
+                  showProgress={false}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Locked Achievements */}
+        {lockedAchievements.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex items-center space-x-2 mb-4">
+              <div className="text-xl">🔒</div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Próximos Logros ({lockedAchievements.length})
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {lockedAchievements.map((achievement) => (
+                <AchievementBadge
+                  key={achievement.id}
+                  achievement={achievement}
+                  showProgress={true}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {filteredAchievements.length === 0 && (
+          <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+            <div className="text-6xl mb-4">🎯</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              No hay logros en esta categoría
+            </h3>
+            <p className="text-gray-600">
+              Selecciona otra categoría para ver más logros disponibles.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Motivational Footer */}
+      {studentStats.achievements_unlocked < studentStats.achievements_total && (
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200 p-6">
+          <div className="flex items-center space-x-3">
+            <div className="text-2xl">💪</div>
+            <div>
+              <h4 className="font-semibold text-gray-900">¡Sigue así!</h4>
+              <p className="text-gray-600">
+                Te faltan {studentStats.achievements_total - studentStats.achievements_unlocked} logros 
+                para completar tu colección. ¡Cada inversión te acerca más a tus objetivos!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
