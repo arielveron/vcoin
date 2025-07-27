@@ -4,17 +4,17 @@ import React, { useEffect, useRef } from 'react';
 
 interface HistoricalGainsGraphProps {
   data: Array<{
-    date: string; // Pre-formatted date string to avoid hydration issues
+    date: string;
     amount: number;
-    formattedAmount: string; // Pre-formatted amount to avoid locale issues
-    sortKey: number; // Pre-calculated sort key
+    formattedAmount: string;
+    sortKey: number;
   }>;
   investmentMarkers?: Array<{
-    date: number; // Timestamp
+    date: number;
     amount: number;
   }>;
   rateChangeMarkers?: Array<{
-    date: number; // Timestamp
+    date: number;
     rate: number;
   }>;
   className?: string;
@@ -35,40 +35,83 @@ export default function HistoricalGainsGraph({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas size
+    // Set canvas size with device pixel ratio for crisp rendering
     const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * window.devicePixelRatio;
-    canvas.height = rect.height * window.devicePixelRatio;
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
 
     // Clear canvas
     ctx.clearRect(0, 0, rect.width, rect.height);
 
-    // Sort data by date to ensure proper line drawing
+    // Sort data by date
     const sortedData = [...data].sort((a, b) => a.sortKey - b.sortKey);
 
     if (sortedData.length < 2) {
-      return; // Don't draw anything if insufficient data
+      // Draw "No sufficient data" message
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '14px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Datos insuficientes', rect.width / 2, rect.height / 2);
+      return;
     }
 
-    // Graph dimensions - use full canvas
-    const padding = 5;
+    // Graph dimensions
+    const padding = 15;
     const graphWidth = rect.width - padding * 2;
     const graphHeight = rect.height - padding * 2;
 
-    // Find min and max values
+    // Find min and max values with some padding
     const amounts = sortedData.map(d => d.amount);
-    const minAmount = Math.min(...amounts);
-    const maxAmount = Math.max(...amounts);
-    const amountRange = maxAmount - minAmount || 1; // Avoid division by zero
+    const minAmount = Math.min(...amounts) * 0.98;
+    const maxAmount = Math.max(...amounts) * 1.02;
+    const amountRange = maxAmount - minAmount || 1;
 
-    // Helper function to get coordinates
+    // Helper functions
     const getX = (index: number) => padding + (index / (sortedData.length - 1)) * graphWidth;
     const getY = (amount: number) => padding + ((maxAmount - amount) / amountRange) * graphHeight;
 
-    // Draw the line only - minimal design
-    ctx.strokeStyle = '#10B981'; // Green color
-    ctx.lineWidth = 2;
+    // Draw grid lines
+    ctx.strokeStyle = '#f3f4f6';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
+    
+    // Horizontal grid lines
+    for (let i = 0; i <= 4; i++) {
+      const y = padding + (i / 4) * graphHeight;
+      ctx.beginPath();
+      ctx.moveTo(padding, y);
+      ctx.lineTo(rect.width - padding, y);
+      ctx.stroke();
+    }
+    
+    ctx.setLineDash([]);
+
+    // Create gradient for area fill
+    const gradient = ctx.createLinearGradient(0, padding, 0, rect.height - padding);
+    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.1)');
+    gradient.addColorStop(1, 'rgba(16, 185, 129, 0.02)');
+
+    // Draw area fill
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.moveTo(getX(0), rect.height - padding);
+    ctx.lineTo(getX(0), getY(sortedData[0].amount));
+    
+    sortedData.forEach((point, index) => {
+      if (index > 0) {
+        ctx.lineTo(getX(index), getY(point.amount));
+      }
+    });
+    
+    ctx.lineTo(getX(sortedData.length - 1), rect.height - padding);
+    ctx.closePath();
+    ctx.fill();
+
+    // Draw the main line
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.beginPath();
@@ -86,12 +129,9 @@ export default function HistoricalGainsGraph({
 
     ctx.stroke();
 
-    // Draw investment markers (blue dots)
+    // Draw investment markers
     if (investmentMarkers.length > 0) {
-      ctx.fillStyle = '#3B82F6'; // Blue color for investments
-      const investmentRadius = 3;
       investmentMarkers.forEach(marker => {
-        // Find the closest data point to get the X position
         const markerTime = marker.date;
         let closestIndex = 0;
         let closestDistance = Math.abs(sortedData[0].sortKey - markerTime);
@@ -107,21 +147,24 @@ export default function HistoricalGainsGraph({
         const x = getX(closestIndex);
         const y = getY(marker.amount);
         
-        // Draw investment marker dot
+        // Draw white circle with blue border
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(x, y, investmentRadius, 0, 2 * Math.PI);
+        ctx.arc(x, y, 5, 0, 2 * Math.PI);
         ctx.fill();
+        ctx.stroke();
       });
     }
 
-    // Draw rate change markers (vertical red lines)
+    // Draw rate change markers
     if (rateChangeMarkers.length > 0) {
-      ctx.strokeStyle = '#EF4444'; // Red color for rate changes
-      ctx.lineWidth = 1;
-      ctx.setLineDash([1, 1]); // Dashed line pattern
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
       
       rateChangeMarkers.forEach(marker => {
-        // Find the closest data point to get the X position
         const markerTime = marker.date;
         let closestIndex = 0;
         let closestDistance = Math.abs(sortedData[0].sortKey - markerTime);
@@ -136,29 +179,28 @@ export default function HistoricalGainsGraph({
         
         const x = getX(closestIndex);
         
-        // Draw vertical line from top to bottom of graph
+        // Draw vertical dashed line
         ctx.beginPath();
         ctx.moveTo(x, padding);
         ctx.lineTo(x, rect.height - padding);
         ctx.stroke();
       });
       
-      // Reset line style for future drawings
       ctx.setLineDash([]);
-      ctx.lineWidth = 2;
     }
 
   }, [data, investmentMarkers, rateChangeMarkers]);
 
   if (!data || data.length === 0) {
-    return null; // Don't render anything if no data
+    return null;
   }
 
   return (
-    <div className={`rounded ${className}`}>
+    <div className={`rounded-lg bg-white ${className}`}>
       <canvas
         ref={canvasRef}
-        className="w-full h-16"
+        className="w-full"
+        style={{ maxWidth: '100%', height: 'inherit' }}
       />
     </div>
   );

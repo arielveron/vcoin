@@ -1,8 +1,8 @@
 import React from "react";
 import MontoActual from "./monto-actual";
-import Interes from "./interes";
-import Ganancia from "./ganancia";
-import Estimado from "./estimado";
+import InteresWrapper from "./interes-wrapper";
+import GananciaWrapper from "./ganancia-wrapper";
+import EstimadoCollapsible from "./estimado-collapsible";
 import ListInvertidos from "./list-invertidos";
 import AchievementSection from "./achievement-section";
 import { ServerDataService } from "@/services/server-data-service";
@@ -28,39 +28,42 @@ export default async function StudentMainScreen({ studentId }: StudentMainScreen
   const unseenAchievements = await ServerDataService.getUnseenAchievements(studentId);
 
   return (
-    <div className="w-full max-w-6xl space-y-6">
-      {/* Investment Dashboard */}
-      <div className="grid grid-cols-2 gap-4 items-start justify-center px-2 py-8 bg-gray-100 rounded-lg shadow-lg w-full max-w-md mx-auto">
-        {/* <div className='col-span-2 text-gray-700 font-bold text-center [family-name:var(--font-geist-mono)]'>VCOIN</div> */}
+    <div className="w-full max-w-6xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
+      {/* Main Dashboard Container */}
+      <div className="space-y-6">
+        {/* Monto Actual - Full Width */}
         <MontoActual 
-          className="col-span-2" 
+          className="w-full" 
           montoActual={montoActual}
           classSettings={classSettings}
           studentId={studentId}
         />
-        <Interes 
-          classSettings={classSettings}
-          studentId={studentId}
-        />
-        <Ganancia 
-          gananciaTotal={gananciaTotal}
-          studentId={studentId}
-        />
         
-        <Estimado 
-          className="col-span-2" 
+        {/* Stats Grid - Responsive with Collapsible Components */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InteresWrapper studentId={studentId} />
+          <GananciaWrapper 
+            gananciaTotal={gananciaTotal}
+            studentId={studentId}
+          />
+        </div>
+        
+        {/* Estimado - Full Width Collapsible */}
+        <EstimadoCollapsible 
+          className="w-full" 
           montoEstimado={montoEstimado}
           classSettings={classSettings}
         />
-        <hr className="col-span-2 border-gray-300" />
+        
+        {/* Investment List - Full Width */}
         <ListInvertidos 
-          className="col-span-2" 
+          className="w-full" 
           totalInvertido={totalInvertido} 
           listInvertidos={listInvertidos} 
         />
       </div>
 
-      {/* Achievement Section */}
+      {/* Achievement Section - Full Width */}
       <AchievementSection 
         achievements={achievements}
         studentStats={achievementStats}

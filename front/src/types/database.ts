@@ -2,6 +2,7 @@
 
 export interface ClassSettings {
   end_date: Date; // Date object for consistency throughout the application
+  start_date?: Date; // Optional start date for progress calculations
   timezone: string; // IANA timezone identifier (e.g., 'America/Argentina/Buenos_Aires')
   current_monthly_interest_rate?: number; // Current rate from history
 }
@@ -275,4 +276,41 @@ export interface AchievementNotification {
   achievement: Achievement;
   unlocked_at: Date;
   isNew: boolean;
+}
+
+// Historical data types for graphs and components
+export interface HistoricalAmount {
+  date: Date;
+  amount: number;
+}
+
+export interface InvestmentMarker {
+  date: number; // Timestamp for graph rendering
+  amount: number;
+}
+
+export interface RateChangeMarker {
+  date: number; // Timestamp for graph rendering
+  rate: number;
+}
+
+export interface HistoricalAmountsData {
+  amounts: HistoricalAmount[];
+  investmentMarkers: InvestmentMarker[];
+  rateChangeMarkers: RateChangeMarker[];
+}
+
+// Graph data types for client components
+export interface GraphDataPoint {
+  date: string;
+  amount: number;
+  formattedAmount: string;
+  sortKey: number;
+}
+
+export interface RateDataPoint {
+  date: string;
+  rate: number;
+  formattedPercentage: string;
+  sortKey: number;
 }

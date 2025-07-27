@@ -3,10 +3,11 @@
 import React, { useState } from "react";
 import IconRenderer from '@/components/icon-renderer';
 import { InvestmentCategory } from '@/types/database';
+import { ChevronDown, ChevronRight, Wallet, Calendar, DollarSign } from 'lucide-react';
 
 interface InvestmentItem {
   id: number;
-  fecha: Date; // Always Date type
+  fecha: Date;
   monto: number;
   concepto: string;
   category?: InvestmentCategory | null;
@@ -23,85 +24,177 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
   
   if (!listInvertidos || listInvertidos.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 bg-gray-100 rounded-lg shadow-lg w-full max-w-md">
-        No hay fondos invertidos.
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 w-full text-center">
+        <Wallet className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+        <p className="text-gray-500">No hay inversiones registradas aún.</p>
+        <p className="text-sm text-gray-400 mt-1">¡Pronto comenzarás a ver tus inversiones aquí!</p>
       </div>
     );
   }
+
+  // Group investments by month for better organization
+  const investmentsByMonth = listInvertidos.reduce((acc, item) => {
+    const monthKey = item.fecha.toLocaleDateString('es-AR', { year: 'numeric', month: 'long' });
+    if (!acc[monthKey]) {
+      acc[monthKey] = [];
+    }
+    acc[monthKey].push(item);
+    return acc;
+  }, {} as Record<string, InvestmentItem[]>);
+
+  const sortedMonths = Object.keys(investmentsByMonth).sort((a, b) => {
+    const dateA = new Date(investmentsByMonth[a][0].fecha);
+    const dateB = new Date(investmentsByMonth[b][0].fecha);
+    return dateB.getTime() - dateA.getTime();
+  });
   
   return (
-    <div className={`w-full max-w-md px-5 text-xs ${className}`} {...props}>
+    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 w-full ${className}`} {...props}>
+      {/* Header */}
       <div 
-        className="flex items-center justify-between cursor-pointer p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+        className="flex items-center justify-between cursor-pointer p-4 sm:p-6 hover:bg-gray-50 transition-colors rounded-t-lg"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
-        <div className="text-gray-700 font-bold text-center flex-1">
-          Total Invertido: {totalInvertido.toLocaleString("es-AR")} $
+        <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+          <div className="p-1.5 sm:p-2 bg-indigo-100 rounded-lg flex-shrink-0">
+            <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm sm:text-lg font-semibold text-gray-800 truncate">Historial de Inversiones</h3>
+            <p className="text-xs sm:text-sm text-gray-600">{listInvertidos.length} transacciones</p>
+          </div>
         </div>
-        <div className="ml-2 text-gray-500">
-          {isCollapsed ? "►" : "▼"}
+        <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+          <div className="text-right">
+            <p className="text-xs text-gray-500">Total invertido</p>
+            <p className="text-base sm:text-xl font-bold text-indigo-600 whitespace-nowrap">
+              $ {totalInvertido.toLocaleString("es-AR")}
+            </p>
+          </div>
+          <div className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            {isCollapsed ? (
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+            ) : (
+              <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+            )}
+          </div>
         </div>
       </div>
       
+      {/* Content */}
       {!isCollapsed && (
-        <div className="mt-2 border border-gray-200 rounded-lg overflow-hidden">
-          <div className="grid grid-cols-[1fr_1fr_2fr] gap-2 items-center bg-gray-200 p-2">
-            <div className="text-gray-700 font-bold">Fecha</div>
-            <div className="text-gray-700 font-bold text-center">Monto</div>
-            <div className="text-gray-700 font-bold">Concepto</div>
-          </div>
-          <hr className="border-gray-300" />
-          {listInvertidos.map((item) => {
-            const fechaDisplay = item.fecha.toISOString().split('T')[0];
-            const category = item.category;
-            
-            // Build className from category text style
-            const categoryClasses = category?.text_style ? [
-              category.text_style.fontSize || '',
-              category.text_style.fontWeight || '',
-              category.text_style.fontStyle || '',
-              category.text_style.textColor || '',
-              category.text_style.effectClass || ''
-            ].filter(Boolean).join(' ') : '';
-
-            // Build inline styles from customCSS
-            const inlineStyles = category?.text_style?.customCSS ? 
-              Object.fromEntries(
-                category.text_style.customCSS.split(';')
-                  .filter(rule => rule.trim())
-                  .map(rule => {
-                    const [key, value] = rule.split(':').map(s => s.trim());
-                    return [key, value];
-                  })
-              ) : {};
-              
-            return (
-              <div key={`${item.id}-${fechaDisplay}`} className="grid grid-cols-[1fr_1fr_2fr] gap-2 items-start p-2 border-b border-gray-100 last:border-b-0">
-                <div className="text-gray-700 text-nowrap">{fechaDisplay}</div>
-                <div className="text-gray-700 text-right text-nowrap font-bold">{item.monto.toLocaleString("es-AR")} $</div>
-                <div className="flex items-center gap-2">
-                  {/* Category Icon */}
-                  {category?.icon_config && (
-                    <IconRenderer
-                      name={category.icon_config.name}
-                      library={category.icon_config.library}
-                      size={12} // Tiny size for list view
-                      color={category.icon_config.color}
-                      animationClass={category.icon_config.animationClass}
-                      className="flex-shrink-0"
-                    />
-                  )}
-                  {/* Concept Text with Category Styling */}
-                  <div 
-                    className={`text-xs leading-tight break-words ${categoryClasses}`}
-                    style={inlineStyles}
-                  >
-                    {item.concepto}
-                  </div>
+        <div className="border-t border-gray-100">
+          <div className="max-h-96 overflow-y-auto">
+            {sortedMonths.map((month, monthIndex) => (
+              <div key={month} className={monthIndex > 0 ? "border-t border-gray-100" : ""}>
+                {/* Month Header */}
+                <div className="px-6 py-3 bg-gray-50">
+                  <h4 className="text-sm font-medium text-gray-700 capitalize">{month}</h4>
                 </div>
+                
+                {/* Investments for this month */}
+                {investmentsByMonth[month].map((item, index) => {
+                  const category = item.category;
+                  
+                  // Build className from category text style
+                  const categoryClasses = category?.text_style ? [
+                    category.text_style.fontSize || '',
+                    category.text_style.fontWeight || '',
+                    category.text_style.fontStyle || '',
+                    category.text_style.textColor || '',
+                    category.text_style.effectClass || ''
+                  ].filter(Boolean).join(' ') : '';
+
+                  // Build inline styles from customCSS
+                  const inlineStyles = category?.text_style?.customCSS ? 
+                    Object.fromEntries(
+                      category.text_style.customCSS.split(';')
+                        .filter(rule => rule.trim())
+                        .map(rule => {
+                          const [key, value] = rule.split(':').map(s => s.trim());
+                          return [key, value];
+                        })
+                    ) : {};
+                  
+                  return (
+                    <div 
+                      key={`${item.id}-${item.fecha.toISOString()}`} 
+                      className={`px-6 py-4 hover:bg-gray-50 transition-colors ${
+                        index < investmentsByMonth[month].length - 1 ? 'border-b border-gray-100' : ''
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        {/* Left side - Date and concept */}
+                        <div className="flex items-start space-x-3 flex-1">
+                          <div className="flex-shrink-0 mt-0.5">
+                            <div className="p-2 bg-gray-100 rounded-lg">
+                              <Calendar className="w-4 h-4 text-gray-600" />
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start space-x-2">
+                              {/* Category Icon */}
+                              {category?.icon_config && (
+                                <div className="flex-shrink-0 mt-0.5">
+                                  <IconRenderer
+                                    name={category.icon_config.name}
+                                    library={category.icon_config.library}
+                                    size={16}
+                                    color={category.icon_config.color}
+                                    animationClass={category.icon_config.animationClass}
+                                  />
+                                </div>
+                              )}
+                              {/* Concept Text */}
+                              <div className="flex-1">
+                                <p 
+                                  className={`text-sm leading-relaxed ${categoryClasses || 'text-gray-800'}`}
+                                  style={inlineStyles}
+                                >
+                                  {item.concepto}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {item.fecha.toLocaleDateString('es-AR', { 
+                                    weekday: 'short', 
+                                    day: 'numeric', 
+                                    month: 'short' 
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Right side - Amount */}
+                        <div className="flex-shrink-0 ml-4">
+                          <div className="flex items-center space-x-1 text-green-600">
+                            <DollarSign className="w-4 h-4" />
+                            <span className="font-semibold">
+                              {item.monto.toLocaleString("es-AR")}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            ))}
+          </div>
+          
+          {/* Footer Summary */}
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                Total de {listInvertidos.length} inversiones registradas
+              </p>
+              <p className="text-sm font-medium text-gray-800">
+                Promedio: {(totalInvertido / listInvertidos.length).toLocaleString("es-AR", {
+                  maximumFractionDigits: 0
+                })} $
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 // Define types for class-specific settings
 export interface ClassSettings {
   end_date: Date;
+  start_date?: Date; // Optional start date for progress calculations
   timezone: string;
   current_monthly_interest_rate?: number; // Current rate from history
 }

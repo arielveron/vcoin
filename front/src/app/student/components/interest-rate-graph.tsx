@@ -3,7 +3,7 @@
 import React from "react";
 
 interface InterestRateGraphProps {
-  rates: { date: string; rate: number; formattedPercentage: string; sortKey: number }[]; // Pre-formatted data
+  rates: { date: string; rate: number; formattedPercentage: string; sortKey: number }[];
   className?: string;
 }
 
@@ -11,27 +11,26 @@ export default function InterestRateGraph({ rates, className = "" }: InterestRat
   if (!rates || rates.length === 0) {
     return (
       <div className={`${className}`}>
-        <div className="relative bg-white rounded p-2">
-          <div className="h-16 flex items-center justify-center">
-            <div className="text-gray-400 text-xs">Sin datos</div>
+        <div className="relative bg-white rounded-lg p-4">
+          <div className="h-20 flex items-center justify-center">
+            <div className="text-gray-400 text-sm">Sin datos disponibles</div>
           </div>
         </div>
       </div>
     );
   }
 
-  // Data is already sorted on the server, no need to sort again
   const sortedRates = rates;
 
   // Find min and max rates for scaling
   const minRate = Math.min(...sortedRates.map(r => r.rate));
   const maxRate = Math.max(...sortedRates.map(r => r.rate));
-  const rateRange = maxRate - minRate || 0.001; // Avoid division by zero
+  const rateRange = maxRate - minRate || 0.001;
   
   // Graph dimensions
-  const graphWidth = 200;
-  const graphHeight = 60;
-  const padding = 10;
+  const graphWidth = 280;
+  const graphHeight = 100;
+  const padding = 20;
   
   // Calculate points for the line
   const points = sortedRates.map((rate, index) => {
@@ -48,11 +47,11 @@ export default function InterestRateGraph({ rates, className = "" }: InterestRat
     
     let segmentColor;
     if (currentRate > previousRate) {
-      segmentColor = '#10b981'; // green-500 for up
+      segmentColor = '#10b981'; // green-500
     } else if (currentRate < previousRate) {
-      segmentColor = '#ef4444'; // red-500 for down
+      segmentColor = '#ef4444'; // red-500
     } else {
-      segmentColor = '#6b7280'; // gray-500 for no change
+      segmentColor = '#9ca3af'; // gray-400
     }
     
     return {
@@ -64,31 +63,58 @@ export default function InterestRateGraph({ rates, className = "" }: InterestRat
     };
   });
 
-  // Generate a stable ID for the SVG pattern based on data hash to avoid hydration issues
+  // Generate path for area fill
+  const areaPath = `
+    M ${points[0].x} ${graphHeight - padding}
+    L ${points[0].x} ${points[0].y}
+    ${points.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ')}
+    L ${points[points.length - 1].x} ${graphHeight - padding}
+    Z
+  `;
+
   const dataHash = sortedRates.length > 0 ? 
     sortedRates.map(r => `${r.date}-${r.rate}`).join('').length.toString(36) : 
     'default';
-  const patternId = `grid-pattern-${dataHash}`;
+  const gradientId = `gradient-${dataHash}`;
 
   return (
     <div className={`${className}`}>
-      {/* SVG Line Graph */}
-      <div className="relative  rounded p-2">
+      <div className="relative bg-white rounded-lg p-2">
         <svg 
           width={graphWidth} 
           height={graphHeight} 
           className="w-full h-auto"
           viewBox={`0 0 ${graphWidth} ${graphHeight}`}
         >
-          {/* Grid lines */}
+          {/* Gradient definition */}
           <defs>
-            <pattern id={patternId} width="20" height="20" patternUnits="userSpaceOnUse">
-              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f3f4f6" strokeWidth="0.5"/>
-            </pattern>
+            <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.02" />
+            </linearGradient>
           </defs>
-          <rect width="100%" height="100%" fill={`url(#${patternId})`} />
+
+          {/* Grid lines */}
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio) => (
+            <line
+              key={ratio}
+              x1={padding}
+              y1={padding + ratio * (graphHeight - 2 * padding)}
+              x2={graphWidth - padding}
+              y2={padding + ratio * (graphHeight - 2 * padding)}
+              stroke="#f3f4f6"
+              strokeWidth="1"
+              strokeDasharray="2,2"
+            />
+          ))}
+
+          {/* Area fill */}
+          <path
+            d={areaPath}
+            fill={`url(#${gradientId})`}
+          />
           
-          {/* Individual line segments with colors based on movement */}
+          {/* Line segments with colors */}
           {segments.map((segment, index) => (
             <line
               key={index}
@@ -97,40 +123,42 @@ export default function InterestRateGraph({ rates, className = "" }: InterestRat
               x2={segment.x2}
               y2={segment.y2}
               stroke={segment.color}
-              strokeWidth="2"
+              strokeWidth="3"
               strokeLinecap="round"
             />
           ))}
           
-          {/* Data points */}
+          {/* Data points with hover effects */}
           {points.map((point, index) => {
             let dotColor;
             if (index === 0) {
-              // First point is always gray
               dotColor = '#6b7280';
             } else {
-              // Use the same color logic as the segment leading to this point
               const currentRate = point.rate;
               const previousRate = points[index - 1].rate;
               
               if (currentRate > previousRate) {
-                dotColor = '#16a34a'; // green-500 for up
+                dotColor = '#10b981';
               } else if (currentRate < previousRate) {
-                dotColor = '#dc2626'; // red-500 for down
+                dotColor = '#ef4444';
               } else {
-                dotColor = '#6b7280'; // gray-500 for no change
+                dotColor = '#6b7280';
               }
             }
             
             return (
-              <circle
-                key={index}
-                cx={point.x}
-                cy={point.y}
-                r="5"
-                fill={dotColor}
-                className="hover:r-4 transition-all"
-              />
+              <g key={index}>
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r="4"
+                  fill="white"
+                  stroke={dotColor}
+                  strokeWidth="2"
+                  className="cursor-pointer"
+                />
+                <title>{`${point.date}: ${point.formattedPercentage}%`}</title>
+              </g>
             );
           })}
         </svg>
