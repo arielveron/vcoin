@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Achievement, Student, Class } from '@/types/database';
+import { Achievement, Student, Class, AchievementWithProgress } from '@/types/database';
 import IconRenderer from '@/components/icon-renderer';
 import AchievementAwardForm from './achievement-award-form';
+import { sortAchievements } from '@/utils/achievement-sorting';
+import { getStudentAchievements } from './actions';
 
 interface BackgroundJobStatus {
   daily: { 
@@ -47,19 +49,45 @@ export default function AchievementsAdminClient({
   const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
   const [selectedClass, setSelectedClass] = useState<number | null>(null);
   const [manualAchievements, setManualAchievements] = useState<Achievement[]>([]);
+  const [studentAchievements, setStudentAchievements] = useState<AchievementWithProgress[]>([]);
   const [filter, setFilter] = useState<'all' | 'automatic' | 'manual'>('all');
 
   useEffect(() => {
-    setManualAchievements(achievements.filter(a => a.trigger_type === 'manual'));
+    setManualAchievements(sortAchievements(achievements.filter(a => a.trigger_type === 'manual')));
   }, [achievements]);
+
+  useEffect(() => {
+    const fetchStudentAchievements = async () => {
+      if (selectedStudent) {
+        try {
+          const result = await getStudentAchievements(selectedStudent);
+          if (result.success && result.data) {
+            setStudentAchievements(result.data);
+          } else {
+            console.error('Failed to fetch student achievements');
+            setStudentAchievements([]);
+          }
+        } catch (error) {
+          console.error('Failed to fetch student achievements:', error);
+          setStudentAchievements([]);
+        }
+      } else {
+        setStudentAchievements([]);
+      }
+    };
+
+    fetchStudentAchievements();
+  }, [selectedStudent]);
 
   const filteredStudents = selectedClass 
     ? students.filter(s => s.class_id === selectedClass)
     : students;
 
-  const filteredAchievements = filter === 'all' 
-    ? achievements 
-    : achievements.filter(a => a.trigger_type === filter);
+  const filteredAchievements = sortAchievements(
+    filter === 'all' 
+      ? achievements 
+      : achievements.filter(a => a.trigger_type === filter)
+  );
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -248,13 +276,31 @@ export default function AchievementsAdminClient({
               Manual Achievements for {students.find(s => s.id === selectedStudent)?.name}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {manualAchievements.map((achievement) => (
-                <AchievementAwardForm
-                  key={achievement.id}
-                  achievement={achievement}
-                  studentId={selectedStudent}
-                />
-              ))}
+              {manualAchievements.map((achievement) => {
+                const isGranted = studentAchievements.some(sa => sa.id === achievement.id && sa.unlocked);
+                return (
+                  <AchievementAwardForm
+                    key={achievement.id}
+                    achievement={achievement}
+                    studentId={selectedStudent}
+                    isGranted={isGranted}
+                    onSuccess={() => {
+                      // Refresh student achievements after award/revoke
+                      const fetchStudentAchievements = async () => {
+                        try {
+                          const result = await getStudentAchievements(selectedStudent);
+                          if (result.success && result.data) {
+                            setStudentAchievements(result.data);
+                          }
+                        } catch (error) {
+                          console.error('Failed to refresh student achievements:', error);
+                        }
+                      };
+                      fetchStudentAchievements();
+                    }}
+                  />
+                );
+              })}
             </div>
             
             {manualAchievements.length === 0 && (

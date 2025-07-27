@@ -22,6 +22,20 @@ export const unlockManualAchievement = withAdminAuth(async (formData: FormData) 
   return { success: true, message: 'Achievement awarded successfully' };
 }, 'unlock manual achievement');
 
+export const revokeManualAchievement = withAdminAuth(async (formData: FormData) => {
+  const studentId = parseFormNumber(formData, 'studentId');
+  const achievementId = parseFormNumber(formData, 'achievementId');
+  
+  // Revoke the achievement by removing it from student_achievements
+  const result = await adminService.revokeAchievement(studentId, achievementId);
+  
+  if (!result) {
+    throw new Error('Failed to revoke achievement');
+  }
+  
+  return { success: true, message: 'Achievement revoked successfully' };
+}, 'revoke manual achievement');
+
 export const createAchievement = withAdminAuth(async (formData: FormData) => {
   const missing = validateRequired(formData, ['name', 'description', 'category', 'rarity', 'trigger_type', 'icon_name', 'icon_library']);
   if (missing.length > 0) {
@@ -141,3 +155,7 @@ export const deleteAchievement = withAdminAuth(async (formData: FormData) => {
   const id = parseFormNumber(formData, 'id');
   return await adminService.deleteAchievement(id);
 }, 'delete achievement');
+
+export const getStudentAchievements = withAdminAuth(async (studentId: number) => {
+  return await adminService.getStudentAchievements(studentId);
+}, 'get student achievements');

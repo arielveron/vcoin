@@ -158,3 +158,15 @@ export const updateStudentProfile = withStudentAuth(async (formData: FormData) =
 
   return { success: true }
 }, 'update student profile')
+
+export const markAchievementSeen = withStudentAuth(async (achievementId: number) => {
+  const session = await SecureStudentSessionService.getSession()
+  if (!session) {
+    throw new Error('No valid session found')
+  }
+
+  const { ServerDataService } = await import('@/services/server-data-service')
+  await ServerDataService.markAchievementAsSeen(session.student_id, achievementId)
+  
+  return { success: true }
+}, 'mark achievement as seen')

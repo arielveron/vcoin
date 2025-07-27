@@ -328,4 +328,16 @@ export class AchievementRepository {
       client.release();
     }
   }
+
+  async revokeAchievement(studentId: number, achievementId: number): Promise<void> {
+    const client = await pool.connect();
+    try {
+      await client.query(`
+        DELETE FROM student_achievements
+        WHERE student_id = $1 AND achievement_id = $2
+      `, [studentId, achievementId]);
+    } finally {
+      client.release();
+    }
+  }
 }

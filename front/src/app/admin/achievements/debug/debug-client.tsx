@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Achievement, InvestmentCategory, Student, Investment } from '@/types/database';
 import { checkStudentAchievements } from './actions';
+import { sortAchievements } from '@/utils/achievement-sorting';
 
 interface Props {
   achievements: Achievement[];
@@ -79,7 +80,7 @@ export default function DebugClient({ achievements, categories, students, invest
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold mb-4">Active Achievements</h2>
         <div className="space-y-3">
-          {achievements.filter(a => a.is_active).map(achievement => (
+          {sortAchievements(achievements.filter(a => a.is_active)).map(achievement => (
             <div key={achievement.id} className="border rounded p-3">
               <div className="flex justify-between items-start">
                 <div>

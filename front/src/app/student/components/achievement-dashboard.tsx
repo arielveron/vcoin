@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { AchievementWithProgress } from '@/types/database';
+import { AchievementWithProgress, Achievement } from '@/types/database';
 import AchievementBadge from '@/components/achievement-badge';
 import { cn } from '@/lib/utils';
+import { sortAchievements } from '@/utils/achievement-sorting';
 
 interface AchievementDashboardProps {
   achievements: AchievementWithProgress[];
@@ -13,6 +14,7 @@ interface AchievementDashboardProps {
     achievements_total: number;
     rank?: number;
   };
+  onAchievementClick?: (achievement: Achievement) => void;
 }
 
 const CATEGORY_FILTERS = [
@@ -25,7 +27,11 @@ const CATEGORY_FILTERS = [
 
 type CategoryKey = typeof CATEGORY_FILTERS[number]['key'];
 
-export function AchievementDashboard({ achievements, studentStats }: AchievementDashboardProps) {
+export function AchievementDashboard({ 
+  achievements, 
+  studentStats, 
+  onAchievementClick 
+}: AchievementDashboardProps) {
   const [selectedCategory, setSelectedCategory] = useState<CategoryKey>('all');
 
   // Filter achievements by category
@@ -41,16 +47,11 @@ export function AchievementDashboard({ achievements, studentStats }: Achievement
     const unlocked = filteredAchievements.filter(a => a.unlocked);
     const locked = filteredAchievements.filter(a => !a.unlocked);
     
-    // Sort unlocked by unlock date (newest first)
-    unlocked.sort((a, b) => {
-      if (!a.unlocked_at || !b.unlocked_at) return 0;
-      return new Date(b.unlocked_at).getTime() - new Date(a.unlocked_at).getTime();
-    });
+    // Sort both groups by category priority and points (consistent ordering)
+    const sortedUnlocked = sortAchievements(unlocked);
+    const sortedLocked = sortAchievements(locked);
     
-    // Sort locked by progress (highest first)
-    locked.sort((a, b) => (b.progress || 0) - (a.progress || 0));
-    
-    return { unlockedAchievements: unlocked, lockedAchievements: locked };
+    return { unlockedAchievements: sortedUnlocked, lockedAchievements: sortedLocked };
   }, [filteredAchievements]);
 
   const completionRate = Math.round(
@@ -143,6 +144,7 @@ export function AchievementDashboard({ achievements, studentStats }: Achievement
                   key={achievement.id}
                   achievement={achievement}
                   showProgress={false}
+                  onClick={onAchievementClick ? () => onAchievementClick(achievement) : undefined}
                 />
               ))}
             </div>

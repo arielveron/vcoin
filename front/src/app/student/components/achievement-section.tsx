@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { AchievementWithProgress, Achievement } from '@/types/database';
 import { AchievementDashboard } from './achievement-dashboard';
 import AchievementCelebration from '@/components/achievement-celebration';
+import { sortAchievements } from '@/utils/achievement-sorting';
+import { markAchievementSeen } from '@/actions/student-actions';
 
 interface AchievementSectionProps {
   achievements: AchievementWithProgress[];
@@ -23,23 +25,42 @@ export default function AchievementSection({
 }: AchievementSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentCelebration, setCurrentCelebration] = useState<Achievement | null>(null);
-  const [celebrationQueue, setCelebrationQueue] = useState<Achievement[]>(unseenAchievements);
+  const [celebrationQueue, setCelebrationQueue] = useState<Achievement[]>([]);
+
+  // Initialize and update celebration queue with only unseen achievements
+  useEffect(() => {
+    if (unseenAchievements.length > 0) {
+      setCelebrationQueue(unseenAchievements);
+    }
+  }, [unseenAchievements]);
 
   // Show celebrations for unseen achievements
   useEffect(() => {
     if (celebrationQueue.length > 0 && !currentCelebration) {
-      const nextAchievement = celebrationQueue[0];
+      // Sort celebrations by category and then by points (highest first)
+      const sortedQueue = sortAchievements(celebrationQueue);
+      
+      const nextAchievement = sortedQueue[0];
       setCurrentCelebration(nextAchievement);
-      setCelebrationQueue(prev => prev.slice(1));
+      setCelebrationQueue(sortedQueue.slice(1));
     }
   }, [celebrationQueue, currentCelebration]);
 
+  // Function to manually trigger celebration for any achievement
+  const triggerCelebration = (achievement: Achievement) => {
+    if (!currentCelebration) {
+      setCurrentCelebration(achievement);
+    } else {
+      // Add to queue if there's already a celebration showing
+      setCelebrationQueue(prev => [...prev, achievement]);
+    }
+  };
+
   const handleCelebrationClose = async () => {
     if (currentCelebration) {
-      // Mark achievement as seen (we'll create this action later)
+      // Mark achievement as seen
       try {
-        // For now, just close the celebration
-        // await markAchievementSeen(studentId, currentCelebration.id);
+        await markAchievementSeen(currentCelebration.id);
       } catch (error) {
         console.error('Failed to mark achievement as seen:', error);
       }
@@ -109,6 +130,7 @@ export default function AchievementSection({
           <AchievementDashboard 
             achievements={achievements}
             studentStats={studentStats}
+            onAchievementClick={triggerCelebration}
           />
         </div>
       )}
@@ -118,7 +140,7 @@ export default function AchievementSection({
         <AchievementCelebration
           achievement={currentCelebration}
           onClose={handleCelebrationClose}
-          autoCloseDelay={5000}
+          autoCloseDelay={0} // Disable auto-close, require manual interaction
         />
       )}
     </div>

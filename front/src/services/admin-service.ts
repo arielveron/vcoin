@@ -303,6 +303,16 @@ export class AdminService {
     return await this.achievementRepo.getStudentAchievements(studentId);
   }
 
+  async revokeAchievement(studentId: number, achievementId: number): Promise<boolean> {
+    try {
+      await this.achievementRepo.revokeAchievement(studentId, achievementId);
+      return true;
+    } catch (error) {
+      console.error('Failed to revoke achievement:', error);
+      return false;
+    }
+  }
+
   async getAchievementStats(): Promise<{
     totalAchievements: number;
     totalUnlocked: number;

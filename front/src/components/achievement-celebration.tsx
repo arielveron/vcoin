@@ -32,10 +32,13 @@ export default function AchievementCelebration({
     // Show modal with animation
     setIsVisible(true);
     
-    // Auto close after delay
-    const timer = setTimeout(() => {
-      handleClose();
-    }, autoCloseDelay);
+    // Auto close after delay (only if autoCloseDelay > 0)
+    let timer: NodeJS.Timeout | undefined;
+    if (autoCloseDelay > 0) {
+      timer = setTimeout(() => {
+        handleClose();
+      }, autoCloseDelay);
+    }
 
     // Stop confetti after 3 seconds
     const confettiTimer = setTimeout(() => {
@@ -43,7 +46,7 @@ export default function AchievementCelebration({
     }, 3000);
 
     return () => {
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
       clearTimeout(confettiTimer);
     };
   }, [autoCloseDelay, handleClose]);
