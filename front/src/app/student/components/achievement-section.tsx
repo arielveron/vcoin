@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { AchievementWithProgress } from '@/types/database';
+import { useState, useEffect } from 'react';
+import { AchievementWithProgress, Achievement } from '@/types/database';
 import { AchievementDashboard } from './achievement-dashboard';
+import AchievementCelebration from '@/components/achievement-celebration';
 
 interface AchievementSectionProps {
   achievements: AchievementWithProgress[];
@@ -12,10 +13,40 @@ interface AchievementSectionProps {
     achievements_total: number;
     rank?: number;
   };
+  unseenAchievements: Achievement[];
 }
 
-export default function AchievementSection({ achievements, studentStats }: AchievementSectionProps) {
+export default function AchievementSection({ 
+  achievements, 
+  studentStats, 
+  unseenAchievements
+}: AchievementSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [currentCelebration, setCurrentCelebration] = useState<Achievement | null>(null);
+  const [celebrationQueue, setCelebrationQueue] = useState<Achievement[]>(unseenAchievements);
+
+  // Show celebrations for unseen achievements
+  useEffect(() => {
+    if (celebrationQueue.length > 0 && !currentCelebration) {
+      const nextAchievement = celebrationQueue[0];
+      setCurrentCelebration(nextAchievement);
+      setCelebrationQueue(prev => prev.slice(1));
+    }
+  }, [celebrationQueue, currentCelebration]);
+
+  const handleCelebrationClose = async () => {
+    if (currentCelebration) {
+      // Mark achievement as seen (we'll create this action later)
+      try {
+        // For now, just close the celebration
+        // await markAchievementSeen(studentId, currentCelebration.id);
+      } catch (error) {
+        console.error('Failed to mark achievement as seen:', error);
+      }
+      
+      setCurrentCelebration(null);
+    }
+  };
 
   const completionRate = Math.round(
     (studentStats.achievements_unlocked / studentStats.achievements_total) * 100
@@ -80,6 +111,15 @@ export default function AchievementSection({ achievements, studentStats }: Achie
             studentStats={studentStats}
           />
         </div>
+      )}
+
+      {/* Achievement Celebration Modal */}
+      {currentCelebration && (
+        <AchievementCelebration
+          achievement={currentCelebration}
+          onClose={handleCelebrationClose}
+          autoCloseDelay={5000}
+        />
       )}
     </div>
   );

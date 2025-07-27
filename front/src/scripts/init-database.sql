@@ -360,9 +360,9 @@ INSERT INTO achievements (name, description, category, rarity, icon_config, trig
  'automatic', '{"metric": "total_invested", "operator": ">=", "value": 1000000}', 500),
 
 -- Category-specific achievements
-('Exam Master', 'Receive 5 investments in exam category', 'academic', 'rare',
+('Standard Achiever', 'Receive 5 investments in Standard category', 'academic', 'rare',
  '{"name": "Award", "library": "lucide", "size": 28, "color": "#06B6D4"}',
- 'automatic', '{"metric": "category_count", "operator": ">=", "value": 5, "category_name": "Exams"}', 40),
+ 'automatic', '{"metric": "category_count", "operator": ">=", "value": 5, "category_id": 1}', 40),
 
 -- Special achievements (manual)
 ('Teacher''s Pet', 'Awarded by professor for exceptional performance', 'special', 'epic',

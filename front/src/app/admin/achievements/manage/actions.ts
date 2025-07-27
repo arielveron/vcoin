@@ -43,14 +43,14 @@ export const createAchievement = withAdminAuth(async (formData: FormData) => {
     const metric = formData.get('metric') as 'investment_count' | 'total_invested' | 'streak_days' | 'category_count';
     const operator = formData.get('operator') as '>' | '>=' | '=' | '<' | '<=';
     const value = formData.get('value') ? parseFormNumber(formData, 'value') : undefined;
-    const category_name = formData.get('category_name') as string || undefined;
+    const category_id = formData.get('category_id') ? parseFormNumber(formData, 'category_id') : undefined;
 
     if (metric && operator && value !== undefined) {
       trigger_config = {
         metric,
         operator,
         value,
-        ...(category_name && { category_name })
+        ...(category_id && { category_id })
       };
     }
   }
@@ -107,14 +107,14 @@ export const updateAchievement = withAdminAuth(async (formData: FormData) => {
     const metric = formData.get('metric') as 'investment_count' | 'total_invested' | 'streak_days' | 'category_count';
     const operator = formData.get('operator') as '>' | '>=' | '=' | '<' | '<=';
     const value = formData.get('value') ? parseFormNumber(formData, 'value') : undefined;
-    const category_name = formData.get('category_name') as string || undefined;
+    const category_id = formData.get('category_id') ? parseFormNumber(formData, 'category_id') : undefined;
 
     if (metric && operator && value !== undefined) {
       trigger_config = {
         metric,
         operator,
         value,
-        ...(category_name && { category_name })
+        ...(category_id && { category_id })
       };
     }
   }

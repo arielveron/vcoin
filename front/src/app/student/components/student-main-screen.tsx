@@ -25,6 +25,7 @@ export default async function StudentMainScreen({ studentId }: StudentMainScreen
   // Fetch achievement data
   const achievements = await ServerDataService.getStudentAchievements(studentId);
   const achievementStats = await ServerDataService.getStudentAchievementStats(studentId);
+  const unseenAchievements = await ServerDataService.getUnseenAchievements(studentId);
 
   return (
     <div className="w-full max-w-6xl space-y-6">
@@ -63,6 +64,7 @@ export default async function StudentMainScreen({ studentId }: StudentMainScreen
       <AchievementSection 
         achievements={achievements}
         studentStats={achievementStats}
+        unseenAchievements={unseenAchievements}
       />
     </div>
   );

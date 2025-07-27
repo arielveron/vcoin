@@ -703,4 +703,28 @@ export class ServerDataService {
       };
     }
   }
+
+  static async getUnseenAchievements(studentId: number) {
+    try {
+      if (!this.achievementRepo) {
+        this.achievementRepo = new AchievementRepository();
+      }
+      return await this.achievementRepo.getUnseenAchievements(studentId);
+    } catch (error) {
+      console.error('Error getting unseen achievements, using fallback:', error);
+      return [];
+    }
+  }
+
+  static async markAchievementAsSeen(studentId: number, achievementId: number) {
+    try {
+      if (!this.achievementRepo) {
+        this.achievementRepo = new AchievementRepository();
+      }
+      return await this.achievementRepo.markAchievementSeen(studentId, achievementId);
+    } catch (error) {
+      console.error('Error marking achievement as seen:', error);
+      return false;
+    }
+  }
 }

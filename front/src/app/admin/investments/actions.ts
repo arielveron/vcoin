@@ -62,7 +62,18 @@ export const updateInvestment = withAdminAuth(async (id: number, formData: FormD
     category_id
   }
 
-  return await adminService.updateInvestment(id, investmentData)
+  // Update the investment
+  const investment = await adminService.updateInvestment(id, investmentData)
+  
+  // Check achievements for the student after update (non-blocking)
+  try {
+    await achievementEngine.checkAchievementsForStudent(student_id, id)
+  } catch (error) {
+    // Don't fail the investment update if achievement checking fails
+    console.error('Achievement checking failed:', error)
+  }
+  
+  return investment
 }, 'update investment')
 
 export const deleteInvestment = withAdminAuth(async (id: number) => {

@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { AdminService } from '@/services/admin-service';
-import AchievementCrudClient from './achievement-crud-client';
+import DebugClient from './debug-client';
 
-export default async function AchievementManagePage() {
+export default async function AchievementDebugPage() {
   const session = await auth();
   
   if (!session) {
@@ -12,22 +12,26 @@ export default async function AchievementManagePage() {
 
   const adminService = new AdminService();
   
-  // Fetch all required data
+  // Get all data for debugging
   const achievements = await adminService.getAllAchievements();
-  const categories = await adminService.getAllCategories(true); // Only active categories
+  const categories = await adminService.getAllCategories();
+  const students = await adminService.getAllStudents();
+  const investments = await adminService.getAllInvestments();
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Achievement Management</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Achievement System Debug</h1>
         <p className="mt-2 text-gray-600">
-          Create, edit, and manage achievements for your students.
+          Debug the achievement system to see what&apos;s happening.
         </p>
       </div>
       
-      <AchievementCrudClient 
+      <DebugClient 
         achievements={achievements}
         categories={categories}
+        students={students}
+        investments={investments}
       />
     </div>
   );

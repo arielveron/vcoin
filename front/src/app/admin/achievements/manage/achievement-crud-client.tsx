@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Achievement } from '@/types/database';
+import { Achievement, InvestmentCategory } from '@/types/database';
 import IconRenderer from '@/components/icon-renderer';
 import { createAchievement, updateAchievement, deleteAchievement } from './actions';
 
 interface Props {
   achievements: Achievement[];
+  categories: InvestmentCategory[];
 }
 
 interface AchievementFormData {
@@ -23,7 +24,7 @@ interface AchievementFormData {
   metric?: 'investment_count' | 'total_invested' | 'streak_days' | 'category_count';
   operator?: '>=' | '>' | '=' | '<' | '<=';
   value?: number;
-  category_name?: string;
+  category_id?: number; // Changed from category_name to category_id
   points: number;
   sort_order: number;
   is_active: boolean;
@@ -84,7 +85,7 @@ const ANIMATION_OPTIONS = [
   { value: 'animate-float', label: 'Float (Custom)' }
 ];
 
-export default function AchievementCrudClient({ achievements }: Props) {
+export default function AchievementCrudClient({ achievements, categories }: Props) {
   const [achievementList, setAchievementList] = useState<Achievement[]>(achievements);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
@@ -171,7 +172,7 @@ export default function AchievementCrudClient({ achievements }: Props) {
       metric: achievement.trigger_config?.metric,
       operator: achievement.trigger_config?.operator || '>=',
       value: achievement.trigger_config?.value,
-      category_name: achievement.trigger_config?.category_name,
+      category_id: achievement.trigger_config?.category_id,
       points: achievement.points,
       sort_order: achievement.sort_order,
       is_active: achievement.is_active
@@ -498,16 +499,24 @@ export default function AchievementCrudClient({ achievements }: Props) {
             {formData.metric === 'category_count' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category Name
+                  Investment Category
                 </label>
-                <input
-                  type="text"
-                  name="category_name"
-                  value={formData.category_name || ''}
-                  onChange={(e) => setFormData({ ...formData, category_name: e.target.value })}
+                <select
+                  name="category_id"
+                  value={formData.category_id || ''}
+                  onChange={(e) => setFormData({ ...formData, category_id: e.target.value ? parseInt(e.target.value) : undefined })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., Exams"
-                />
+                >
+                  <option value="">Select a category...</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name} ({category.level})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Choose which investment category to count for this achievement
+                </p>
               </div>
             )}
           </div>
