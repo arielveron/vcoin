@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { formatearMoneda } from "@/utils/format";
 import { ClassSettings } from "@/db/pseudo-db";
 import { calculateDiasRestantes } from "@/logic/calculations";
@@ -11,11 +11,13 @@ interface EstimadoProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   montoEstimado: number;
   classSettings: ClassSettings;
+  firstInvestmentDate?: Date; // Add this prop
 }
 
 export default function EstimadoCollapsible({ 
   montoEstimado, 
   classSettings, 
+  firstInvestmentDate,
   className, 
   ...props 
 }: EstimadoProps) {
@@ -23,20 +25,26 @@ export default function EstimadoCollapsible({
   
   const diasRestantes = calculateDiasRestantes(classSettings);
   
-  // Calculate progress percentage - handle optional start_date
+  // Calculate progress percentage using first investment date
+  const { progressPercentage, totalDays, startDate } = useMemo(() => {
+    const endDate = new Date(classSettings.end_date);
+    const now = new Date();
+    
+    // Use first investment date if available, otherwise use today as fallback
+    const effectiveStartDate = firstInvestmentDate || now;
+    
+    const totalDays = Math.floor((endDate.getTime() - effectiveStartDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysElapsed = Math.floor((now.getTime() - effectiveStartDate.getTime()) / (1000 * 60 * 60 * 24));
+    const progressPercentage = Math.min(Math.max((daysElapsed / totalDays) * 100, 0), 100);
+    
+    return {
+      progressPercentage,
+      totalDays,
+      startDate: effectiveStartDate
+    };
+  }, [classSettings.end_date, firstInvestmentDate]);
+
   const endDate = new Date(classSettings.end_date);
-  const now = new Date();
-  
-  let progressPercentage = 0;
-  let totalDays = 0;
-  let daysElapsed = 0;
-  
-  if (classSettings.start_date) {
-    const startDate = new Date(classSettings.start_date);
-    totalDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    daysElapsed = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    progressPercentage = Math.min(Math.max((daysElapsed / totalDays) * 100, 0), 100);
-  }
 
   return (
     <div
@@ -171,10 +179,7 @@ export default function EstimadoCollapsible({
                 </div>
                 <div className="flex justify-between text-xs text-gray-500">
                   <span>
-                    {classSettings.start_date 
-                      ? new Date(classSettings.start_date).toLocaleDateString('es-AR', { month: 'short', day: 'numeric' })
-                      : 'Inicio'
-                    }
+                    {startDate.toLocaleDateString('es-AR', { month: 'short', day: 'numeric' })}
                   </span>
                   <span className="font-medium text-purple-600">Hoy</span>
                   <span>{endDate.toLocaleDateString('es-AR', { month: 'short', day: 'numeric' })}</span>

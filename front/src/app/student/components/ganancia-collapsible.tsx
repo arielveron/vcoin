@@ -15,36 +15,27 @@ interface GananciaProps {
   rateChangeMarkers: RateChangeMarker[];
 }
 
-export default function GananciaCollapsible({ 
-  gananciaTotal, 
+export default function GananciaCollapsible({
+  gananciaTotal,
   graphData,
   investmentMarkers,
-  rateChangeMarkers
+  rateChangeMarkers,
 }: GananciaProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Determine styling based on gain/loss
   const isPositive = gananciaTotal >= 0;
-  const bgGradient = isPositive 
-    ? "from-emerald-50 to-green-50" 
-    : "from-red-50 to-pink-50";
-  const borderColor = isPositive 
-    ? "border-emerald-200" 
-    : "border-red-200";
-  const textColor = isPositive 
-    ? "text-emerald-600" 
-    : "text-red-600";
-  const iconBgColor = isPositive 
-    ? "bg-emerald-100" 
-    : "bg-red-100";
+  const bgGradient = isPositive ? "from-emerald-50 to-green-50" : "from-red-50 to-pink-50";
+  const borderColor = isPositive ? "border-emerald-200" : "border-red-200";
+  const textColor = isPositive ? "text-emerald-600" : "text-red-600";
+  const iconBgColor = isPositive ? "bg-emerald-100" : "bg-red-100";
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm border ${borderColor} overflow-hidden transition-all duration-300 hover:shadow-md`}>
+    <div
+      className={`bg-white rounded-lg shadow-sm border ${borderColor} overflow-hidden transition-all duration-300 hover:shadow-md`}
+    >
       {/* Collapsed View - Always Visible */}
-      <div 
-        className="p-4 cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
+      <div className="p-4 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 flex-1">
             <div className={`p-2 rounded-lg ${iconBgColor}`}>
@@ -61,14 +52,7 @@ export default function GananciaCollapsible({
                     {formatearMoneda(Math.abs(gananciaTotal), 2)}%
                   </span>
                 </div>
-                <Image 
-                  src="/vcoin-xs.gif" 
-                  alt="Vcoin Logo" 
-                  width={16} 
-                  height={16} 
-                  className="opacity-60" 
-                  unoptimized 
-                />
+                <Image src="/vcoin-xs.gif" alt="Vcoin Logo" width={16} height={16} className="opacity-60" unoptimized />
               </div>
             </div>
           </div>
@@ -76,18 +60,19 @@ export default function GananciaCollapsible({
           {/* Mini Graph - Only in collapsed view */}
           <AnimatePresence>
             {!isExpanded && graphData.length > 0 && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
                 className="w-32 h-12 ml-4"
               >
-                <HistoricalGainsGraph 
+                <HistoricalGainsGraph
                   data={graphData}
                   investmentMarkers={investmentMarkers}
                   rateChangeMarkers={rateChangeMarkers}
                   className="w-full h-full"
+                  isCollapsed={true}
                 />
               </motion.div>
             )}
@@ -134,8 +119,10 @@ export default function GananciaCollapsible({
               {graphData.length > 0 && (
                 <div className="bg-gray-50 rounded-lg p-4">
                   <p className="text-xs text-gray-500 mb-3">Evolución de tu inversión</p>
-                  <div className="h-48"> {/* Aumentado de h-24 a h-48 */}
-                    <HistoricalGainsGraph 
+                  <div className="h-48">
+                    {" "}
+                    {/* Aumentado de h-24 a h-48 */}
+                    <HistoricalGainsGraph
                       data={graphData}
                       investmentMarkers={investmentMarkers}
                       rateChangeMarkers={rateChangeMarkers}
@@ -148,7 +135,13 @@ export default function GananciaCollapsible({
                       <span className="text-gray-600">Inversiones</span>
                     </div>
                     <div className="flex items-center space-x-1">
-                      <div className="w-8 h-0.5 bg-red-400" style={{ backgroundImage: 'repeating-linear-gradient(to right, transparent, transparent 2px, #f87171 2px, #f87171 4px)' }}></div>
+                      <div
+                        className="w-8 h-0.5 bg-red-400"
+                        style={{
+                          backgroundImage:
+                            "repeating-linear-gradient(to right, transparent, transparent 2px, #f87171 2px, #f87171 4px)",
+                        }}
+                      ></div>
                       <span className="text-gray-600">Cambio de tasa</span>
                     </div>
                   </div>

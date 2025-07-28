@@ -12,7 +12,7 @@ interface GananciaProps {
 export default async function Ganancia({ gananciaTotal, studentId }: GananciaProps) {
   // Get historical amounts for the ganancia total graph
   const historicalData = await ServerDataService.getHistoricalAmountsWithCurrentRate(studentId);
-  
+
   // Format the amounts data for the graph
   const graphData = historicalData.amounts
     .map((item) => {
@@ -52,21 +52,15 @@ export default async function Ganancia({ gananciaTotal, studentId }: GananciaPro
 
   // Determine styling based on gain/loss
   const isPositive = gananciaTotal >= 0;
-  const bgGradient = isPositive 
-    ? "from-emerald-50 to-green-50" 
-    : "from-red-50 to-pink-50";
-  const borderColor = isPositive 
-    ? "border-emerald-200" 
-    : "border-red-200";
-  const textColor = isPositive 
-    ? "text-emerald-600" 
-    : "text-red-600";
-  const iconBgColor = isPositive 
-    ? "bg-emerald-100" 
-    : "bg-red-100";
+  const bgGradient = isPositive ? "from-emerald-50 to-green-50" : "from-red-50 to-pink-50";
+  const borderColor = isPositive ? "border-emerald-200" : "border-red-200";
+  const textColor = isPositive ? "text-emerald-600" : "text-red-600";
+  const iconBgColor = isPositive ? "bg-emerald-100" : "bg-red-100";
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm border ${borderColor} p-6 w-full transition-all duration-300 hover:shadow-md`}>
+    <div
+      className={`bg-white rounded-lg shadow-sm border ${borderColor} p-6 w-full transition-all duration-300 hover:shadow-md`}
+    >
       {/* Header with Icon */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
@@ -78,14 +72,7 @@ export default async function Ganancia({ gananciaTotal, studentId }: GananciaPro
           <h3 className="text-sm font-medium text-gray-600">Ganancia Total</h3>
         </div>
         <div className="flex items-center">
-          <Image 
-            src="/vcoin-xs.gif" 
-            alt="Vcoin Logo" 
-            width={20} 
-            height={20} 
-            className="opacity-60" 
-            unoptimized 
-          />
+          <Image src="/vcoin-xs.gif" alt="Vcoin Logo" width={20} height={20} className="opacity-60" unoptimized />
         </div>
       </div>
 
@@ -94,9 +81,7 @@ export default async function Ganancia({ gananciaTotal, studentId }: GananciaPro
         <div className="flex items-center justify-center space-x-3">
           <div className="flex items-baseline space-x-1">
             {isPositive && <span className={`text-2xl font-bold ${textColor}`}>+</span>}
-            <span className={`text-3xl font-bold ${textColor}`}>
-              {formatearMoneda(Math.abs(gananciaTotal), 2)}%
-            </span>
+            <span className={`text-3xl font-bold ${textColor}`}>{formatearMoneda(Math.abs(gananciaTotal), 2)}%</span>
           </div>
         </div>
       </div>
@@ -105,11 +90,12 @@ export default async function Ganancia({ gananciaTotal, studentId }: GananciaPro
       {graphData.length > 0 && (
         <div className="bg-gray-50 rounded-lg p-3">
           <p className="text-xs text-gray-500 mb-2">Evolución de tu inversión</p>
-          <HistoricalGainsGraph 
+          <HistoricalGainsGraph
             data={graphData}
             investmentMarkers={investmentMarkers}
             rateChangeMarkers={rateChangeMarkers}
-            className="w-full"
+            className="w-full h-full"
+            isCollapsed={false}
           />
           <div className="mt-2 flex items-center justify-center space-x-4 text-xs">
             <div className="flex items-center space-x-1">
@@ -117,7 +103,13 @@ export default async function Ganancia({ gananciaTotal, studentId }: GananciaPro
               <span className="text-gray-600">Inversiones</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-8 h-0.5 bg-red-400" style={{ backgroundImage: 'repeating-linear-gradient(to right, transparent, transparent 2px, #f87171 2px, #f87171 4px)' }}></div>
+              <div
+                className="w-8 h-0.5 bg-red-400"
+                style={{
+                  backgroundImage:
+                    "repeating-linear-gradient(to right, transparent, transparent 2px, #f87171 2px, #f87171 4px)",
+                }}
+              ></div>
               <span className="text-gray-600">Cambio de tasa</span>
             </div>
           </div>

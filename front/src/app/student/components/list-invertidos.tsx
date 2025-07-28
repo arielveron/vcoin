@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import IconRenderer from '@/components/icon-renderer';
-import { InvestmentCategory } from '@/types/database';
-import { ChevronDown, ChevronRight, Wallet, Calendar, DollarSign } from 'lucide-react';
+import { motion, AnimatePresence } from "framer-motion";
+import IconRenderer from "@/components/icon-renderer";
+import { InvestmentCategory } from "@/types/database";
+import { ChevronDown, ChevronRight, Wallet, Calendar, DollarSign } from "lucide-react";
 
 interface InvestmentItem {
   id: number;
@@ -21,7 +22,7 @@ interface ListInvertidosProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export default function ListInvertidos({ totalInvertido, listInvertidos, className, ...props }: ListInvertidosProps) {
   const [isCollapsed, setIsCollapsed] = useState(true);
-  
+
   if (!listInvertidos || listInvertidos.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 w-full text-center">
@@ -34,7 +35,7 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
 
   // Group investments by month for better organization
   const investmentsByMonth = listInvertidos.reduce((acc, item) => {
-    const monthKey = item.fecha.toLocaleDateString('es-AR', { year: 'numeric', month: 'long' });
+    const monthKey = item.fecha.toLocaleDateString("es-AR", { year: "numeric", month: "long" });
     if (!acc[monthKey]) {
       acc[monthKey] = [];
     }
@@ -47,11 +48,11 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
     const dateB = new Date(investmentsByMonth[b][0].fecha);
     return dateB.getTime() - dateA.getTime();
   });
-  
+
   return (
     <div className={`bg-white rounded-lg shadow-sm border border-gray-200 w-full ${className}`} {...props}>
       {/* Header */}
-      <div 
+      <div
         className="flex items-center justify-between cursor-pointer p-4 sm:p-6 hover:bg-gray-50 transition-colors rounded-t-lg"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
@@ -80,10 +81,16 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
           </div>
         </div>
       </div>
-      
+
       {/* Content */}
       {!isCollapsed && (
-        <div className="border-t border-gray-100">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="border-t border-gray-100"
+        >
           <div className="max-h-96 overflow-y-auto">
             {sortedMonths.map((month, monthIndex) => (
               <div key={month} className={monthIndex > 0 ? "border-t border-gray-100" : ""}>
@@ -91,36 +98,42 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
                 <div className="px-6 py-3 bg-gray-50">
                   <h4 className="text-sm font-medium text-gray-700 capitalize">{month}</h4>
                 </div>
-                
+
                 {/* Investments for this month */}
                 {investmentsByMonth[month].map((item, index) => {
                   const category = item.category;
-                  
+
                   // Build className from category text style
-                  const categoryClasses = category?.text_style ? [
-                    category.text_style.fontSize || '',
-                    category.text_style.fontWeight || '',
-                    category.text_style.fontStyle || '',
-                    category.text_style.textColor || '',
-                    category.text_style.effectClass || ''
-                  ].filter(Boolean).join(' ') : '';
+                  const categoryClasses = category?.text_style
+                    ? [
+                        category.text_style.fontSize || "",
+                        category.text_style.fontWeight || "",
+                        category.text_style.fontStyle || "",
+                        category.text_style.textColor || "",
+                        category.text_style.effectClass || "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")
+                    : "";
 
                   // Build inline styles from customCSS
-                  const inlineStyles = category?.text_style?.customCSS ? 
-                    Object.fromEntries(
-                      category.text_style.customCSS.split(';')
-                        .filter(rule => rule.trim())
-                        .map(rule => {
-                          const [key, value] = rule.split(':').map(s => s.trim());
-                          return [key, value];
-                        })
-                    ) : {};
-                  
+                  const inlineStyles = category?.text_style?.customCSS
+                    ? Object.fromEntries(
+                        category.text_style.customCSS
+                          .split(";")
+                          .filter((rule) => rule.trim())
+                          .map((rule) => {
+                            const [key, value] = rule.split(":").map((s) => s.trim());
+                            return [key, value];
+                          })
+                      )
+                    : {};
+
                   return (
-                    <div 
-                      key={`${item.id}-${item.fecha.toISOString()}`} 
+                    <div
+                      key={`${item.id}-${item.fecha.toISOString()}`}
                       className={`px-6 py-4 hover:bg-gray-50 transition-colors ${
-                        index < investmentsByMonth[month].length - 1 ? 'border-b border-gray-100' : ''
+                        index < investmentsByMonth[month].length - 1 ? "border-b border-gray-100" : ""
                       }`}
                     >
                       <div className="flex items-start justify-between">
@@ -147,31 +160,29 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
                               )}
                               {/* Concept Text */}
                               <div className="flex-1">
-                                <p 
-                                  className={`text-sm leading-relaxed ${categoryClasses || 'text-gray-800'}`}
+                                <p
+                                  className={`text-sm leading-relaxed ${categoryClasses || "text-gray-800"}`}
                                   style={inlineStyles}
                                 >
                                   {item.concepto}
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">
-                                  {item.fecha.toLocaleDateString('es-AR', { 
-                                    weekday: 'short', 
-                                    day: 'numeric', 
-                                    month: 'short' 
+                                  {item.fecha.toLocaleDateString("es-AR", {
+                                    weekday: "short",
+                                    day: "numeric",
+                                    month: "short",
                                   })}
                                 </p>
                               </div>
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Right side - Amount */}
                         <div className="flex-shrink-0 ml-4">
                           <div className="flex items-center space-x-1 text-green-600">
                             <DollarSign className="w-4 h-4" />
-                            <span className="font-semibold">
-                              {item.monto.toLocaleString("es-AR")}
-                            </span>
+                            <span className="font-semibold">{item.monto.toLocaleString("es-AR")}</span>
                           </div>
                         </div>
                       </div>
@@ -181,21 +192,21 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
               </div>
             ))}
           </div>
-          
+
           {/* Footer Summary */}
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-600">
-                Total de {listInvertidos.length} inversiones registradas
-              </p>
+              <p className="text-sm text-gray-600">Total de {listInvertidos.length} inversiones registradas</p>
               <p className="text-sm font-medium text-gray-800">
-                Promedio: {(totalInvertido / listInvertidos.length).toLocaleString("es-AR", {
-                  maximumFractionDigits: 0
-                })} $
+                Promedio:{" "}
+                {(totalInvertido / listInvertidos.length).toLocaleString("es-AR", {
+                  maximumFractionDigits: 0,
+                })}{" "}
+                $
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );

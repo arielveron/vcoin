@@ -18,13 +18,15 @@ interface HistoricalGainsGraphProps {
     rate: number;
   }>;
   className?: string;
+  isCollapsed?: boolean; // Add this prop
 }
 
 export default function HistoricalGainsGraph({ 
   data, 
   investmentMarkers = [], 
   rateChangeMarkers = [], 
-  className = "" 
+  className = "",
+  isCollapsed = false // Default to false
 }: HistoricalGainsGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -58,7 +60,7 @@ export default function HistoricalGainsGraph({
     }
 
     // Graph dimensions
-    const padding = 15;
+    const padding = isCollapsed ? 10 : 15; // Reduce padding when collapsed
     const graphWidth = rect.width - padding * 2;
     const graphHeight = rect.height - padding * 2;
 
@@ -72,21 +74,23 @@ export default function HistoricalGainsGraph({
     const getX = (index: number) => padding + (index / (sortedData.length - 1)) * graphWidth;
     const getY = (amount: number) => padding + ((maxAmount - amount) / amountRange) * graphHeight;
 
-    // Draw grid lines
-    ctx.strokeStyle = '#f3f4f6';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([2, 2]);
-    
-    // Horizontal grid lines
-    for (let i = 0; i <= 4; i++) {
-      const y = padding + (i / 4) * graphHeight;
-      ctx.beginPath();
-      ctx.moveTo(padding, y);
-      ctx.lineTo(rect.width - padding, y);
-      ctx.stroke();
+    // Draw grid lines (only when not collapsed)
+    if (!isCollapsed) {
+      ctx.strokeStyle = '#f3f4f6';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 2]);
+      
+      // Horizontal grid lines
+      for (let i = 0; i <= 4; i++) {
+        const y = padding + (i / 4) * graphHeight;
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(rect.width - padding, y);
+        ctx.stroke();
+      }
+      
+      ctx.setLineDash([]);
     }
-    
-    ctx.setLineDash([]);
 
     // Create gradient for area fill
     const gradient = ctx.createLinearGradient(0, padding, 0, rect.height - padding);
@@ -111,7 +115,7 @@ export default function HistoricalGainsGraph({
 
     // Draw the main line
     ctx.strokeStyle = '#10b981';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = isCollapsed ? 2 : 3; // Thinner line when collapsed
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.beginPath();
@@ -130,7 +134,7 @@ export default function HistoricalGainsGraph({
     ctx.stroke();
 
     // Draw investment markers
-    if (investmentMarkers.length > 0) {
+    if (investmentMarkers.length > 0 && !isCollapsed) { // Only show detailed markers when expanded
       investmentMarkers.forEach(marker => {
         const markerTime = marker.date;
         let closestIndex = 0;
@@ -156,12 +160,36 @@ export default function HistoricalGainsGraph({
         ctx.fill();
         ctx.stroke();
       });
+    } else if (investmentMarkers.length > 0 && isCollapsed) {
+      // Draw small dots when collapsed
+      investmentMarkers.forEach(marker => {
+        const markerTime = marker.date;
+        let closestIndex = 0;
+        let closestDistance = Math.abs(sortedData[0].sortKey - markerTime);
+        
+        for (let i = 1; i < sortedData.length; i++) {
+          const distance = Math.abs(sortedData[i].sortKey - markerTime);
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = i;
+          }
+        }
+        
+        const x = getX(closestIndex);
+        const y = getY(marker.amount);
+        
+        // Draw small dot
+        ctx.fillStyle = '#3b82f6';
+        ctx.beginPath();
+        ctx.arc(x, y, 2, 0, 2 * Math.PI); // Smaller radius (2 instead of 5)
+        ctx.fill();
+      });
     }
 
     // Draw rate change markers
     if (rateChangeMarkers.length > 0) {
       ctx.strokeStyle = '#ef4444';
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = isCollapsed ? 1 : 1.5; // Thinner when collapsed
       ctx.setLineDash([4, 4]);
       
       rateChangeMarkers.forEach(marker => {
@@ -189,7 +217,7 @@ export default function HistoricalGainsGraph({
       ctx.setLineDash([]);
     }
 
-  }, [data, investmentMarkers, rateChangeMarkers]);
+  }, [data, investmentMarkers, rateChangeMarkers, isCollapsed]);
 
   if (!data || data.length === 0) {
     return null;

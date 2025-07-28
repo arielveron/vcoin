@@ -16,7 +16,7 @@ export default async function StudentMainScreen({ studentId }: StudentMainScreen
   const totalInvertido = await ServerDataService.getTotalInvested(studentId);
   const listInvertidos = await ServerDataService.getInvestmentsList(studentId);
   const classSettings = await ServerDataService.getStudentClassSettings(studentId);
-  
+
   // Calculate derived values using current rates
   const montoActual = await ServerDataService.calculateMontoActual(studentId);
   const gananciaTotal = await ServerDataService.calculateGananciaTotal(studentId);
@@ -27,44 +27,39 @@ export default async function StudentMainScreen({ studentId }: StudentMainScreen
   const achievementStats = await ServerDataService.getStudentAchievementStats(studentId);
   const unseenAchievements = await ServerDataService.getUnseenAchievements(studentId);
 
+  // Determine the first investment date for the list
+  const firstInvestmentDate =
+    listInvertidos.length > 0
+      ? new Date(Math.min(...listInvertidos.map((inv) => new Date(inv.fecha).getTime())))
+      : undefined;
+
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
       {/* Main Dashboard Container */}
       <div className="space-y-6">
         {/* Monto Actual - Full Width */}
-        <MontoActual 
-          className="w-full" 
-          montoActual={montoActual}
-          classSettings={classSettings}
-          studentId={studentId}
-        />
-        
+        <MontoActual className="w-full" montoActual={montoActual} classSettings={classSettings} studentId={studentId} />
+
         {/* Stats Grid - Responsive with Collapsible Components */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InteresWrapper studentId={studentId} />
-          <GananciaWrapper 
-            gananciaTotal={gananciaTotal}
-            studentId={studentId}
-          />
+          <GananciaWrapper gananciaTotal={gananciaTotal} studentId={studentId} />
         </div>
-        
+
         {/* Estimado - Full Width Collapsible */}
-        <EstimadoCollapsible 
-          className="w-full" 
+        <EstimadoCollapsible
+          className="w-full"
           montoEstimado={montoEstimado}
           classSettings={classSettings}
+          firstInvestmentDate={firstInvestmentDate}
         />
-        
+
         {/* Investment List - Full Width */}
-        <ListInvertidos 
-          className="w-full" 
-          totalInvertido={totalInvertido} 
-          listInvertidos={listInvertidos} 
-        />
+        <ListInvertidos className="w-full" totalInvertido={totalInvertido} listInvertidos={listInvertidos} />
       </div>
 
       {/* Achievement Section - Full Width */}
-      <AchievementSection 
+      <AchievementSection
         achievements={achievements}
         studentStats={achievementStats}
         unseenAchievements={unseenAchievements}
