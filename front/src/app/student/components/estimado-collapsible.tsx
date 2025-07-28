@@ -155,7 +155,7 @@ export default function EstimadoCollapsible({
                   <TrendingUp className="w-5 h-5 text-green-500" />
                   <span className="text-sm font-medium text-green-600">Proyección optimista</span>
                 </div>
-                <div className="text-4xl font-bold text-gray-800">
+                <div className="text-3xl font-bold text-gray-800">
                   {formatearMoneda(montoEstimado)}
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
