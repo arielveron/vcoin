@@ -1,11 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { AchievementWithProgress, Achievement } from '@/types/database';
-import { AchievementDashboard } from './achievement-dashboard';
-import AchievementCelebration from '@/components/achievement-celebration';
-import { sortAchievements } from '@/utils/achievement-sorting';
-import { markAchievementSeen } from '@/actions/student-actions';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { AchievementWithProgress, Achievement } from "@/types/database";
+import { AchievementDashboard } from "./achievement-dashboard";
+import AchievementCelebration from "@/components/achievement-celebration";
+import { sortAchievements } from "@/utils/achievement-sorting";
+import { markAchievementSeen } from "@/actions/student-actions";
 
 interface AchievementSectionProps {
   achievements: AchievementWithProgress[];
@@ -18,10 +19,10 @@ interface AchievementSectionProps {
   unseenAchievements: Achievement[];
 }
 
-export default function AchievementSection({ 
-  achievements, 
-  studentStats, 
-  unseenAchievements
+export default function AchievementSection({
+  achievements,
+  studentStats,
+  unseenAchievements,
 }: AchievementSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentCelebration, setCurrentCelebration] = useState<Achievement | null>(null);
@@ -39,7 +40,7 @@ export default function AchievementSection({
     if (celebrationQueue.length > 0 && !currentCelebration) {
       // Sort celebrations by category and then by points (highest first)
       const sortedQueue = sortAchievements(celebrationQueue);
-      
+
       const nextAchievement = sortedQueue[0];
       setCurrentCelebration(nextAchievement);
       setCelebrationQueue(sortedQueue.slice(1));
@@ -52,7 +53,7 @@ export default function AchievementSection({
       setCurrentCelebration(achievement);
     } else {
       // Add to queue if there's already a celebration showing
-      setCelebrationQueue(prev => [...prev, achievement]);
+      setCelebrationQueue((prev) => [...prev, achievement]);
     }
   };
 
@@ -62,21 +63,19 @@ export default function AchievementSection({
       try {
         await markAchievementSeen(currentCelebration.id);
       } catch (error) {
-        console.error('Failed to mark achievement as seen:', error);
+        console.error("Failed to mark achievement as seen:", error);
       }
-      
+
       setCurrentCelebration(null);
     }
   };
 
-  const completionRate = Math.round(
-    (studentStats.achievements_unlocked / studentStats.achievements_total) * 100
-  );
+  const completionRate = Math.round((studentStats.achievements_unlocked / studentStats.achievements_total) * 100);
 
   return (
     <div className="w-full">
       {/* Achievement Summary Card */}
-      <div 
+      <div
         className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-all duration-200"
         onClick={() => setIsExpanded(!isExpanded)}
       >
@@ -101,22 +100,32 @@ export default function AchievementSection({
             </div>
             <div className="ml-2">
               {isExpanded ? (
-                <svg className="w-5 h-5 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5 text-gray-500 transform transition-transform"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                 </svg>
               ) : (
-                <svg className="w-5 h-5 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5 text-gray-500 transform transition-transform"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               )}
             </div>
           </div>
         </div>
-        
+
         {/* Progress Bar */}
         <div className="mt-3">
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
+            <div
               className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${completionRate}%` }}
             />
@@ -126,13 +135,19 @@ export default function AchievementSection({
 
       {/* Expanded Achievement Dashboard */}
       {isExpanded && (
-        <div className="mt-4 transition-all duration-300 ease-in-out">
-          <AchievementDashboard 
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="mt-4"
+        >
+          <AchievementDashboard
             achievements={achievements}
             studentStats={studentStats}
             onAchievementClick={triggerCelebration}
           />
-        </div>
+        </motion.div>
       )}
 
       {/* Achievement Celebration Modal */}

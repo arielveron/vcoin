@@ -64,7 +64,7 @@ export default function EstimadoCollapsible({
             <div className="flex-1">
               <h3 className="text-sm font-medium text-gray-600">Estimación Final</h3>
               <div className="flex items-baseline space-x-2 mt-1">
-                <span className="text-2xl font-bold text-purple-700">
+                <span className="text-1xl font-bold text-purple-700">
                   {formatearMoneda(montoEstimado)}
                 </span>
                 <span className="text-xs text-purple-600 font-medium">
