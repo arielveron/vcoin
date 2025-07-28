@@ -158,8 +158,8 @@ export default function MontoActual({
         </div>
 
         {/* Live Indicator */}
-        <div className="flex items-center space-x-2 bg-white/80 backdrop-blur px-3 py-1.5 rounded-full">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+        <div className="flex items-center space-x-2 bg-white/80 backdrop-blur border-green-300 border px-3 py-1.5 rounded-full">
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
           <span className="text-xs font-medium text-gray-700">LIVE</span>
         </div>
       </div>
