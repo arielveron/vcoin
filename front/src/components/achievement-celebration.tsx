@@ -18,7 +18,7 @@ export default function AchievementCelebration({
   autoCloseDelay = 5000
 }: AchievementCelebrationProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(true);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const handleClose = useCallback(() => {
     setIsVisible(false);
@@ -29,8 +29,9 @@ export default function AchievementCelebration({
   }, [onClose]);
 
   useEffect(() => {
-    // Show modal with animation
+    // Show modal and confetti immediately
     setIsVisible(true);
+    setShowConfetti(true);
     
     // Auto close after delay (only if autoCloseDelay > 0)
     let timer: NodeJS.Timeout | undefined;
@@ -40,14 +41,18 @@ export default function AchievementCelebration({
       }, autoCloseDelay);
     }
 
-    // Stop confetti after 4 seconds (longer duration for better visibility)
-    const confettiTimer = setTimeout(() => {
-      setShowConfetti(false);
-    }, 4000);
+    // Stop confetti after 4 seconds ONLY if autoCloseDelay is enabled
+    // If manual close (autoCloseDelay = 0), keep confetti until manual close
+    let confettiTimer: NodeJS.Timeout | undefined;
+    if (autoCloseDelay > 0) {
+      confettiTimer = setTimeout(() => {
+        setShowConfetti(false);
+      }, Math.min(6000, autoCloseDelay - 1000)); // Stop 1 second before auto-close, or after 4 seconds max
+    }
 
     return () => {
       if (timer) clearTimeout(timer);
-      clearTimeout(confettiTimer);
+      if (confettiTimer) clearTimeout(confettiTimer);
     };
   }, [autoCloseDelay, handleClose]);
 
@@ -94,19 +99,26 @@ export default function AchievementCelebration({
           width={window.innerWidth}
           height={window.innerHeight}
           recycle={false}
-          numberOfPieces={300}
-          gravity={0.2}
+          numberOfPieces={500}
+          gravity={0.1}
           colors={['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8']}
-          wind={0.05}
-          initialVelocityY={15}
-          initialVelocityX={5}
+          wind={0.02}
+          initialVelocityY={20}
+          initialVelocityX={8}
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            zIndex: 10000,
+            pointerEvents: 'none'
+          }}
         />
       )}
 
       {/* Modal Backdrop */}
       <div
         className={cn(
-          "fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 transition-opacity duration-300",
+          "fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4 transition-opacity duration-300",
           isVisible ? "opacity-100" : "opacity-0"
         )}
         onClick={handleClose}
