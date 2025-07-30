@@ -124,7 +124,7 @@ export default function MontoActual({
 
   return (
     <div
-      className={`relative overflow-hidden bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 rounded-2xl shadow-lg border border-emerald-200 p-8 transition-all duration-300 hover:shadow-xl ${className}`}
+      className={`relative overflow-hidden bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 rounded-2xl shadow-lg border border-emerald-200 py-8 px-4 transition-all duration-300 hover:shadow-xl ${className}`}
       {...props}
     >
       {/* Background Pattern */}
@@ -146,7 +146,7 @@ export default function MontoActual({
       </div> */}
 
       {/* Header */}
-      <div className="relative flex items-center justify-between mb-6">
+      <div className="relative flex items-center justify-between mb-6 mx-4">
         <div className="flex items-center space-x-3">
           <div className="p-3 bg-white rounded-xl shadow-sm">
             <DollarSign className="w-6 h-6 text-emerald-600" />

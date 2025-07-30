@@ -95,8 +95,8 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
             {sortedMonths.map((month, monthIndex) => (
               <div key={month} className={monthIndex > 0 ? "border-t border-gray-100" : ""}>
                 {/* Month Header */}
-                <div className="px-6 py-3 bg-gray-50">
-                  <h4 className="text-sm font-medium text-gray-700 capitalize">{month}</h4>
+                <div className="px-6 py-2 bg-indigo-50 border-t border-gray-300 shadow-md">
+                  <h4 className="text-xs font-semibold text-gray-900 capitalize">{month}</h4>
                 </div>
 
                 {/* Investments for this month */}
