@@ -154,34 +154,72 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
     {
       key: 'category',
       header: 'Category',
-      render: (investment: InvestmentForClient) => (
-        <div>
-          {investment.category ? (
-            <div className="flex items-center gap-2">
-              {investment.category.icon_config?.name && (
-                <IconRenderer 
-                  name={investment.category.icon_config.name}
-                  size={16}
-                  color={investment.category.icon_config.color}
-                />
-              )}
-              <span 
-                className={`text-sm ${investment.category.text_style?.effectClass || ''}`}
-                style={{
-                  color: investment.category.icon_config?.color
-                }}
-              >
-                {investment.category.name}
-              </span>
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                {investment.category.level}
-              </span>
-            </div>
-          ) : (
-            <span className="text-gray-400">Standard</span>
-          )}
-        </div>
-      )
+      render: (investment: InvestmentForClient) => {
+        const category = investment.category;
+        
+        // Build className from category text style (excluding textColor which will be handled inline)
+        const categoryClasses = category?.text_style
+          ? [
+              category.text_style.fontSize || "",
+              category.text_style.fontWeight || "",
+              category.text_style.fontStyle || "",
+              category.text_style.effectClass || "",
+            ]
+              .filter(Boolean)
+              .join(" ")
+          : "";
+        
+        // Build inline styles from customCSS and textColor
+        const inlineStyles = {
+          // First apply customCSS if it exists
+          ...(category?.text_style?.customCSS
+            ? Object.fromEntries(
+                category.text_style.customCSS
+                  .split(";")
+                  .filter((rule) => rule.trim())
+                  .map((rule) => {
+                    const [key, value] = rule.split(":").map((s) => s.trim());
+                    return [key, value];
+                  })
+              )
+            : {}),
+          // Then apply textColor if it exists (this will override any color from customCSS)
+          ...(category?.text_style?.textColor?.startsWith('#') 
+            ? { color: category.text_style.textColor }
+            : {})
+        };
+
+        return (
+          <div>
+            {category ? (
+              <div className="flex items-center gap-2">
+                <span 
+                  className={`text-sm ${categoryClasses || 'text-gray-900'}`}
+                  style={inlineStyles}
+                >
+                  {category.name}
+                </span>
+                {category.icon_config?.name && (
+                  <IconRenderer 
+                    name={category.icon_config.name}
+                    library={category.icon_config.library}
+                    size={16}
+                    color={category.icon_config.color}
+                    effectClass={category.icon_config.effectClass}
+                    backgroundColor={category.icon_config.backgroundColor}
+                    padding={category.icon_config.padding}
+                  />
+                )}
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                  {category.level}
+                </span>
+              </div>
+            ) : (
+              <span className="text-gray-400">Standard</span>
+            )}
+          </div>
+        );
+      }
     },
     {
       key: 'actions',
@@ -256,21 +294,51 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
         {investment.category ? (
           <div className="flex items-center gap-2">
             <Tag className="h-4 w-4 text-gray-400" />
-            {investment.category.icon_config?.name && (
-              <IconRenderer 
-                name={investment.category.icon_config.name}
-                size={16}
-                color={investment.category.icon_config.color}
-              />
-            )}
             <span 
-              className={`text-sm ${investment.category.text_style?.effectClass || ''}`}
+              className={`text-sm ${
+                investment.category.text_style
+                  ? [
+                      investment.category.text_style.fontSize || "",
+                      investment.category.text_style.fontWeight || "",
+                      investment.category.text_style.fontStyle || "",
+                      investment.category.text_style.effectClass || "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ") || 'text-gray-900'
+                  : 'text-gray-900'
+              }`}
               style={{
-                color: investment.category.icon_config?.color
+                // First apply customCSS if it exists
+                ...(investment.category.text_style?.customCSS
+                  ? Object.fromEntries(
+                      investment.category.text_style.customCSS
+                        .split(";")
+                        .filter((rule) => rule.trim())
+                        .map((rule) => {
+                          const [key, value] = rule.split(":").map((s) => s.trim());
+                          return [key, value];
+                        })
+                    )
+                  : {}),
+                // Then apply textColor if it exists (this will override any color from customCSS)
+                ...(investment.category.text_style?.textColor?.startsWith('#') 
+                  ? { color: investment.category.text_style.textColor }
+                  : {})
               }}
             >
               {investment.category.name}
             </span>
+            {investment.category.icon_config?.name && (
+              <IconRenderer 
+                name={investment.category.icon_config.name}
+                library={investment.category.icon_config.library}
+                size={16}
+                color={investment.category.icon_config.color}
+                effectClass={investment.category.icon_config.effectClass}
+                backgroundColor={investment.category.icon_config.backgroundColor}
+                padding={investment.category.icon_config.padding}
+              />
+            )}
             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
               {investment.category.level}
             </span>

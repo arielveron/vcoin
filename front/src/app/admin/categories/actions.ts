@@ -30,6 +30,7 @@ export const createCategory = withAdminAuth(async (formData: FormData) => {
   const iconBackgroundColor = formData.get('iconBackgroundColor') as string;
   const iconPadding = formData.get('iconPadding') ? parseInt(formData.get('iconPadding') as string) : 4;
   const iconAnimation = formData.get('iconAnimation') as string;
+  const iconEffectClass = formData.get('iconEffectClass') as string;
 
   const categoryData: CreateInvestmentCategoryRequest = {
     name,
@@ -48,7 +49,8 @@ export const createCategory = withAdminAuth(async (formData: FormData) => {
       color: iconColor || undefined,
       backgroundColor: iconBackgroundColor || undefined,
       padding: iconPadding,
-      animationClass: iconAnimation || undefined
+      animationClass: iconAnimation || undefined,
+      effectClass: iconEffectClass || undefined
     } : null,
     is_active: isActive,
     sort_order: sortOrder
@@ -76,6 +78,7 @@ export const updateCategory = withAdminAuth(async (id: number, formData: FormDat
   const iconBackgroundColor = formData.get('iconBackgroundColor') as string;
   const iconPadding = formData.get('iconPadding') ? parseInt(formData.get('iconPadding') as string) : 4;
   const iconAnimation = formData.get('iconAnimation') as string;
+  const iconEffectClass = formData.get('iconEffectClass') as string;
 
   const categoryData: Partial<CreateInvestmentCategoryRequest> = {};
   
@@ -100,7 +103,8 @@ export const updateCategory = withAdminAuth(async (id: number, formData: FormDat
       color: iconColor || undefined,
       backgroundColor: iconBackgroundColor || undefined,
       padding: iconPadding,
-      animationClass: iconAnimation || undefined
+      animationClass: iconAnimation || undefined,
+      effectClass: iconEffectClass || undefined
     };
   } else {
     categoryData.icon_config = null;

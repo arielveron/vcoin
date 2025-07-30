@@ -19,7 +19,7 @@ export interface IconDefinition {
 
 // Curated icons for gamification
 const ICON_REGISTRY: IconDefinition[] = [
-  // Lucide Icons
+  // Lucide Icons - Solid variants preferred
   { 
     name: 'Trophy', 
     component: LucideIcons.Trophy,
@@ -84,6 +84,13 @@ const ICON_REGISTRY: IconDefinition[] = [
     tags: ['protection', 'defense', 'escudo']
   },
   { 
+    name: 'ShieldCheck', 
+    component: LucideIcons.ShieldCheck,
+    library: 'lucide',
+    category: 'general',
+    tags: ['protection', 'verified', 'defense', 'escudo']
+  },
+  { 
     name: 'GraduationCap', 
     component: LucideIcons.GraduationCap,
     library: 'lucide',
@@ -98,11 +105,46 @@ const ICON_REGISTRY: IconDefinition[] = [
     tags: ['study', 'read', 'education', 'libro']
   },
   { 
+    name: 'Book', 
+    component: LucideIcons.Book,
+    library: 'lucide',
+    category: 'academic',
+    tags: ['study', 'read', 'education', 'libro']
+  },
+  { 
+    name: 'Bookmark', 
+    component: LucideIcons.Bookmark,
+    library: 'lucide',
+    category: 'academic',
+    tags: ['save', 'favorite', 'marcador']
+  },
+  { 
+    name: 'Lightbulb', 
+    component: LucideIcons.Lightbulb,
+    library: 'lucide',
+    category: 'academic',
+    tags: ['idea', 'innovation', 'creativity', 'bombilla']
+  },
+  { 
     name: 'Brain', 
     component: LucideIcons.Brain,
     library: 'lucide',
     category: 'academic',
     tags: ['mind', 'intelligence', 'cerebro']
+  },
+  { 
+    name: 'Calculator', 
+    component: LucideIcons.Calculator,
+    library: 'lucide',
+    category: 'academic',
+    tags: ['math', 'calculation', 'calculadora']
+  },
+  { 
+    name: 'PenTool', 
+    component: LucideIcons.PenTool,
+    library: 'lucide',
+    category: 'academic',
+    tags: ['write', 'draw', 'design', 'lapiz']
   },
   { 
     name: 'DollarSign', 
@@ -119,20 +161,97 @@ const ICON_REGISTRY: IconDefinition[] = [
     tags: ['money', 'currency', 'monedas']
   },
   { 
+    name: 'Wallet', 
+    component: LucideIcons.Wallet,
+    library: 'lucide',
+    category: 'finance',
+    tags: ['money', 'billfold', 'billetera']
+  },
+  { 
+    name: 'CreditCard', 
+    component: LucideIcons.CreditCard,
+    library: 'lucide',
+    category: 'finance',
+    tags: ['payment', 'card', 'tarjeta']
+  },
+  { 
+    name: 'PiggyBank', 
+    component: LucideIcons.PiggyBank,
+    library: 'lucide',
+    category: 'finance',
+    tags: ['savings', 'money', 'alcancia']
+  },
+  { 
+    name: 'TrendingUp', 
+    component: LucideIcons.TrendingUp,
+    library: 'lucide',
+    category: 'finance',
+    tags: ['growth', 'profit', 'increase', 'crecimiento']
+  },
+  { 
+    name: 'BarChart3', 
+    component: LucideIcons.BarChart3,
+    library: 'lucide',
+    category: 'finance',
+    tags: ['analytics', 'stats', 'data', 'grafico']
+  },
+  { 
     name: 'Gem', 
     component: LucideIcons.Gem,
     library: 'lucide',
     category: 'reward',
     tags: ['diamond', 'jewel', 'precious', 'gema']
   },
+  { 
+    name: 'Gift', 
+    component: LucideIcons.Gift,
+    library: 'lucide',
+    category: 'reward',
+    tags: ['present', 'birthday', 'regalo', 'cumpleaños']
+  },
+  { 
+    name: 'Sparkles', 
+    component: LucideIcons.Sparkles,
+    library: 'lucide',
+    category: 'reward',
+    tags: ['magic', 'shine', 'destellos']
+  },
+  { 
+    name: 'Heart', 
+    component: LucideIcons.Heart,
+    library: 'lucide',
+    category: 'reward',
+    tags: ['love', 'valentine', 'amor', 'corazon']
+  },
+  { 
+    name: 'ThumbsUp', 
+    component: LucideIcons.ThumbsUp,
+    library: 'lucide',
+    category: 'reward',
+    tags: ['like', 'approve', 'good', 'pulgar']
+  },
 
-  // Heroicons Solid
+  // Heroicons Solid - Prefer solid versions for better visibility
   { 
     name: 'AcademicCapSolid', 
     component: HeroiconsSolid.AcademicCapIcon,
     library: 'heroicons-solid',
     category: 'academic',
     tags: ['graduation', 'education', 'graduacion']
+  },
+  { 
+    name: 'StarSolid', 
+    component: HeroiconsSolid.StarIcon,
+    library: 'heroicons-solid',
+    category: 'achievement',
+    tags: ['favorite', 'rating', 'estrella']
+  },
+  { 
+    name: 'TrophySolid', 
+    component: HeroiconsSolid.TrophyIcon,
+    library: 'heroicons-solid',
+    category: 'achievement',
+    tags: ['award', 'winner', 'trofeo']
   },
   { 
     name: 'BoltSolid', 
@@ -155,8 +274,36 @@ const ICON_REGISTRY: IconDefinition[] = [
     category: 'reward',
     tags: ['magic', 'shine', 'destellos']
   },
+  { 
+    name: 'ShieldCheckSolid', 
+    component: HeroiconsSolid.ShieldCheckIcon,
+    library: 'heroicons-solid',
+    category: 'general',
+    tags: ['protection', 'security', 'verified', 'escudo']
+  },
+  { 
+    name: 'CurrencyDollarSolid', 
+    component: HeroiconsSolid.CurrencyDollarIcon,
+    library: 'heroicons-solid',
+    category: 'finance',
+    tags: ['money', 'cash', 'currency', 'dinero']
+  },
+  { 
+    name: 'HeartSolid', 
+    component: HeroiconsSolid.HeartIcon,
+    library: 'heroicons-solid',
+    category: 'reward',
+    tags: ['love', 'valentine', 'amor', 'corazon']
+  },
+  { 
+    name: 'GiftSolid', 
+    component: HeroiconsSolid.GiftIcon,
+    library: 'heroicons-solid',
+    category: 'reward',
+    tags: ['present', 'birthday', 'regalo']
+  },
 
-  // Heroicons Outline
+  // Heroicons Outline - Only include essential ones as solid versions are preferred
   { 
     name: 'StarOutline', 
     component: HeroiconsOutline.StarIcon,
@@ -172,7 +319,7 @@ const ICON_REGISTRY: IconDefinition[] = [
     tags: ['award', 'winner', 'trofeo']
   },
 
-  // Tabler Icons
+  // Tabler Icons - Solid style preferred
   { 
     name: 'Certificate', 
     component: TablerIcons.IconCertificate,
@@ -195,14 +342,49 @@ const ICON_REGISTRY: IconDefinition[] = [
     tags: ['money', 'currency', 'moneda']
   },
   { 
+    name: 'CoinFilled', 
+    component: TablerIcons.IconCoinFilled,
+    library: 'tabler',
+    category: 'finance',
+    tags: ['money', 'currency', 'moneda']
+  },
+  { 
     name: 'Diamond', 
     component: TablerIcons.IconDiamond,
     library: 'tabler',
     category: 'reward',
     tags: ['gem', 'jewel', 'diamante']
   },
+  { 
+    name: 'DiamondFilled', 
+    component: TablerIcons.IconDiamondFilled,
+    library: 'tabler',
+    category: 'reward',
+    tags: ['gem', 'jewel', 'diamante']
+  },
+  { 
+    name: 'Rosette', 
+    component: TablerIcons.IconRosette,
+    library: 'tabler',
+    category: 'achievement',
+    tags: ['award', 'badge', 'roseta']
+  },
+  { 
+    name: 'RosetteFilled', 
+    component: TablerIcons.IconRosetteFilled,
+    library: 'tabler',
+    category: 'achievement',
+    tags: ['award', 'badge', 'roseta']
+  },
+  { 
+    name: 'CircleCheckFilled', 
+    component: TablerIcons.IconCircleCheckFilled,
+    library: 'tabler',
+    category: 'general',
+    tags: ['complete', 'done', 'success', 'completado']
+  },
 
-  // Phosphor Icons
+  // Phosphor Icons - These come with fill variants built-in
   { 
     name: 'TrophyPhosphor', 
     component: PhosphorIcons.Trophy,
@@ -231,6 +413,41 @@ const ICON_REGISTRY: IconDefinition[] = [
     category: 'reward',
     tags: ['celebration', 'party', 'confeti']
   },
+  { 
+    name: 'DiamondPhosphor', 
+    component: PhosphorIcons.Diamond,
+    library: 'phosphor',
+    category: 'reward',
+    tags: ['gem', 'jewel', 'diamante']
+  },
+  { 
+    name: 'CrownPhosphor', 
+    component: PhosphorIcons.Crown,
+    library: 'phosphor',
+    category: 'achievement',
+    tags: ['king', 'royal', 'corona']
+  },
+  { 
+    name: 'CoinPhosphor', 
+    component: PhosphorIcons.Coin,
+    library: 'phosphor',
+    category: 'finance',
+    tags: ['money', 'currency', 'moneda']
+  },
+  { 
+    name: 'Student', 
+    component: PhosphorIcons.Student,
+    library: 'phosphor',
+    category: 'academic',
+    tags: ['education', 'school', 'estudiante']
+  },
+  { 
+    name: 'Graduation', 
+    component: PhosphorIcons.GraduationCap,
+    library: 'phosphor',
+    category: 'academic',
+    tags: ['education', 'school', 'graduacion']
+  },
 
   // Seasonal Icons
   { 
@@ -248,18 +465,18 @@ const ICON_REGISTRY: IconDefinition[] = [
     tags: ['summer', 'hot', 'verano', 'sol']
   },
   { 
-    name: 'Gift', 
-    component: LucideIcons.Gift,
+    name: 'TreePine', 
+    component: LucideIcons.TreePine,
     library: 'lucide',
     category: 'seasonal',
-    tags: ['present', 'birthday', 'regalo', 'cumpleaños']
+    tags: ['christmas', 'winter', 'tree', 'arbol']
   },
   { 
-    name: 'Heart', 
-    component: LucideIcons.Heart,
+    name: 'Candy', 
+    component: LucideIcons.Candy,
     library: 'lucide',
     category: 'seasonal',
-    tags: ['love', 'valentine', 'amor', 'corazon']
+    tags: ['sweet', 'treat', 'dulce']
   },
 ];
 

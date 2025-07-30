@@ -13,6 +13,7 @@ interface IconRendererProps {
   padding?: number;
   className?: string;
   animationClass?: string;
+  effectClass?: string;
 }
 
 export default function IconRenderer({ 
@@ -23,7 +24,8 @@ export default function IconRenderer({
   backgroundColor,
   padding = 4,
   className,
-  animationClass 
+  animationClass,
+  effectClass 
 }: IconRendererProps) {
   const iconDef = getIcon(name, library);
   
@@ -34,7 +36,7 @@ export default function IconRenderer({
 
   const iconProps = {
     size,
-    className: cn(className, animationClass),
+    className: cn(className, animationClass, effectClass),
     style: color?.startsWith('#') ? { color } : undefined
   };
 

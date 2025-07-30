@@ -12,6 +12,7 @@ interface IconPreviewProps {
   backgroundColor?: string;
   padding?: number;
   animationClass?: string;
+  effectClass?: string;
   showLabel?: boolean;
   className?: string;
 }
@@ -24,6 +25,7 @@ export default function IconPreview({
   backgroundColor,
   padding,
   animationClass,
+  effectClass,
   showLabel = true,
   className
 }: IconPreviewProps) {
@@ -52,6 +54,7 @@ export default function IconPreview({
         backgroundColor={backgroundColor}
         padding={padding}
         animationClass={animationClass}
+        effectClass={effectClass}
       />
       {showLabel && (
         <span className="text-xs text-gray-600 mt-1">
