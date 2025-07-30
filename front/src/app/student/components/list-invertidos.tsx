@@ -73,24 +73,30 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
             </p>
           </div>
           <div className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            {isCollapsed ? (
-              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
-            ) : (
-              <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
-            )}
+            <motion.div
+              animate={{ rotate: isCollapsed ? 0 : 180 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              {isCollapsed ? (
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+              ) : (
+                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+              )}
+            </motion.div>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      {!isCollapsed && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="border-t border-gray-100"
-        >
+      <AnimatePresence>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="border-t border-gray-100"
+          >
           <div className="max-h-96 overflow-y-auto">
             {sortedMonths.map((month, monthIndex) => (
               <div key={month} className={monthIndex > 0 ? "border-t border-gray-100" : ""}>
@@ -218,7 +224,8 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
             </div>
           </div>
         </motion.div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }
