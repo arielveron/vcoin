@@ -1,18 +1,27 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { StudentSession } from '@/types/database';
 import { studentLogout } from '@/actions/student-actions';
-import { Menu, X, User, Home, LogOut } from 'lucide-react';
+import { Menu, X, User, Home, LogOut, Trophy, ChevronDown } from 'lucide-react';
+import AchievementSummary from './achievement-summary';
 
 interface StudentNavProps {
   session: StudentSession;
+  achievementStats?: {
+    total_points: number;
+    achievements_unlocked: number;
+    achievements_total: number;
+    rank?: number;
+  };
+  unseenAchievementsCount?: number;
 }
 
-export default function StudentNav({ session }: StudentNavProps) {
+export default function StudentNav({ session, achievementStats, unseenAchievementsCount = 0 }: StudentNavProps) {
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAchievementDropdownOpen, setIsAchievementDropdownOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -31,10 +40,35 @@ export default function StudentNav({ session }: StudentNavProps) {
     setIsMobileMenuOpen(false);
   };
 
+  const closeAchievementDropdown = () => {
+    setIsAchievementDropdownOpen(false);
+  };
+
   const navigateTo = (path: string) => {
     router.push(path);
     closeMobileMenu();
+    closeAchievementDropdown();
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const dropdown = document.querySelector('[data-dropdown="achievements"]');
+      const button = document.querySelector('[data-dropdown-button="achievements"]');
+      
+      if (isAchievementDropdownOpen && dropdown && button) {
+        if (!dropdown.contains(target) && !button.contains(target)) {
+          setIsAchievementDropdownOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isAchievementDropdownOpen]);
 
   return (
     <>
@@ -52,12 +86,100 @@ export default function StudentNav({ session }: StudentNavProps) {
             
             {/* Navegación Desktop */}
             <div className="hidden md:flex items-center space-x-4">
+              {/* Achievements Dropdown */}
+              <div className="relative">
+                <button
+                  data-dropdown-button="achievements"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsAchievementDropdownOpen(!isAchievementDropdownOpen);
+                  }}
+                  className="flex items-center space-x-2 text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  {achievementStats && (
+                    <AchievementSummary 
+                      stats={achievementStats}
+                      unseenCount={unseenAchievementsCount}
+                    />
+                  )}
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isAchievementDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {/* Dropdown Menu */}
+                {isAchievementDropdownOpen && (
+                  <div 
+                    data-dropdown="achievements"
+                    className="absolute right-0 mt-2 w-96 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+                  >
+                    <div className="py-1">
+                      {achievementStats && (
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <div className="text-xl">🏆</div>
+                                <div>
+                                  <h3 className="font-semibold text-gray-900">Logros</h3>
+                                  <p className="text-sm text-gray-600">
+                                    {achievementStats.achievements_unlocked}/{achievementStats.achievements_total} completados
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-4">
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-blue-600">{achievementStats.total_points}</div>
+                                  <div className="text-xs text-gray-600">Puntos</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-purple-600">
+                                    {Math.round((achievementStats.achievements_unlocked / achievementStats.achievements_total) * 100)}%
+                                  </div>
+                                  <div className="text-xs text-gray-600">Completado</div>
+                                </div>
+                              </div>
+                            </div>
+                            {/* Progress Bar */}
+                            <div className="mt-3">
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+                                  style={{ width: `${Math.round((achievementStats.achievements_unlocked / achievementStats.achievements_total) * 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsAchievementDropdownOpen(false);
+                          router.push('/student/achievements');
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-indigo-600 transition-colors"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <Trophy className="w-4 h-4" />
+                          <span>Ver Todos los Logros</span>
+                          {unseenAchievementsCount > 0 && (
+                            <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
+                              {unseenAchievementsCount}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
               <button
                 onClick={() => router.push('/student')}
                 className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Dashboard
               </button>
+              
               <button
                 onClick={() => router.push('/student/profile')}
                 className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -149,6 +271,61 @@ export default function StudentNav({ session }: StudentNavProps) {
           {/* Navigation Links */}
           <div className="flex-1 py-4">
             <nav className="space-y-1 px-4">
+              {/* Achievements Section */}
+              <div className="border-b border-gray-200 pb-3 mb-3">
+                {achievementStats && (
+                  <div className="mb-3">
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="text-lg">🏆</div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">Logros</div>
+                            <div className="text-xs text-gray-600">
+                              {achievementStats.achievements_unlocked}/{achievementStats.achievements_total} completados
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <div className="text-center">
+                            <div className="text-sm font-bold text-blue-600">{achievementStats.total_points}</div>
+                            <div className="text-xs text-gray-600">Puntos</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-sm font-bold text-purple-600">
+                              {Math.round((achievementStats.achievements_unlocked / achievementStats.achievements_total) * 100)}%
+                            </div>
+                            <div className="text-xs text-gray-600">Completado</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-2">
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div
+                            className="bg-gradient-to-r from-blue-500 to-purple-600 h-1.5 rounded-full transition-all duration-300"
+                            style={{ 
+                              width: `${Math.round((achievementStats.achievements_unlocked / achievementStats.achievements_total) * 100)}%` 
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <button
+                  onClick={() => navigateTo('/student/achievements')}
+                  className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-indigo-600 transition-colors"
+                >
+                  <Trophy className="w-5 h-5 mr-3" />
+                  <span className="flex-1 text-left">Ver Todos los Logros</span>
+                  {unseenAchievementsCount > 0 && (
+                    <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 ml-2">
+                      {unseenAchievementsCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+              
               <button
                 onClick={() => navigateTo('/student')}
                 className="w-full flex items-center px-3 py-3 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-indigo-600 transition-colors"
@@ -156,6 +333,7 @@ export default function StudentNav({ session }: StudentNavProps) {
                 <Home className="w-5 h-5 mr-3" />
                 Dashboard
               </button>
+              
               <button
                 onClick={() => navigateTo('/student/profile')}
                 className="w-full flex items-center px-3 py-3 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-indigo-600 transition-colors"

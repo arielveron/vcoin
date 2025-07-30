@@ -4,7 +4,7 @@ import InteresWrapper from "./interes-wrapper";
 import GananciaWrapper from "./ganancia-wrapper";
 import EstimadoCollapsible from "./estimado-collapsible";
 import ListInvertidos from "./list-invertidos";
-import AchievementSection from "./achievement-section";
+import DashboardAchievementCelebrations from "./dashboard-achievement-celebrations";
 import { ServerDataService } from "@/services/server-data-service";
 
 interface StudentMainScreenProps {
@@ -22,9 +22,7 @@ export default async function StudentMainScreen({ studentId }: StudentMainScreen
   const gananciaTotal = await ServerDataService.calculateGananciaTotal(studentId);
   const montoEstimado = await ServerDataService.calculateMontoEstimado(studentId);
 
-  // Fetch achievement data
-  const achievements = await ServerDataService.getStudentAchievements(studentId);
-  const achievementStats = await ServerDataService.getStudentAchievementStats(studentId);
+  // Fetch achievement data for celebrations
   const unseenAchievements = await ServerDataService.getUnseenAchievements(studentId);
 
   // Determine the first investment date for the list
@@ -58,12 +56,8 @@ export default async function StudentMainScreen({ studentId }: StudentMainScreen
         <ListInvertidos className="w-full" totalInvertido={totalInvertido} listInvertidos={listInvertidos} />
       </div>
 
-      {/* Achievement Section - Full Width */}
-      <AchievementSection
-        achievements={achievements}
-        studentStats={achievementStats}
-        unseenAchievements={unseenAchievements}
-      />
+      {/* Achievement Celebrations - Shows confetti and celebrations for new achievements */}
+      <DashboardAchievementCelebrations unseenAchievements={unseenAchievements} />
     </div>
   );
 }
