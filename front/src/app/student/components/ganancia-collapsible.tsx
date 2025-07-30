@@ -44,16 +44,35 @@ export default function GananciaCollapsible({
               </svg>
             </div>
             <div className="flex-1">
-              <h3 className="text-sm font-medium text-gray-600">Ganancia Total</h3>
-              <div className="flex items-center space-x-2 mt-1">
-                <div className="flex items-baseline space-x-1">
-                  {isPositive && <span className={`text-xl font-bold ${textColor}`}>+</span>}
-                  <span className={`text-2xl font-bold ${textColor}`}>
-                    {formatearMoneda(Math.abs(gananciaTotal), 2)}%
-                  </span>
-                </div>
-                <Image src="/vcoin-xs.gif" alt="Vcoin Logo" width={16} height={16} className="opacity-60" unoptimized />
-              </div>
+              <motion.h3 
+                animate={{ 
+                  fontSize: isExpanded ? "1.25rem" : "0.875rem",
+                  fontWeight: isExpanded ? "700" : "500"
+                }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="text-gray-600"
+              >
+                Ganancia Total
+              </motion.h3>
+              <AnimatePresence>
+                {!isExpanded && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center space-x-2 mt-1"
+                  >
+                    <div className="flex items-baseline space-x-1">
+                      {isPositive && <span className={`text-xl font-bold ${textColor}`}>+</span>}
+                      <span className={`text-2xl font-bold ${textColor}`}>
+                        {formatearMoneda(Math.abs(gananciaTotal), 2)}%
+                      </span>
+                    </div>
+                    <Image src="/vcoin-xs.gif" alt="Vcoin Logo" width={16} height={16} className="opacity-60" unoptimized />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 

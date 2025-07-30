@@ -62,15 +62,34 @@ export default function EstimadoCollapsible({
               <Target className="w-5 h-5 text-purple-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-sm font-medium text-gray-600">Estimación Final</h3>
-              <div className="flex items-baseline space-x-2 mt-1">
-                <span className="text-1xl font-bold text-purple-700">
-                  {formatearMoneda(montoEstimado)}
-                </span>
-                <span className="text-xs text-purple-600 font-medium">
-                  en {diasRestantes} días
-                </span>
-              </div>
+              <motion.h3 
+                animate={{ 
+                  fontSize: isExpanded ? "1.25rem" : "0.875rem",
+                  fontWeight: isExpanded ? "700" : "500"
+                }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="text-gray-600"
+              >
+                Estimación Final
+              </motion.h3>
+              <AnimatePresence>
+                {!isExpanded && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-baseline space-x-2 mt-1"
+                  >
+                    <span className="text-1xl font-bold text-purple-700">
+                      {formatearMoneda(montoEstimado)}
+                    </span>
+                    <span className="text-xs text-purple-600 font-medium">
+                      en {diasRestantes} días
+                    </span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 

@@ -61,19 +61,38 @@ export default function InteresCollapsible({
               </svg>
             </div>
             <div className="flex-1">
-              <h3 className="text-sm font-medium text-gray-600">Interés Mensual</h3>
-              <div className="flex items-baseline space-x-2 mt-1">
-                <span className={`text-2xl font-bold ${trendColor}`}>
-                  {formatearMoneda(currentRate * 100)}%
-                </span>
-                {direction && <Icon className={`w-4 h-4 ${trendColor}`} />}
-                {latestRateChange && latestRateChange.previous_rate !== null && (
-                  <span className={`text-xs ${trendColor} font-medium`}>
-                    {direction === "up" ? "+" : "-"}
-                    {Math.abs(((currentRate - latestRateChange.previous_rate) / latestRateChange.previous_rate) * 100).toFixed(1)}%
-                  </span>
+              <motion.h3 
+                animate={{ 
+                  fontSize: isExpanded ? "1.25rem" : "0.875rem",
+                  fontWeight: isExpanded ? "700" : "500"
+                }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="text-gray-600"
+              >
+                Interés Mensual
+              </motion.h3>
+              <AnimatePresence>
+                {!isExpanded && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-baseline space-x-2 mt-1"
+                  >
+                    <span className={`text-2xl font-bold ${trendColor}`}>
+                      {formatearMoneda(currentRate * 100)}%
+                    </span>
+                    {direction && <Icon className={`w-4 h-4 ${trendColor}`} />}
+                    {latestRateChange && latestRateChange.previous_rate !== null && (
+                      <span className={`text-xs ${trendColor} font-medium`}>
+                        {direction === "up" ? "+" : "-"}
+                        {Math.abs(((currentRate - latestRateChange.previous_rate) / latestRateChange.previous_rate) * 100).toFixed(1)}%
+                      </span>
+                    )}
+                  </motion.div>
                 )}
-              </div>
+              </AnimatePresence>
             </div>
           </div>
 
