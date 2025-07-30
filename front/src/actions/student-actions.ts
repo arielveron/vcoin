@@ -107,10 +107,10 @@ export const studentLogin = async (formData: FormData): Promise<ActionResult> =>
   }
 }
 
-export const studentLogout = withErrorHandling(async () => {
+export const studentLogout = async (): Promise<void> => {
   await SecureStudentSessionService.destroySession()
   redirect('/login')
-}, 'student logout')
+}
 
 export const clearInvalidSession = withErrorHandling(async () => {
   await SecureStudentSessionService.destroySession()

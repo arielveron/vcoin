@@ -23,14 +23,7 @@ export default function StudentNav({ session, achievementStats, unseenAchievemen
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAchievementDropdownOpen, setIsAchievementDropdownOpen] = useState(false);
 
-  const handleLogout = async () => {
-    try {
-      await studentLogout();
-      // studentLogout will redirect to /login
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
+  // Server action for logout - use directly in form actions
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -186,7 +179,7 @@ export default function StudentNav({ session, achievementStats, unseenAchievemen
               >
                 Profile
               </button>
-              <form action={handleLogout}>
+              <form action={studentLogout}>
                 <button
                   type="submit"
                   className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
@@ -346,7 +339,7 @@ export default function StudentNav({ session, achievementStats, unseenAchievemen
 
           {/* Logout Button */}
           <div className="border-t border-gray-200 p-4">
-            <form action={handleLogout} className="w-full">
+            <form action={studentLogout} className="w-full">
               <button
                 type="submit"
                 className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors"
