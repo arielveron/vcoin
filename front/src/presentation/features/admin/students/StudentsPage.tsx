@@ -8,6 +8,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { useAdminFilters } from '@/hooks/useAdminFilters'
+import { useServerAction } from '@/presentation/hooks'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import MobileFilters from '@/components/admin/mobile-filters'
 import {
@@ -34,10 +35,13 @@ export default function StudentsPage({
   setStudentPassword
 }: StudentsPageProps) {
   const [students, setStudents] = useState<StudentForClient[]>(initialStudents)
-  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingStudent, setEditingStudent] = useState<StudentForClient | null>(null)
   const [passwordDialogStudent, setPasswordDialogStudent] = useState<StudentForClient | null>(null)
   const { filters } = useAdminFilters()
+
+  // Server actions
+  const { execute: executeDelete } = useServerAction(deleteStudent)
 
   // Filter students based on selected class
   const filteredStudents = filters.classId 
@@ -68,32 +72,33 @@ export default function StudentsPage({
       }
       setStudents([...students, newStudentForClient])
     }
-    setShowCreateForm(false)
+    setIsFormOpen(false)
   }
 
   const handleFormCancel = () => {
-    setShowCreateForm(false)
+    setIsFormOpen(false)
     setEditingStudent(null)
   }
 
   const handleCreateClick = () => {
     setEditingStudent(null)
-    setShowCreateForm(true)
+    setIsFormOpen(true)
   }
 
   const handleEditStudent = (student: StudentForClient) => {
     setEditingStudent(student)
-    setShowCreateForm(true)
+    setIsFormOpen(true)
   }
 
   const handleDeleteStudent = async (id: number) => {
     if (!confirm(t('students.confirmDelete'))) return
     
-    const result = await deleteStudent(id)
-    if (result.success) {
-      setStudents(students.filter(s => s.id !== id))
+    const result = await executeDelete(id)
+    if (!result?.success) {
+      alert(result?.error || 'Failed to delete student')
     } else {
-      alert(result.error || 'Error deleting student')
+      // Update local state
+      setStudents(students.filter(s => s.id !== id))
     }
   }
 
@@ -118,7 +123,7 @@ export default function StudentsPage({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div>
           <h2 className="text-xl lg:text-2xl font-semibold text-gray-900">
             {t('students.title')}
@@ -129,7 +134,7 @@ export default function StudentsPage({
         </div>
         <button
           onClick={handleCreateClick}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 self-start lg:self-center"
+          className="w-full sm:w-auto inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
           <Plus className="h-4 w-4" />
           {t('students.createStudent')}
@@ -137,21 +142,19 @@ export default function StudentsPage({
       </div>
 
       {/* Filters */}
-      <div className="block lg:hidden">
-        <MobileFilters 
-          classes={classes}
-          students={students}
-          showStudentFilter={false}
-        />
+      <div className="flex flex-col sm:flex-row gap-4">
+        <FilterBadges classes={classes} students={students} />
+        <div className="block lg:hidden">
+          <MobileFilters 
+            classes={classes}
+            students={students}
+            showStudentFilter={false}
+          />
+        </div>
       </div>
 
-      <FilterBadges 
-        classes={classes}
-        students={students}
-      />
-
       {/* Student Form Modal */}
-      {showCreateForm && (
+      {isFormOpen && (
         <StudentForm
           editingStudent={editingStudent}
           classes={classes}

@@ -2,24 +2,28 @@
 
 import { Achievement } from '@/types/database';
 import IconRenderer from '@/components/icon-renderer';
-import { unlockManualAchievement, revokeManualAchievement } from './actions';
+import { ActionResult } from '@/utils/server-actions';
 
 interface AchievementAwardFormProps {
   achievement: Achievement;
   studentId: number;
   isGranted?: boolean;
   onSuccess?: () => void;
+  onAward: (formData: FormData) => Promise<ActionResult<null>>;
+  onRevoke?: (formData: FormData) => Promise<ActionResult<null>>;
 }
 
 export default function AchievementAwardForm({ 
   achievement, 
   studentId, 
   isGranted = false,
-  onSuccess 
+  onSuccess,
+  onAward,
+  onRevoke
 }: AchievementAwardFormProps) {
   const handleAwardAchievement = async (formData: FormData) => {
     try {
-      const result = await unlockManualAchievement(formData);
+      const result = await onAward(formData);
       if (result.success) {
         alert('Achievement awarded successfully!');
         onSuccess?.();
@@ -33,8 +37,13 @@ export default function AchievementAwardForm({
   };
 
   const handleRevokeAchievement = async (formData: FormData) => {
+    if (!onRevoke) {
+      alert('Revoke action not available');
+      return;
+    }
+    
     try {
-      const result = await revokeManualAchievement(formData);
+      const result = await onRevoke(formData);
       if (result.success) {
         alert('Achievement revoked successfully!');
         onSuccess?.();

@@ -14,7 +14,7 @@
  * - Type safety for server action responses
  */
 
-import type { Student, Class, Investment, InvestmentCategory, InterestRateHistory, Achievement } from '@/types/database'
+import type { Student, Class, Investment, InvestmentCategory, InterestRateHistory, Achievement, AchievementWithProgress } from '@/types/database'
 import type { ActionResult } from '@/utils/server-actions'
 import type { InterestRateForClient, CurrentRateInfo, StudentForClient, ClassForClient } from '@/utils/admin-data-types'
 
@@ -147,6 +147,7 @@ export interface AchievementsPageProps {
   deleteAchievement: (formData: FormData) => Promise<ActionResult<null>>
   processAchievements: () => Promise<ActionResult<{ processed: number }>>
   manualAward: (formData: FormData) => Promise<ActionResult<null>>
+  getStudentAchievements: (studentId: number) => Promise<ActionResult<AchievementWithProgress[]>>
 }
 
 // ===== FORM COMPONENT TYPES =====

@@ -1,5 +1,5 @@
 /**
- * Manual Award Interface Component
+ * Manual Award Interface
  * Provides interface for manually awarding achievements to students
  * Extracted from achievements-admin-client.tsx
  */
@@ -8,9 +8,8 @@
 import { useState, useEffect } from 'react'
 import { Users, BookOpen } from 'lucide-react'
 import { sortAchievementsForClient } from '@/utils/achievement-sorting'
-import { getStudentAchievements } from '@/app/admin/achievements/actions'
 import AchievementAwardForm from '@/app/admin/achievements/achievement-award-form'
-import type { Achievement, Student, Class, AchievementWithProgress } from '@/types/database'
+import type { Student, Class, Achievement, AchievementWithProgress } from '@/types/database'
 import { formatAchievementForClient } from '@/utils/admin-data-types'
 import type { AchievementForClient } from '@/utils/admin-data-types'
 import type { ActionResult } from '@/utils/server-actions'
@@ -19,19 +18,29 @@ interface ManualAwardInterfaceProps {
   achievements: AchievementForClient[]
   students: Student[]
   classes: Class[]
+  selectedStudent: number | null
+  studentAchievements: AchievementWithProgress[]
+  isLoadingStudent: boolean
+  onStudentSelect: (studentId: number) => Promise<void>
   onManualAward: (formData: FormData) => Promise<ActionResult<null>>
+  onManualAwardSuccess: () => Promise<void>
+  onRevokeAward?: (formData: FormData) => Promise<ActionResult<null>>
 }
 
 export default function ManualAwardInterface({ 
   achievements, 
   students, 
   classes,
-  onManualAward
+  selectedStudent,
+  studentAchievements,
+  isLoadingStudent,
+  onStudentSelect,
+  onManualAward,
+  onManualAwardSuccess,
+  onRevokeAward
 }: ManualAwardInterfaceProps) {
-  const [selectedStudent, setSelectedStudent] = useState<number | null>(null)
   const [selectedClass, setSelectedClass] = useState<number | null>(null)
   const [manualAchievements, setManualAchievements] = useState<AchievementForClient[]>([])
-  const [studentAchievements, setStudentAchievements] = useState<AchievementWithProgress[]>([])
 
   useEffect(() => {
     const manualOnly = achievements.filter(a => a.trigger_type === 'manual')
@@ -48,45 +57,16 @@ export default function ManualAwardInterface({
     setManualAchievements(sorted)
   }, [achievements])
 
-  useEffect(() => {
-    const fetchStudentAchievements = async () => {
-      if (selectedStudent) {
-        try {
-          const result = await getStudentAchievements(selectedStudent)
-          if (result.success && result.data) {
-            setStudentAchievements(result.data)
-          } else {
-            console.error('Failed to fetch student achievements')
-            setStudentAchievements([])
-          }
-        } catch (error) {
-          console.error('Failed to fetch student achievements:', error)
-          setStudentAchievements([])
-        }
-      } else {
-        setStudentAchievements([])
-      }
-    }
-
-    fetchStudentAchievements()
-  }, [selectedStudent])
-
   const filteredStudents = selectedClass 
     ? students.filter(s => s.class_id === selectedClass)
     : students
 
+  const handleStudentChange = async (studentId: number) => {
+    await onStudentSelect(studentId)
+  }
+
   const handleAwardSuccess = async () => {
-    // Refresh student achievements after award/revoke
-    if (selectedStudent) {
-      try {
-        const result = await getStudentAchievements(selectedStudent)
-        if (result.success && result.data) {
-          setStudentAchievements(result.data)
-        }
-      } catch (error) {
-        console.error('Failed to refresh student achievements:', error)
-      }
-    }
+    await onManualAwardSuccess()
   }
 
   return (
@@ -107,7 +87,10 @@ export default function ManualAwardInterface({
             onChange={(e) => {
               const classId = e.target.value ? parseInt(e.target.value) : null
               setSelectedClass(classId)
-              setSelectedStudent(null) // Reset student selection
+              // Reset student selection when class changes
+              if (selectedStudent) {
+                handleStudentChange(0) // Reset to no student
+              }
             }}
             className="w-full border border-gray-300 rounded-md px-3 py-3 lg:py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
@@ -126,7 +109,12 @@ export default function ManualAwardInterface({
           </label>
           <select
             value={selectedStudent || ''}
-            onChange={(e) => setSelectedStudent(e.target.value ? parseInt(e.target.value) : null)}
+            onChange={(e) => {
+              const studentId = e.target.value ? parseInt(e.target.value) : null
+              if (studentId) {
+                handleStudentChange(studentId)
+              }
+            }}
             className="w-full border border-gray-300 rounded-md px-3 py-3 lg:py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Choose a student...</option>
@@ -145,10 +133,11 @@ export default function ManualAwardInterface({
           <h4 className="text-md font-medium text-gray-900 mb-3 flex items-center">
             <BookOpen className="h-4 w-4 mr-2 text-green-600" />
             Manual Achievements for {students.find(s => s.id === selectedStudent)?.name}
+            {isLoadingStudent && <span className="ml-2 text-sm text-gray-500">(Loading...)</span>}
           </h4>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {manualAchievements.map((achievement) => {
-              const isGranted = studentAchievements.some(sa => sa.id === achievement.id && sa.unlocked)
+              const isGranted = studentAchievements.some((sa: AchievementWithProgress) => sa.id === achievement.id && sa.unlocked)
               return (
                 <AchievementAwardForm
                   key={achievement.id}
@@ -156,6 +145,8 @@ export default function ManualAwardInterface({
                   studentId={selectedStudent}
                   isGranted={isGranted}
                   onSuccess={handleAwardSuccess}
+                  onAward={onManualAward}
+                  onRevoke={onRevokeAward}
                 />
               )
             })}

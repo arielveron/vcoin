@@ -5,12 +5,13 @@
  */
 'use client'
 
+import { useState } from 'react'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import MobileFilters from '@/components/admin/mobile-filters'
 import BackgroundJobsStatus from './components/BackgroundJobsStatus'
 import AchievementsOverview from './components/AchievementsOverview'
 import ManualAwardInterface from './components/ManualAwardInterface'
-import type { Student } from '@/types/database'
+import type { Student, AchievementWithProgress } from '@/types/database'
 import {
   AchievementsPageProps
 } from '@/utils/admin-server-action-types'
@@ -49,13 +50,61 @@ export default function AchievementsPage({
   initialAchievements,
   classes,
   processAchievements,
-  manualAward
+  manualAward,
+  getStudentAchievements
 }: AchievementsPageProps) {
   const achievements: AchievementForClient[] = initialAchievements.map(formatAchievementForClient)
+  
+  // State for manual award interface
+  const [selectedStudent, setSelectedStudent] = useState<number | null>(null)
+  const [studentAchievements, setStudentAchievements] = useState<AchievementWithProgress[]>([])
+  const [isLoadingStudent, setIsLoadingStudent] = useState(false)
   
   // Mock data for now - in real implementation these would come from props or be fetched
   const students: Student[] = []
   const backgroundJobStatus: BackgroundJobStatus | undefined = undefined
+
+  // Server actions - no need for useServerAction wrapper for simple cases
+  
+  // Handle manual award with success callback
+  const handleManualAward = async (formData: FormData) => {
+    const result = await manualAward(formData)
+    if (result.success) {
+      await handleManualAwardSuccess()
+    }
+    return result
+  }
+
+  // Handle student selection and fetch their achievements
+  const handleStudentSelect = async (studentId: number) => {
+    setSelectedStudent(studentId)
+    setIsLoadingStudent(true)
+    
+    try {
+      const result = await getStudentAchievements(studentId)
+      if (result.success) {
+        setStudentAchievements(result.data || [])
+      } else {
+        console.error('Failed to fetch student achievements:', result.error)
+        setStudentAchievements([])
+      }
+    } catch (error) {
+      console.error('Error fetching student achievements:', error)
+      setStudentAchievements([])
+    } finally {
+      setIsLoadingStudent(false)
+    }
+  }
+
+  // Handle manual award success and refresh student achievements
+  const handleManualAwardSuccess = async () => {
+    if (selectedStudent) {
+      const result = await getStudentAchievements(selectedStudent)
+      if (result.success) {
+        setStudentAchievements(result.data || [])
+      }
+    }
+  }
 
   // Process achievements handler
   const handleProcessAchievements = async () => {
@@ -105,7 +154,12 @@ export default function AchievementsPage({
         achievements={achievements}
         students={students}
         classes={classes}
-        onManualAward={manualAward}
+        selectedStudent={selectedStudent}
+        studentAchievements={studentAchievements}
+        isLoadingStudent={isLoadingStudent}
+        onStudentSelect={handleStudentSelect}
+        onManualAward={handleManualAward}
+        onManualAwardSuccess={handleManualAwardSuccess}
       />
     </div>
   )

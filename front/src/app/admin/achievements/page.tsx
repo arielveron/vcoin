@@ -7,7 +7,8 @@ import {
   updateAchievement, 
   deleteAchievement, 
   unlockManualAchievement,
-  processAchievements 
+  processAchievements,
+  getStudentAchievements
 } from './actions';
 
 export default async function AchievementsAdminPage() {
@@ -42,6 +43,7 @@ export default async function AchievementsAdminPage() {
         deleteAchievement={deleteAchievement}
         processAchievements={processAchievements}
         manualAward={unlockManualAchievement}
+        getStudentAchievements={getStudentAchievements}
       />
     </div>
   );
