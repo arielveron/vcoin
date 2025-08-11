@@ -4,6 +4,7 @@ import { InvestmentRepository } from "../repos/investment-repo";
 import { InterestRateHistoryRepository } from "../repos/interest-rate-history-repo";
 import { InvestmentCategoryRepository } from "../repos/investment-category-repo";
 import { AchievementRepository } from "../repos/achievement-repo";
+import { formatDate, formatCurrency, formatPercentage } from "@/shared/utils/formatting";
 import {
   Class,
   Student,
@@ -26,36 +27,6 @@ export interface AdminStats {
   totalInvestments: number;
   totalInvestmentAmount: number;
   totalInvestmentAmountFormatted: string;
-}
-
-// Helper function for consistent date formatting (es-AR)
-function formatDateConsistent(date: Date | string): string {
-  const d = typeof date === "string" ? new Date(date) : date;
-  return d.toLocaleDateString("es-AR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-}
-
-// Helper function for consistent percentage formatting (es-AR)
-function formatPercentageConsistent(rate: number): string {
-  return (
-    (rate * 100).toLocaleString("es-AR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }) + "%"
-  );
-}
-
-// Helper function for consistent currency formatting (es-AR)
-function formatCurrencyConsistent(amount: number): string {
-  return amount.toLocaleString("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 }
 
 export class AdminService {
@@ -97,7 +68,7 @@ export class AdminService {
       totalStudents: students.length,
       totalInvestments: investments.length,
       totalInvestmentAmount: totalAmount,
-      totalInvestmentAmountFormatted: formatCurrencyConsistent(totalAmount),
+      totalInvestmentAmountFormatted: formatCurrency(totalAmount),
     };
   }
 
@@ -207,10 +178,10 @@ export class AdminService {
     // Add formatted versions for consistent rendering
     return rates.map((rate) => ({
       ...rate,
-      monthly_interest_rate_formatted: formatPercentageConsistent(rate.monthly_interest_rate),
-      effective_date_formatted: formatDateConsistent(rate.effective_date),
-      created_at_formatted: formatDateConsistent(rate.created_at),
-      updated_at_formatted: formatDateConsistent(rate.updated_at),
+      monthly_interest_rate_formatted: formatPercentage(rate.monthly_interest_rate),
+      effective_date_formatted: formatDate(rate.effective_date),
+      created_at_formatted: formatDate(rate.created_at),
+      updated_at_formatted: formatDate(rate.updated_at),
     }));
   }
 
@@ -229,9 +200,9 @@ export class AdminService {
       return {
         class: cls,
         currentRate,
-        currentRateFormatted: formatPercentageConsistent(currentRate),
+        currentRateFormatted: formatPercentage(currentRate),
         lastUpdated,
-        lastUpdatedFormatted: lastUpdated ? formatDateConsistent(lastUpdated) : null,
+        lastUpdatedFormatted: lastUpdated ? formatDate(lastUpdated) : null,
       };
     });
 

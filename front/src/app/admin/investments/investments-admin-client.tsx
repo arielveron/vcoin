@@ -7,7 +7,7 @@ import { useAdminFilters } from '@/hooks/useAdminFilters'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import ResponsiveTable from '@/components/admin/responsive-table'
 import MobileFilters from '@/components/admin/mobile-filters'
-import { formatCurrency } from '@/utils/format'
+import { formatCurrency } from '@/shared/utils/formatting'
 import { WithFormattedDates } from '@/utils/format-dates'
 import IconRenderer from '@/components/icon-renderer'
 import { Calendar, DollarSign, User, Tag, Edit, Trash2, Plus, X, TrendingUp, BarChart3 } from 'lucide-react'
@@ -429,11 +429,6 @@ export default function InvestmentsAdminClient({ investments: initialInvestments
             <MobileFilters
               classes={classes}
               students={filteredStudents}
-              currentClassId={filters.classId}
-              currentStudentId={filters.studentId}
-              onClassChange={(classId) => updateFilters({ classId })}
-              onStudentChange={(studentId) => updateFilters({ studentId })}
-              onClearFilters={() => updateFilters({ classId: null })}
               showStudentFilter={true}
             />
           </div>

@@ -22,7 +22,7 @@ export default function StudentsAdminClient({ students: initialStudents, classes
   const [passwordDialogStudent, setPasswordDialogStudent] = useState<Student | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [settingPassword, setSettingPassword] = useState(false)
-  const { filters, updateFilters } = useAdminFilters()
+  const { filters } = useAdminFilters()
 
   const handleCreateStudent = async (formData: FormData) => {
     try {
@@ -264,9 +264,6 @@ export default function StudentsAdminClient({ students: initialStudents, classes
         <div className="flex flex-col sm:flex-row gap-2">
           <MobileFilters
             classes={classes}
-            currentClassId={filters.classId}
-            onClassChange={(classId) => updateFilters({ classId })}
-            onClearFilters={() => updateFilters({ classId: null })}
           />
           <button
             onClick={() => setShowCreateForm(true)}

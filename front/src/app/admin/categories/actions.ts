@@ -59,7 +59,17 @@ export const createCategory = withAdminAuth(async (formData: FormData) => {
   return await adminService.createCategory(categoryData);
 }, 'create category');
 
-export const updateCategory = withAdminAuth(async (id: number, formData: FormData) => {
+export const updateCategory = withAdminAuth(async (formData: FormData) => {
+  const missing = validateRequired(formData, ['id', 'name', 'level']);
+  if (missing.length > 0) {
+    throw new Error(`Missing required fields: ${missing.join(', ')}`);
+  }
+
+  const id = parseFormNumber(formData, 'id');
+  if (!id) {
+    throw new Error('Invalid category ID');
+  }
+
   const name = formData.get('name') as string;
   const level = formData.get('level') as 'bronze' | 'silver' | 'gold' | 'platinum';
   const fontSize = formData.get('fontSize') as string;
@@ -113,9 +123,24 @@ export const updateCategory = withAdminAuth(async (id: number, formData: FormDat
   categoryData.is_active = isActive;
   categoryData.sort_order = sortOrder;
 
-  return await adminService.updateCategory(id, categoryData);
+  const result = await adminService.updateCategory(id, categoryData);
+  if (!result) {
+    throw new Error('Failed to update category');
+  }
+  return result;
 }, 'update category');
 
-export const deleteCategory = withAdminAuth(async (id: number) => {
-  return await adminService.deleteCategory(id);
+export const deleteCategory = withAdminAuth(async (formData: FormData) => {
+  const missing = validateRequired(formData, ['id']);
+  if (missing.length > 0) {
+    throw new Error(`Missing required fields: ${missing.join(', ')}`);
+  }
+
+  const id = parseFormNumber(formData, 'id');
+  if (!id) {
+    throw new Error('Invalid category ID');
+  }
+
+  await adminService.deleteCategory(id);
+  return null;
 }, 'delete category');

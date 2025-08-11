@@ -25,12 +25,13 @@ export const createInterestRate = withAdminAuth(async (formData: FormData) => {
   return await adminService.createInterestRate(rateData)
 }, 'create interest rate')
 
-export const updateInterestRate = withAdminAuth(async (id: number, formData: FormData) => {
-  const missing = validateRequired(formData, ['class_id', 'monthly_interest_rate', 'effective_date'])
+export const updateInterestRate = withAdminAuth(async (formData: FormData) => {
+  const missing = validateRequired(formData, ['id', 'class_id', 'monthly_interest_rate', 'effective_date'])
   if (missing.length > 0) {
     throw new Error(`Missing required fields: ${missing.join(', ')}`)
   }
 
+  const id = parseFormNumber(formData, 'id')
   const class_id = parseFormNumber(formData, 'class_id')
   const monthly_interest_rate = parseFormFloat(formData, 'monthly_interest_rate') / 100 // Convert percentage to decimal
   const effective_date = parseFormDate(formData, 'effective_date')
@@ -41,9 +42,22 @@ export const updateInterestRate = withAdminAuth(async (id: number, formData: For
     effective_date
   }
 
-  return await adminService.updateInterestRate(id, rateData)
+  const updatedRate = await adminService.updateInterestRate(id, rateData)
+  
+  if (!updatedRate) {
+    throw new Error('Interest rate not found or update failed')
+  }
+
+  return updatedRate
 }, 'update interest rate')
 
-export const deleteInterestRate = withAdminAuth(async (id: number) => {
-  return await adminService.deleteInterestRate(id)
+export const deleteInterestRate = withAdminAuth(async (formData: FormData) => {
+  const missing = validateRequired(formData, ['id'])
+  if (missing.length > 0) {
+    throw new Error(`Missing required fields: ${missing.join(', ')}`)
+  }
+
+  const id = parseFormNumber(formData, 'id')
+  await adminService.deleteInterestRate(id)
+  return null
 }, 'delete interest rate')

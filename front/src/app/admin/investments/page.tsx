@@ -5,7 +5,7 @@ import { Suspense } from 'react'
 import InvestmentsAdminClient from './investments-admin-client'
 import { withFormattedDates, DateFieldSets, WithFormattedDates } from '@/utils/format-dates'
 import { InvestmentWithStudent, Student, Class } from '@/types/database'
-import { formatCurrency } from '@/utils/format'
+import { formatCurrency } from '@/shared/utils/formatting'
 
 // Define types for client components
 type InvestmentForClient = WithFormattedDates<InvestmentWithStudent, 'fecha' | 'created_at' | 'updated_at'> & {

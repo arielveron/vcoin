@@ -46,11 +46,18 @@ export const updateStudent = withAdminAuth(async (id: number, formData: FormData
     class_id
   }
 
-  return await adminService.updateStudent(id, studentData)
+  const updatedStudent = await adminService.updateStudent(id, studentData)
+  
+  if (!updatedStudent) {
+    throw new Error('Student not found or update failed')
+  }
+
+  return updatedStudent
 }, 'update student')
 
 export const deleteStudent = withAdminAuth(async (id: number) => {
-  return await adminService.deleteStudent(id)
+  await adminService.deleteStudent(id)
+  return null
 }, 'delete student')
 
 export const setStudentPassword = withAdminAuth(async (formData: FormData) => {
@@ -72,5 +79,5 @@ export const setStudentPassword = withAdminAuth(async (formData: FormData) => {
     throw new Error('Failed to set password')
   }
 
-  return { success: true }
+  return null
 }, 'set student password')

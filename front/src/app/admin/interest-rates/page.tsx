@@ -2,7 +2,9 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { AdminService } from '@/services/admin-service'
 import { Suspense } from 'react'
-import InterestRatesAdminClient from './interest-rates-admin-client'
+import InterestRatesPage from '@/presentation/features/admin/interest-rates/InterestRatesPage'
+import { createInterestRate, updateInterestRate, deleteInterestRate } from './actions'
+import { formatInterestRateForClient } from '@/utils/admin-data-types'
 
 export default async function InterestRatesAdminPage() {
   const session = await auth()
@@ -15,6 +17,9 @@ export default async function InterestRatesAdminPage() {
   const { rates: interestRates, currentRates } = await adminService.getAllInterestRatesWithCurrentRates()
   const classes = await adminService.getAllClasses()
 
+  // Transform rates to client format
+  const initialRates = interestRates.map(formatInterestRateForClient)
+
   return (
     <div className="space-y-6">
       <div>
@@ -25,7 +30,14 @@ export default async function InterestRatesAdminPage() {
       </div>
       
       <Suspense fallback={<div>Loading interest rates...</div>}>
-        <InterestRatesAdminClient interestRates={interestRates} classes={classes} currentRates={currentRates} />
+        <InterestRatesPage 
+          initialRates={initialRates}
+          classes={classes} 
+          currentRates={currentRates}
+          createInterestRate={createInterestRate}
+          updateInterestRate={updateInterestRate}
+          deleteInterestRate={deleteInterestRate}
+        />
       </Suspense>
     </div>
   )

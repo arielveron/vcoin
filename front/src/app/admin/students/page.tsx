@@ -2,7 +2,9 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { AdminService } from '@/services/admin-service'
 import { Suspense } from 'react'
-import StudentsAdminClient from './students-admin-client'
+import StudentsPage from '@/presentation/features/admin/students/StudentsPage'
+import { createStudent, updateStudent, deleteStudent, setStudentPassword } from './actions'
+import { formatStudentsForClient } from '@/utils/admin-data-types'
 
 interface StudentsPageProps {
   searchParams: Promise<{ qc?: string, qs?: string }>
@@ -26,6 +28,9 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
   
   const classes = await adminService.getAllClasses()
 
+  // Format data for client components
+  const studentsForClient = formatStudentsForClient(students)
+
   return (
     <div className="space-y-6">
       <div>
@@ -36,9 +41,13 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
       </div>
       
       <Suspense fallback={<div>Loading students...</div>}>
-        <StudentsAdminClient 
-          students={students} 
-          classes={classes} 
+        <StudentsPage 
+          initialStudents={studentsForClient} 
+          classes={classes}
+          createStudent={createStudent}
+          updateStudent={updateStudent}
+          deleteStudent={deleteStudent}
+          setStudentPassword={setStudentPassword}
         />
       </Suspense>
     </div>

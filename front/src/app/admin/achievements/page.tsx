@@ -1,7 +1,14 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { AdminService } from '@/services/admin-service';
-import AchievementsAdminClient from './achievements-admin-client';
+import { AchievementsPage } from '@/presentation/features/admin/achievements';
+import { 
+  createAchievement, 
+  updateAchievement, 
+  deleteAchievement, 
+  unlockManualAchievement,
+  processAchievements 
+} from './actions';
 
 export default async function AchievementsAdminPage() {
   const session = await auth();
@@ -13,43 +20,11 @@ export default async function AchievementsAdminPage() {
   const adminService = new AdminService();
   
   // Fetch all required data
-  const [achievements, students, classes] = await Promise.all([
+  const [achievements, classes, categories] = await Promise.all([
     adminService.getAllAchievements(),
-    adminService.getAllStudents(),
-    adminService.getAllClasses()
+    adminService.getAllClasses(),
+    adminService.getAllCategories()
   ]);
-
-  // Simple background job status (to be enhanced later via API)
-  const backgroundJobStatus = {
-    daily: { 
-      status: 'unknown', 
-      lastRun: null, 
-      lastRunFormatted: 'Never',
-      error: 'Background monitoring available via API' 
-    },
-    weekly: { 
-      status: 'unknown', 
-      lastRun: null, 
-      lastRunFormatted: 'Never',
-      error: 'Background monitoring available via API' 
-    },
-    check: { 
-      status: 'unknown', 
-      lastRun: null, 
-      lastRunFormatted: 'Never',
-      error: 'Background monitoring available via API' 
-    },
-    lastUpdated: new Date().toISOString(),
-    lastUpdatedFormatted: new Date().toLocaleDateString('es-AR', {
-      year: 'numeric',
-      month: '2-digit', 
-      day: '2-digit'
-    }) + ', ' + new Date().toLocaleTimeString('es-AR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    })
-  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -58,11 +33,15 @@ export default async function AchievementsAdminPage() {
         <p className="text-gray-600">Manage achievements, award manual achievements, and view student progress</p>
       </div>
       
-      <AchievementsAdminClient 
-        achievements={achievements}
-        students={students}
+      <AchievementsPage 
+        initialAchievements={achievements}
         classes={classes}
-        backgroundJobStatus={backgroundJobStatus}
+        categories={categories}
+        createAchievement={createAchievement}
+        updateAchievement={updateAchievement}
+        deleteAchievement={deleteAchievement}
+        processAchievements={processAchievements}
+        manualAward={unlockManualAchievement}
       />
     </div>
   );
