@@ -12,6 +12,7 @@ import { useServerAction } from '@/presentation/hooks'
 import IconPicker from '@/components/admin/icon-picker'
 import IconRenderer from '@/components/icon-renderer'
 import type { InvestmentCategory, CreateInvestmentCategoryRequest } from '@/types/database'
+import type { ActionResult } from '@/utils/server-actions'
 
 const PREMIUM_EFFECTS = [
   { value: "", label: "None" },
@@ -39,7 +40,7 @@ const PREMIUM_EFFECTS = [
 
 interface CategoryFormProps {
   editingCategory: InvestmentCategory | null
-  onSubmit: (formData: FormData) => Promise<{ success: boolean; error?: string }>
+  onSubmit: (formData: FormData) => Promise<ActionResult<InvestmentCategory>>
   onSuccess: (category: InvestmentCategory) => void
   onCancel: () => void
 }

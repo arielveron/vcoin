@@ -17,24 +17,22 @@ import {
   InvestmentFilters,
   InvestmentsTable
 } from './components'
-import type { InvestmentWithStudent, Student, Class, InvestmentCategory } from '@/types/database'
-import { WithFormattedDates } from '@/utils/format-dates'
-
-// Types for formatted data
-type InvestmentForClient = WithFormattedDates<InvestmentWithStudent, 'fecha' | 'created_at' | 'updated_at'> & {
-  monto_formatted: string
-}
-type StudentForClient = WithFormattedDates<Student, 'created_at' | 'updated_at'>
-type ClassForClient = WithFormattedDates<Class, 'end_date' | 'created_at' | 'updated_at'>
+import type { InvestmentWithStudent, InvestmentCategory } from '@/types/database'
+import { 
+  InvestmentForClient, 
+  StudentForClient, 
+  ClassForClient
+} from '@/utils/admin-data-types'
+import { ActionResult } from '@/utils/server-actions'
 
 interface InvestmentsPageProps {
   initialInvestments: InvestmentForClient[]
   students: StudentForClient[]
   classes: ClassForClient[]
   categories: InvestmentCategory[]
-  createInvestment: (formData: FormData) => Promise<{ success: boolean; error?: string }>
-  updateInvestment: (formData: FormData) => Promise<{ success: boolean; error?: string }>
-  deleteInvestment: (formData: FormData) => Promise<{ success: boolean; error?: string }>
+  createInvestment: (formData: FormData) => Promise<ActionResult<InvestmentWithStudent>>
+  updateInvestment: (formData: FormData) => Promise<ActionResult<InvestmentWithStudent>>
+  deleteInvestment: (formData: FormData) => Promise<ActionResult<null>>
 }
 
 export default function InvestmentsPage({

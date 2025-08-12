@@ -1,60 +1,65 @@
-'use client';
+/**
+ * Award Form Component
+ * Handles awarding and revoking achievements for individual students
+ * Extracted from achievement-award-form.tsx for Phase 3 compliance
+ */
+'use client'
 
-import { Achievement } from '@/types/database';
-import IconRenderer from '@/components/icon-renderer';
-import { ActionResult } from '@/utils/server-actions';
+import type { Achievement } from '@/types/database'
+import IconRenderer from '@/components/icon-renderer'
+import type { ActionResult } from '@/utils/server-actions'
 
-interface AchievementAwardFormProps {
-  achievement: Achievement;
-  studentId: number;
-  isGranted?: boolean;
-  onSuccess?: () => void;
-  onAward: (formData: FormData) => Promise<ActionResult<null>>;
-  onRevoke?: (formData: FormData) => Promise<ActionResult<null>>;
+interface AwardFormProps {
+  achievement: Achievement
+  studentId: number
+  isGranted?: boolean
+  onSuccess?: () => void
+  onAward: (formData: FormData) => Promise<ActionResult<null>>
+  onRevoke?: (formData: FormData) => Promise<ActionResult<null>>
 }
 
-export default function AchievementAwardForm({ 
+export default function AwardForm({ 
   achievement, 
   studentId, 
   isGranted = false,
   onSuccess,
   onAward,
   onRevoke
-}: AchievementAwardFormProps) {
+}: AwardFormProps) {
   const handleAwardAchievement = async (formData: FormData) => {
     try {
-      const result = await onAward(formData);
+      const result = await onAward(formData)
       if (result.success) {
-        alert('Achievement awarded successfully!');
-        onSuccess?.();
+        alert('Achievement awarded successfully!')
+        onSuccess?.()
       } else {
-        alert(result.error || 'Failed to award achievement');
+        alert(result.error || 'Failed to award achievement')
       }
     } catch (error) {
-      console.error('Award achievement error:', error);
-      alert('Error awarding achievement: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      console.error('Award achievement error:', error)
+      alert('Error awarding achievement: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
-  };
+  }
 
   const handleRevokeAchievement = async (formData: FormData) => {
     if (!onRevoke) {
-      alert('Revoke action not available');
-      return;
+      alert('Revoke action not available')
+      return
     }
     
     try {
-      const result = await onRevoke(formData);
+      const result = await onRevoke(formData)
       if (result.success) {
-        alert('Achievement revoked successfully!');
-        onSuccess?.();
+        alert('Achievement revoked successfully!')
+        onSuccess?.()
       } else {
-        alert(result.error || 'Failed to revoke achievement');
+        alert(result.error || 'Failed to revoke achievement')
       }
     } catch (error) {
-      console.error('Revoke achievement error:', error);
-      alert('Error revoking achievement: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      console.error('Revoke achievement error:', error)
+      alert('Error revoking achievement: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
-  };
+  }
 
   return (
     <div className="border rounded-lg p-4 flex items-center justify-between">
@@ -101,5 +106,5 @@ export default function AchievementAwardForm({
         </form>
       )}
     </div>
-  );
+  )
 }

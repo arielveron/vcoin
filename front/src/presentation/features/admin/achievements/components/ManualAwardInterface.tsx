@@ -8,7 +8,7 @@
 import { useState, useEffect } from 'react'
 import { Users, BookOpen } from 'lucide-react'
 import { sortAchievementsForClient } from '@/utils/achievement-sorting'
-import AchievementAwardForm from '@/app/admin/achievements/achievement-award-form'
+import AwardForm from './AwardForm'
 import type { Student, Class, Achievement, AchievementWithProgress } from '@/types/database'
 import { formatAchievementForClient } from '@/utils/admin-data-types'
 import type { AchievementForClient } from '@/utils/admin-data-types'
@@ -139,7 +139,7 @@ export default function ManualAwardInterface({
             {manualAchievements.map((achievement) => {
               const isGranted = studentAchievements.some((sa: AchievementWithProgress) => sa.id === achievement.id && sa.unlocked)
               return (
-                <AchievementAwardForm
+                <AwardForm
                   key={achievement.id}
                   achievement={achievement}
                   studentId={selectedStudent}

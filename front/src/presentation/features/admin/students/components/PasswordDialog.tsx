@@ -7,10 +7,11 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import { useServerAction } from '@/presentation/hooks'
 import type { Student } from '@/types/database'
+import type { ActionResult } from '@/utils/server-actions'
 
 interface PasswordDialogProps {
   student: Student
-  onSubmit: (formData: FormData) => Promise<{ success: boolean; error?: string }>
+  onSubmit: (formData: FormData) => Promise<ActionResult<null>>
   onSuccess: (student: Student) => void
   onCancel: () => void
 }

@@ -5,15 +5,16 @@
 'use client'
 
 import { X } from 'lucide-react'
-import type { Student, InvestmentCategory } from '@/types/database'
+import type { Student, InvestmentCategory, InvestmentWithStudent } from '@/types/database'
 import { useServerAction } from '@/presentation/hooks'
+import type { ActionResult } from '@/utils/server-actions'
 
 interface InvestmentFormProps {
   students: Student[]
   categories: InvestmentCategory[]
   isOpen: boolean
   onClose: () => void
-  onSubmit: (formData: FormData) => Promise<{ success: boolean; error?: string }>
+  onSubmit: (formData: FormData) => Promise<ActionResult<InvestmentWithStudent>>
   editingInvestment?: {
     id: number
     student_id: number
