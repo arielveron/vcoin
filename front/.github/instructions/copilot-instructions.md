@@ -10,6 +10,34 @@ VCoin is a Next.js 15 investment tracking application for students with dual aut
 - **Database-First**: PostgreSQL with connection pooling, fallback to pseudo-db for development
 - **Server Components**: Data fetching happens server-side, client components handle UI interactions
 
+### Architectural Foundation (Post-Refactoring)
+**VCoin follows a clean, layered architecture with strict separation of concerns:**
+
+```
+src/
+├── core/                   # 🧠 Business Logic & Domain
+│   ├── domain/            # Domain entities and business rules
+│   ├── use-cases/         # Application use cases
+│   └── ports/             # Interfaces for external services
+├── infrastructure/         # 🔧 Technical Implementation
+│   ├── database/          # Data access layer
+│   ├── auth/              # Authentication systems
+│   └── external/          # External service integrations
+├── presentation/          # 🎨 UI Layer
+│   ├── features/         # Feature-specific components
+│   │   ├── admin/        # Refactored admin components
+│   │   └── student/      # Student-facing components
+│   └── hooks/            # Reusable business logic hooks
+├── shared/               # 🔄 Shared Utilities
+│   ├── utils/           # Pure utility functions
+│   ├── types/           # Shared TypeScript types
+│   └── constants/       # Global constants
+└── utils/               # 📊 Centralized Data & Actions
+    ├── admin-data-types.ts    # Standardized admin data types
+    ├── admin-server-action-types.ts # Server action type patterns
+    └── server-actions.ts      # Authentication wrappers
+```
+
 ### Key Patterns
 
 #### Repository Pattern
@@ -21,14 +49,15 @@ AdminService → InvestmentRepository → Database
 
 #### Server/Client Component Split
 - **Server Components** (`page.tsx`): Authentication, data fetching, initial props
-- **Client Components** (`*-admin-client.tsx`): Forms, state management, UI interactions
+- **Presentation Layer Components**: Feature-based organization in `/src/presentation/features/`
+- **Reusable Hooks**: Business logic extracted to `/src/presentation/hooks/`
 - **Server Actions** (`actions.ts`): Form processing with authentication checks
 This project never uses API routes except for authentication or if required by third-party libraries.
 The connection to the database is always through server actions.
-Date and currency formatting is done in the server components using the hybrid approach, ensuring consistent data types and preventing hydration mismatches.
+Date and currency formatting is done in the server components using centralized utilities.
 
 #### Interest Rate Calculations
-Complex financial calculations in `/src/logic/calculations.ts`:
+Complex financial calculations in `/src/core/domain/investment/calculations.ts`:
 - Monthly → Daily → Seconds conversion for compound interest
 - Historical rate tracking with effective dates
 - End-date finalization vs. real-time calculations
@@ -67,14 +96,39 @@ npm run db:init  # Alternative database initialization
 
 ## Project-Specific Conventions
 
-### Standardized Server Actions
-**All server actions now use consistent patterns:**
-```typescript
-// Import the utilities
-import { withAdminAuth, validateRequired, parseFormNumber } from '@/utils/server-actions'
+## Project-Specific Conventions
 
-// Admin actions pattern
-export const createEntity = withAdminAuth(async (formData: FormData) => {
+### Import Path Aliases
+**Use TypeScript path aliases for clean imports:**
+```typescript
+// Core business logic
+import { calculateCompoundInterest } from '@/core/domain/investment/calculations'
+
+// Infrastructure (data access, auth)
+import { StudentRepository } from '@/infrastructure/database/repositories/StudentRepository'
+
+// Presentation layer (components, hooks)
+import { useServerAction } from '@/presentation/hooks'
+import { StudentsTable } from '@/presentation/features/admin/students/components/StudentsTable'
+
+// Shared utilities
+import { formatCurrency } from '@/shared/utils/formatting'
+import { validateRequired } from '@/shared/utils/validation'
+
+// Centralized admin utilities
+import { StudentForClient, formatStudentsForClient } from '@/utils/admin-data-types'
+import { ActionResult } from '@/utils/admin-server-action-types'
+```
+
+### Standardized Server Actions
+**All server actions use consistent patterns with centralized utilities:**
+```typescript
+// Import standardized utilities
+import { withAdminAuth, validateRequired, parseFormNumber } from '@/utils/server-actions'
+import type { ActionResult } from '@/utils/admin-server-action-types'
+
+// Admin actions pattern - ALWAYS use ActionResult<T>
+export const createEntity = withAdminAuth(async (formData: FormData): Promise<ActionResult<Entity>> => {
   const missing = validateRequired(formData, ['field1', 'field2'])
   if (missing.length > 0) {
     throw new Error(`Missing required fields: ${missing.join(', ')}`)
@@ -87,24 +141,85 @@ export const createEntity = withAdminAuth(async (formData: FormData) => {
 }, 'create entity')
 
 // Student actions pattern  
-export const updateProfile = withStudentAuth(async (formData: FormData) => {
+export const updateProfile = withStudentAuth(async (formData: FormData): Promise<ActionResult<StudentProfile>> => {
   // validation and logic here
   return await service.updateProfile(data)
 }, 'update profile')
 ```
 
-**Standard Response Format:**
+**Standard Response Format (ActionResult<T>):**
 ```typescript
 // Success response
-{ success: true, data?: any, message?: string }
+{ success: true, data: T, message?: string }
 
 // Error response  
 { success: false, error: string, code?: string }
 ```
 
+**CRITICAL**: All server actions MUST use `ActionResult<T>` return type from `/src/utils/admin-server-action-types.ts`
+
 **API Routes** (only for authentication or third-party requirements):
 - `/api/auth/[...nextauth]` - NextAuth.js handlers
 - `/api/auth/student/*` - Student login/logout endpoints
+
+### Centralized Data Types & Formatting
+**Use standardized utilities to prevent duplication:**
+
+```typescript
+// Import centralized types and formatters
+import { 
+  StudentForClient, 
+  ClassForClient, 
+  InvestmentForClient,
+  formatStudentsForClient, 
+  formatClassesForClient,
+  formatInvestmentsForClient 
+} from '@/utils/admin-data-types'
+
+// In server components (page.tsx)
+const rawStudents = await adminService.getAllStudents()
+const studentsForClient = formatStudentsForClient(rawStudents)
+
+// Pass to client component with proper typing
+<StudentsAdminClient initialStudents={studentsForClient} />
+```
+
+**Benefits of centralized approach:**
+- ✅ Eliminates duplicate type definitions across components
+- ✅ Consistent date/currency formatting everywhere
+- ✅ Type safety between server actions and components
+- ✅ Single source of truth for data transformations
+
+### Presentation Layer Organization
+**Feature-based component structure:**
+
+```typescript
+// Admin components organized by feature
+src/presentation/features/admin/
+├── students/
+│   ├── StudentsPage.tsx          # Main orchestrator component
+│   ├── components/
+│   │   ├── StudentsTable.tsx     # Focused table component
+│   │   ├── StudentForm.tsx       # Focused form component
+│   │   └── PasswordDialog.tsx    # Specific dialog component
+│   └── hooks/
+│       └── useStudents.ts        # Feature-specific business logic
+├── investments/
+├── classes/
+└── shared/
+    └── components/               # Shared admin components
+```
+
+**Reusable Hooks Pattern:**
+```typescript
+// Use standardized hooks for common patterns
+import { useServerAction, useFormModal, useDataTable } from '@/presentation/hooks'
+
+// In client components
+const { executeAction, loading, error } = useServerAction(serverActionFunction)
+const { isOpen, openModal, closeModal } = useFormModal()
+const { filteredData, sortedData, searchQuery } = useDataTable(data, columns)
+```
 
 ### Data Types
 - **Dates**: Always use `Date` objects, not strings (PostgreSQL handles conversion)
@@ -120,33 +235,36 @@ export const updateProfile = withStudentAuth(async (formData: FormData) => {
 **Server-Side Formatting to Prevent Hydration Mismatches:**
 
 ```typescript
-// 1. Use the hybrid formatting utility
-import { withFormattedDates, DateFieldSets, WithFormattedDates } from '@/utils/format-dates'
+// 1. Use centralized formatting utilities (PREFERRED)
+import { formatStudentsForClient, StudentForClient } from '@/utils/admin-data-types'
 
-// 2. In server components (page.tsx)
-const classes = await adminService.getAllClasses()
+// 2. In server components (page.tsx) - use centralized formatters
+const rawStudents = await adminService.getAllStudents()
+const studentsForClient = formatStudentsForClient(rawStudents)
+
+// 3. Pass to client component with proper typing
+<StudentsAdminClient initialStudents={studentsForClient} />
+
+// 4. Alternative: Direct utility usage for custom cases
+import { withFormattedDates, DateFieldSets } from '@/utils/format-dates'
 const classesForClient = withFormattedDates(classes, [...DateFieldSets.CLASS_FIELDS])
-
-// 3. Define client types with formatted fields
-type ClassForClient = WithFormattedDates<Class, 'end_date' | 'created_at' | 'updated_at'>
-
-// 4. Pass to client component
-<ClassesAdminClient initialClasses={classesForClient as unknown as ClassForClient[]} />
 ```
 
 **Benefits of this approach:**
 - ✅ Prevents hydration mismatches (server/client render exactly the same)
 - ✅ Keeps original `Date` objects for calculations and logic
 - ✅ Provides pre-formatted strings for display (`field_name_formatted`)
-- ✅ DRY principle - one utility works for all entities
-- ✅ Type safety with `WithFormattedDates<T, K>` helper
+- ✅ DRY principle - centralized utilities eliminate duplication
+- ✅ Type safety with standardized `*ForClient` types
 
-**Available DateFieldSets:**
+**Available Centralized Formatters:**
 ```typescript
-DateFieldSets.CLASS_FIELDS = ['end_date', 'created_at', 'updated_at']
-DateFieldSets.INVESTMENT_FIELDS = ['fecha', 'created_at', 'updated_at']  
-DateFieldSets.AUDIT_FIELDS = ['created_at', 'updated_at']
-DateFieldSets.INTEREST_RATE_FIELDS = ['effective_date', 'created_at', 'updated_at']
+// From /src/utils/admin-data-types.ts
+formatStudentsForClient(students) → StudentForClient[]
+formatClassesForClient(classes) → ClassForClient[]
+formatInvestmentsForClient(investments) → InvestmentForClient[]
+formatCategoriesForClient(categories) → CategoryForClient[]
+formatInterestRatesForClient(rates) → InterestRateForClient[]
 ```
 
 **Client Component Usage:**
@@ -203,11 +321,16 @@ const filteredStudents = filters.classId
 - Server actions: `actions.ts` (admin) or `/src/actions/*-actions.ts` (student/investment)
 - Types: Centralized in `/src/types/database.ts`
 - **Utilities**: `/src/utils/server-actions.ts` for standardized patterns
+- **Shared Utilities**: `/src/shared/utils/` for pure functions (formatting, validation, errors)
+- **Presentation Hooks**: `/src/presentation/hooks/` for reusable UI logic
 
 ### Standardized Error Handling
 **Consistent patterns across the codebase:**
 ```typescript
 // Server actions automatically handle errors via withAdminAuth/withStudentAuth wrappers
+// Use centralized error utilities from shared layer
+import { handleError, formatErrorMessage } from '@/shared/utils/errors'
+
 // Services use try-catch with graceful degradation
 try {
   return await this.service.getData()
@@ -228,6 +351,7 @@ if (!result.success) {
 - Services log errors and gracefully degrade (database → pseudo-db fallback)
 - Client components show user-friendly error messages
 - Authentication and validation are handled by wrapper functions
+- Use centralized error utilities from `/src/shared/utils/errors/`
 
 ## Key Integration Points
 
@@ -337,11 +461,14 @@ npm run setup     # Complete database + auth setup
 ## Common Tasks
 - **Adding new entities**: Follow the Repository → Service → Admin Client → Actions pattern
 - **Interest rate changes**: Use admin panel, automatic historical tracking
-- **New calculations**: Extend `/src/logic/calculations.ts` with proper date handling
+- **New calculations**: Extend `/src/core/domain/investment/calculations.ts` with proper date handling
 - **Database changes**: Create database tables with SQL scripts in `/src/scripts/init-database.sql` and in `/src/scripts/setup-db.ts`. Never create new migrations. Mantain database integrity with proper foreign keys and constraints. Keep the database schema in sync with the application code. Mantain a single source of truth for the database schema.
 - **Student password management**: Use admin panel or `StudentAuthService` methods
 - **New admin features**: Create `page.tsx` (server), `*-admin-client.tsx` (client), `actions.ts` (forms)
 - **New server actions**: Use `withAdminAuth()` or `withStudentAuth()` wrappers from `/src/utils/server-actions.ts`
+- **Shared utilities**: Add to `/src/shared/utils/` for pure functions (formatting, validation, errors)
+- **Business logic**: Add to `/src/core/domain/` organized by entity (investment, student, etc.)
+- **UI patterns**: Create reusable hooks in `/src/presentation/hooks/` for common component logic
 
 ## Key Development Workflows
 
@@ -365,6 +492,24 @@ npm run db:test   # Verify database connectivity
 - Compound calculations: Monthly → Daily → Seconds conversion
 - Auto-applies rates based on investment dates
 
+### Refactoring Patterns & META-PRINCIPLE
+**Established META-PRINCIPLE for architectural consistency:**
+> **"When facing architectural inconsistencies or implementing shared functionality, ALWAYS: AUDIT → ANALYZE → UNIFY → APPLY"**
+
+**Key Refactoring Achievements:**
+1. **Pattern Consistency**: All admin components follow identical patterns
+2. **Type Safety**: 100% ActionResult<T> compliance across all server actions
+3. **Data Type Unification**: Eliminated duplicate type definitions via centralized utilities
+4. **Component Organization**: Feature-based structure in `/src/presentation/features/`
+5. **Business Logic Extraction**: Reusable hooks in `/src/presentation/hooks/`
+
+**Architectural Standards Applied:**
+- Single responsibility per component (no components > 200 lines)
+- Consistent server action patterns with authentication wrappers
+- Centralized formatting and type definitions
+- Proper separation between server/client concerns
+- Feature-based organization over technical organization
+
 ### Adding New Features
 1. **Entity**: Define in `/src/types/database.ts`
 2. **Repository**: CRUD operations in `/src/repos/`
@@ -380,17 +525,25 @@ npm run db:test   # Verify database connectivity
 ❌ **Don't**: Skip authentication wrappers in server actions
 ❌ **Don't**: Use string dates - always `Date` objects
 ❌ **Don't**: Forget to handle auth configuration errors gracefully
+❌ **Don't**: Define duplicate types - use centralized utilities from `/src/utils/admin-data-types.ts`
+❌ **Don't**: Create large components - follow single responsibility principle
 
 ✅ **Do**: Use server actions for all form processing
-✅ **Do**: Pre-format dates/currency in server components with `withFormattedDates`
+✅ **Do**: Pre-format dates/currency in server components with centralized formatters
 ✅ **Do**: Follow standardized error handling patterns
 ✅ **Do**: Use repository pattern for database access
 ✅ **Do**: Handle missing OAuth configuration with helpful error messages
 ✅ **Do**: Use form auto-fill patterns for better UX
+✅ **Do**: Use centralized data types and formatters from `/src/utils/admin-data-types.ts`
+✅ **Do**: Extract reusable logic to hooks in `/src/presentation/hooks/`
+✅ **Do**: Organize components by feature in `/src/presentation/features/`
 
 ## Documentation Structure
-All detailed documentation is located in the `/documentation` folder:
+All detailed documentation is located in the `/documentation` and `/implementation` folders:
 - `ADMIN_COMPLETE.md` - Complete admin panel implementation details
 - `ADMIN_SETUP.md` - Admin panel setup guide  
 - `DATABASE.md` - Database configuration and setup
 - `STUDENT_AUTH_SETUP.md` - Student authentication system details
+- `implementation/vcoin-refactoring-guide.md` - Complete refactoring strategy and patterns
+- `PHASE_*_COMPLETION_NOTES.md` - Detailed refactoring phase documentation
+- `ARCHITECTURAL_COMPLIANCE_AUDIT.md` - Architectural standards and compliance guidelines
