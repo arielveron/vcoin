@@ -24,7 +24,6 @@ import {
 import { 
   StudentForClient 
 } from '@/utils/admin-data-types'
-import { t } from '@/config/translations'
 
 export default function StudentsPage({
   initialStudents,
@@ -91,7 +90,7 @@ export default function StudentsPage({
   }
 
   const handleDeleteStudent = async (id: number) => {
-    if (!confirm(t('students.confirmDelete'))) return
+    if (!confirm('¿Estás seguro de que quieres eliminar este estudiante?')) return
     
     const result = await executeDelete(id)
     if (!result?.success) {
@@ -126,10 +125,10 @@ export default function StudentsPage({
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div>
           <h2 className="text-xl lg:text-2xl font-semibold text-gray-900">
-            {t('students.title')}
+            Gestión de Estudiantes
           </h2>
           <p className="text-sm lg:text-base text-gray-600 mt-1">
-            {t('students.subtitle')}
+            Administrar estudiantes de VCoin
           </p>
         </div>
         <button
@@ -137,7 +136,7 @@ export default function StudentsPage({
           className="w-full sm:w-auto inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
           <Plus className="h-4 w-4" />
-          {t('students.createStudent')}
+          Crear Estudiante
         </button>
       </div>
 

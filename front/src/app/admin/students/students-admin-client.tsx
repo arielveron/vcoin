@@ -7,7 +7,6 @@ import { useAdminFilters } from '@/hooks/useAdminFilters'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import ResponsiveTable from '@/components/admin/responsive-table'
 import MobileFilters from '@/components/admin/mobile-filters'
-import { t } from '@/config/translations'
 import { User, Mail, Edit, Key, Trash2, Plus, X } from 'lucide-react'
 
 interface StudentsAdminClientProps {
@@ -258,8 +257,8 @@ export default function StudentsAdminClient({ students: initialStudents, classes
       {/* Header with Create Button */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
-          <h2 className="text-xl lg:text-2xl font-semibold text-gray-900">{t('students.title')}</h2>
-          <p className="text-gray-600">Total: {filteredStudents.length} {t('students.studentsInClass')}</p>
+          <h2 className="text-xl lg:text-2xl font-semibold text-gray-900">Gestión de Estudiantes</h2>
+          <p className="text-gray-600">Total: {filteredStudents.length} estudiantes en esta clase</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <MobileFilters
@@ -270,7 +269,7 @@ export default function StudentsAdminClient({ students: initialStudents, classes
             className="flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 min-h-[44px]"
           >
             <Plus className="h-4 w-4 mr-2" />
-            {t('students.createNew')}
+            Crear Nuevo Estudiante
           </button>
         </div>
       </div>
@@ -281,7 +280,7 @@ export default function StudentsAdminClient({ students: initialStudents, classes
           <div className="relative top-0 lg:top-10 mx-auto p-0 lg:p-5 border w-full lg:w-2xl h-full lg:h-auto shadow-lg lg:rounded-md bg-white">
             <div className="flex flex-col h-full lg:h-auto">
               <div className="flex items-center justify-between p-4 border-b lg:border-0">
-                <h3 className="text-lg font-medium text-gray-900">{t('students.createNew')}</h3>
+                <h3 className="text-lg font-medium text-gray-900">Crear Nuevo Estudiante</h3>
                 <button
                   onClick={() => setShowCreateForm(false)}
                   className="lg:hidden p-2 text-gray-400 hover:text-gray-600"
@@ -295,14 +294,14 @@ export default function StudentsAdminClient({ students: initialStudents, classes
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                      {t('students.studentName')}
+                      Nombre del Estudiante
                     </label>
                     <input
                       type="text"
                       id="name"
                       name="name"
                       required
-                      placeholder={t('students.enterStudentName')}
+                      placeholder="Ingresa el nombre del estudiante"
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
                     />
                   </div>
@@ -320,20 +319,20 @@ export default function StudentsAdminClient({ students: initialStudents, classes
                   </div>
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                      {t('students.email')}
+                      Correo Electrónico
                     </label>
                     <input
                       type="email"
                       id="email"
                       name="email"
                       required
-                      placeholder={t('students.enterEmail')}
+                      placeholder="Ingresa el correo electrónico"
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
                     />
                   </div>
                   <div>
                     <label htmlFor="class_id" className="block text-sm font-medium text-gray-700">
-                      {t('students.class')}
+                      Clase
                     </label>
                     <select
                       id="class_id"
@@ -342,7 +341,7 @@ export default function StudentsAdminClient({ students: initialStudents, classes
                       defaultValue={filters.classId ? filters.classId.toString() : ''}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
                     >
-                      <option value="">{t('students.selectClass')}</option>
+                      <option value="">Seleccionar clase</option>
                       {classes.map((cls) => (
                         <option key={cls.id} value={cls.id}>
                           {cls.name}
@@ -357,13 +356,13 @@ export default function StudentsAdminClient({ students: initialStudents, classes
                     onClick={() => setShowCreateForm(false)}
                     className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
                   >
-                    {t('students.cancel')}
+                    Cancelar
                   </button>
                   <button
                     type="submit"
                     className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
                   >
-                    {t('students.create')}
+                    Crear
                   </button>
                 </div>
               </form>
@@ -378,7 +377,7 @@ export default function StudentsAdminClient({ students: initialStudents, classes
           <div className="relative top-0 lg:top-10 mx-auto p-0 lg:p-5 border w-full lg:w-2xl h-full lg:h-auto shadow-lg lg:rounded-md bg-white">
             <div className="flex flex-col h-full lg:h-auto">
               <div className="flex items-center justify-between p-4 border-b lg:border-0">
-                <h3 className="text-lg font-medium text-gray-900">{t('students.edit')}</h3>
+                <h3 className="text-lg font-medium text-gray-900">Editar</h3>
                 <button
                   onClick={() => setEditingStudent(null)}
                   className="lg:hidden p-2 text-gray-400 hover:text-gray-600"
@@ -392,7 +391,7 @@ export default function StudentsAdminClient({ students: initialStudents, classes
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700">
-                      {t('students.studentName')}
+                      Nombre del Estudiante
                     </label>
                     <input
                       type="text"
@@ -418,7 +417,7 @@ export default function StudentsAdminClient({ students: initialStudents, classes
                   </div>
                   <div>
                     <label htmlFor="edit-email" className="block text-sm font-medium text-gray-700">
-                      {t('students.email')}
+                      Correo Electrónico
                     </label>
                     <input
                       type="email"
@@ -431,7 +430,7 @@ export default function StudentsAdminClient({ students: initialStudents, classes
                   </div>
                   <div>
                     <label htmlFor="edit-class_id" className="block text-sm font-medium text-gray-700">
-                      {t('students.class')}
+                      Clase
                     </label>
                     <select
                       id="edit-class_id"
@@ -454,13 +453,13 @@ export default function StudentsAdminClient({ students: initialStudents, classes
                     onClick={() => setEditingStudent(null)}
                     className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
                   >
-                    {t('students.cancel')}
+                    Cancelar
                   </button>
                   <button
                     type="submit"
                     className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
                   >
-                    {t('students.save')}
+                    Guardar
                   </button>
                 </div>
               </form>
@@ -474,7 +473,7 @@ export default function StudentsAdminClient({ students: initialStudents, classes
         data={filteredStudents}
         columns={columns}
         mobileCard={mobileCard}
-        emptyMessage={t('students.noStudents')}
+        emptyMessage="No se encontraron estudiantes. Crea tu primer estudiante arriba."
       />
 
       {/* Password Dialog - Mobile-friendly */}

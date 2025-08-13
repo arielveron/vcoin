@@ -6,7 +6,6 @@ import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useAdminFilters } from '@/hooks/useAdminFilters'
-import { t } from '@/config/translations'
 import { Menu, X, Home, Users, TrendingUp, Percent, Trophy, Award, Tags, LogOut } from 'lucide-react'
 
 // Icon mapping for navigation items
@@ -22,14 +21,14 @@ const navIcons: Record<string, React.ElementType> = {
 }
 
 const navigation = [
-  { name: t('nav.dashboard'), href: '/admin' },
-  { name: t('nav.classes'), href: '/admin/classes' },
-  { name: t('nav.students'), href: '/admin/students' },
-  { name: t('nav.investments'), href: '/admin/investments' },
-  { name: t('nav.categories'), href: '/admin/categories' },
-  { name: t('nav.interestRates'), href: '/admin/interest-rates' },
-  { name: t('achievements.manageAchievements'), href: '/admin/achievements' },
-  { name: t('achievements.achievementManagement'), href: '/admin/achievements/manage' },
+  { name: 'Panel de Control', href: '/admin' },
+  { name: 'Clases', href: '/admin/classes' },
+  { name: 'Estudiantes', href: '/admin/students' },
+  { name: 'Inversiones', href: '/admin/investments' },
+  { name: 'Categorías', href: '/admin/categories' },
+  { name: 'Tasas de Interés', href: '/admin/interest-rates' },
+  { name: 'Gestionar Logros', href: '/admin/achievements' },
+  { name: 'Administrar Logros', href: '/admin/achievements/manage' },
   // { name: 'Debug Achievements', href: '/admin/achievements/debug' },
 ]
 
@@ -112,7 +111,7 @@ export default function AdminNav() {
                 onClick={() => signOut({ callbackUrl: '/' })}
                 className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium"
               >
-                {t('nav.signOut')}
+                Cerrar Sesión
               </button>
             </div>
 
@@ -217,7 +216,7 @@ export default function AdminNav() {
               className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
             >
               <LogOut className="w-5 h-5 mr-2" />
-              {t('nav.signOut')}
+              Cerrar Sesión
             </button>
           </div>
         </div>

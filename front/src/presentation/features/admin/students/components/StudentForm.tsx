@@ -7,7 +7,6 @@ import { X } from 'lucide-react'
 import { useServerAction } from '@/presentation/hooks'
 import type { Student, Class } from '@/types/database'
 import type { ActionResult } from '@/utils/server-actions'
-import { t } from '@/config/translations'
 
 interface StudentFormProps {
   editingStudent: Student | null
@@ -46,7 +45,7 @@ export default function StudentForm({
         <div className="flex flex-col h-full lg:h-auto">
           <div className="flex items-center justify-between p-4 border-b lg:border-0">
             <h3 className="text-lg font-medium text-gray-900">
-              {editingStudent ? t('students.edit') : t('students.createNew')}
+              {editingStudent ? 'Editar' : 'Crear Nuevo Estudiante'}
             </h3>
             <button
               onClick={onCancel}
@@ -64,7 +63,7 @@ export default function StudentForm({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  {t('students.studentName')}
+                  Nombre del Estudiante
                 </label>
                 <input
                   type="text"
@@ -72,7 +71,7 @@ export default function StudentForm({
                   name="name"
                   required
                   defaultValue={editingStudent?.name || ''}
-                  placeholder={editingStudent ? '' : t('students.enterStudentName')}
+                  placeholder={editingStudent ? '' : 'Ingresa el nombre del estudiante'}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
                 />
               </div>
@@ -91,7 +90,7 @@ export default function StudentForm({
               </div>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  {t('students.email')}
+                  Correo Electrónico
                 </label>
                 <input
                   type="email"
@@ -99,13 +98,13 @@ export default function StudentForm({
                   name="email"
                   required
                   defaultValue={editingStudent?.email || ''}
-                  placeholder={editingStudent ? '' : t('students.enterEmail')}
+                  placeholder={editingStudent ? '' : 'Ingresa el correo electrónico'}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
                 />
               </div>
               <div>
                 <label htmlFor="class_id" className="block text-sm font-medium text-gray-700">
-                  {t('students.class')}
+                  Clase
                 </label>
                 <select
                   id="class_id"
@@ -114,7 +113,7 @@ export default function StudentForm({
                   defaultValue={editingStudent?.class_id || (classId ? classId.toString() : '')}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
                 >
-                  <option value="">{t('students.selectClass')}</option>
+                  <option value="">Seleccionar clase</option>
                   {classes.map((cls) => (
                     <option key={cls.id} value={cls.id}>
                       {cls.name}
@@ -129,14 +128,14 @@ export default function StudentForm({
                 onClick={onCancel}
                 className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
               >
-                {t('students.cancel')}
+                Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
                 className="w-full lg:w-auto px-4 py-3 lg:py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50"
               >
-                {loading ? 'Saving...' : (editingStudent ? t('students.update') : t('students.create'))}
+                {loading ? 'Guardando...' : (editingStudent ? 'Actualizar' : 'Crear')}
               </button>
             </div>
           </form>

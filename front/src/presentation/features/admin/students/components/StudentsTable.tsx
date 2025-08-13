@@ -7,7 +7,6 @@ import { User, Mail, Edit, Key, Trash2 } from 'lucide-react'
 import ResponsiveTable from '@/components/admin/responsive-table'
 import type { Class } from '@/types/database'
 import { StudentForClient } from '@/utils/admin-data-types'
-import { t } from '@/config/translations'
 
 interface StudentsTableProps {
   students: StudentForClient[]
@@ -172,7 +171,7 @@ export default function StudentsTable({
       data={students}
       columns={columns}
       mobileCard={mobileCard}
-      emptyMessage={t('students.noStudents')}
+      emptyMessage="No se encontraron estudiantes. Crea tu primer estudiante arriba."
     />
   )
 }
