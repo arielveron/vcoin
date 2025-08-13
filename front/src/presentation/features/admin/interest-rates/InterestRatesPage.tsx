@@ -7,7 +7,7 @@
 
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
-import { useAdminFilters } from '@/hooks/useAdminFilters'
+import { useAdminFilters } from '../hooks/useAdminFilters'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import MobileFilters from '@/components/admin/mobile-filters'
 import {

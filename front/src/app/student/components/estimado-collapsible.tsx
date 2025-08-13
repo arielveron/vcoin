@@ -26,7 +26,7 @@ export default function EstimadoCollapsible({
   const diasRestantes = calculateDiasRestantes(classSettings);
   
   // Calculate progress percentage using first investment date
-  const { progressPercentage, totalDays, startDate } = useMemo(() => {
+  const { progressPercentage, startDate } = useMemo(() => {
     const endDate = new Date(classSettings.end_date);
     const now = new Date();
     
@@ -39,7 +39,6 @@ export default function EstimadoCollapsible({
     
     return {
       progressPercentage,
-      totalDays,
       startDate: effectiveStartDate
     };
   }, [classSettings.end_date, firstInvestmentDate]);

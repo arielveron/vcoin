@@ -3,6 +3,9 @@
 import React, { useState } from "react";
 import { formatearMoneda } from "@/utils/format";
 import InterestRateGraph from "./interest-rate-graph";
+import DisclaimerModal from "./disclaimer-modal";
+import { useCollapsibleStore } from "@/presentation/hooks/useCollapsibleStore";
+import { useMediaQuery } from "@/presentation/hooks/useMediaQuery";
 import { TrendingUp, TrendingDown, Minus, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { InterestRateChange, RateDataPoint } from "@/types/database";
@@ -18,7 +21,23 @@ export default function InteresCollapsible({
   latestRateChange, 
   rateData 
 }: InteresProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isLocalExpanded, setIsLocalExpanded] = useState(false);
+  const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(false);
+  
+  // Check if we're in a wide screen (md and above)
+  const isWideScreen = useMediaQuery('(min-width: 768px)');
+  
+  // Use shared state for wide screens, local state for narrow screens
+  const sharedState = useCollapsibleStore();
+  const isExpanded = isWideScreen ? sharedState.isExpanded : isLocalExpanded;
+  
+  const handleToggle = () => {
+    if (isWideScreen) {
+      sharedState.toggle();
+    } else {
+      setIsLocalExpanded(prev => !prev);
+    }
+  };
 
   // Determine the direction and styling
   let direction = null;
@@ -51,7 +70,7 @@ export default function InteresCollapsible({
       {/* Collapsed View - Always Visible */}
       <div 
         className="p-4 cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={handleToggle}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 flex-1">
@@ -80,7 +99,14 @@ export default function InteresCollapsible({
                     transition={{ duration: 0.2 }}
                     className="flex items-baseline space-x-2 mt-1"
                   >
-                    <span className={`text-2xl font-bold ${trendColor}`}>
+                    <span 
+                      className={`text-2xl font-bold ${trendColor} cursor-pointer hover:opacity-80 transition-opacity`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsDisclaimerOpen(true);
+                      }}
+                      title="Haz clic para ver información importante"
+                    >
                       {formatearMoneda(currentRate * 100)}%
                     </span>
                     {direction && <Icon className={`w-4 h-4 ${trendColor}`} />}
@@ -136,8 +162,15 @@ export default function InteresCollapsible({
               {/* Main Rate Display */}
               <div className={`bg-gradient-to-r ${bgGradient} rounded-lg p-4 mb-4`}>
                 <div className="flex items-baseline justify-center space-x-2">
-                  <span className={`text-3xl font-bold ${trendColor}`}>
-                    {formatearMoneda(currentRate * 100)}%
+                  <span 
+                    className={`text-3xl font-bold ${trendColor} cursor-pointer hover:opacity-80 transition-opacity`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsDisclaimerOpen(true);
+                    }}
+                    title="Haz clic para ver información importante"
+                  >
+                    ⚠️ {formatearMoneda(currentRate * 100)}%
                   </span>
                   {latestRateChange && latestRateChange.previous_rate !== null && (
                     <span className={`text-sm ${trendColor} font-medium`}>
@@ -166,6 +199,12 @@ export default function InteresCollapsible({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Disclaimer Modal */}
+      <DisclaimerModal 
+        isOpen={isDisclaimerOpen}
+        onClose={() => setIsDisclaimerOpen(false)}
+      />
     </div>
   );
 }

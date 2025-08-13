@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, Star } from "lucide-react";
+import { Trophy } from "lucide-react";
 
 interface AchievementSummaryProps {
   stats: {

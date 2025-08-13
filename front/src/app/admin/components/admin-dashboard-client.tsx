@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { AdminStats } from '@/services/admin-service'
 import { Class, Student } from '@/types/database'
-import { useAdminFilters } from '@/hooks/useAdminFilters'
+import { useAdminFilters } from '@/presentation/features/admin/hooks/useAdminFilters'
 import FilterBadges from './filter-badges'
 import { Users, TrendingUp, Percent, Tags, Trophy, DollarSign, GraduationCap, Target } from 'lucide-react'
 

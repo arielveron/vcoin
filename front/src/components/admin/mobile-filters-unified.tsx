@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Filter, X } from 'lucide-react'
-import { useAdminFilters } from '@/hooks/useAdminFilters'
+import { useAdminFilters } from '@/presentation/features/admin/hooks/useAdminFilters'
 import { Class, Student } from '@/types/database'
 
 interface MobileFiltersProps {

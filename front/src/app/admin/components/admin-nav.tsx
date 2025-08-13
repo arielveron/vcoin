@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
-import { useAdminFilters } from '@/hooks/useAdminFilters'
+import { useAdminFilters } from '@/presentation/features/admin/hooks/useAdminFilters'
 import { Menu, X, Home, Users, TrendingUp, Percent, Trophy, Award, Tags, LogOut } from 'lucide-react'
 
 // Icon mapping for navigation items

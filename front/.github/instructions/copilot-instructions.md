@@ -213,12 +213,14 @@ src/presentation/features/admin/
 **Reusable Hooks Pattern:**
 ```typescript
 // Use standardized hooks for common patterns
-import { useServerAction, useFormModal, useDataTable } from '@/presentation/hooks'
+import { useServerAction, useFormModal, useDataTable, useMediaQuery, useCollapsibleStore } from '@/presentation/hooks'
 
 // In client components
 const { executeAction, loading, error } = useServerAction(serverActionFunction)
 const { isOpen, openModal, closeModal } = useFormModal()
 const { filteredData, sortedData, searchQuery } = useDataTable(data, columns)
+const isWideScreen = useMediaQuery('(min-width: 768px)')
+const { isExpanded, toggle } = useCollapsibleStore()
 ```
 
 ### Data Types
@@ -322,7 +324,8 @@ const filteredStudents = filters.classId
 - Types: Centralized in `/src/types/database.ts`
 - **Utilities**: `/src/utils/server-actions.ts` for standardized patterns
 - **Shared Utilities**: `/src/shared/utils/` for pure functions (formatting, validation, errors)
-- **Presentation Hooks**: `/src/presentation/hooks/` for reusable UI logic
+- **Presentation Hooks**: `/src/presentation/hooks/` for reusable UI logic (components, state management, media queries)
+- **Legacy Hooks**: `/src/hooks/` for admin-specific hooks (will be migrated)
 
 ### Standardized Error Handling
 **Consistent patterns across the codebase:**
@@ -469,8 +472,34 @@ npm run setup     # Complete database + auth setup
 - **Shared utilities**: Add to `/src/shared/utils/` for pure functions (formatting, validation, errors)
 - **Business logic**: Add to `/src/core/domain/` organized by entity (investment, student, etc.)
 - **UI patterns**: Create reusable hooks in `/src/presentation/hooks/` for common component logic
+- **Feature-specific hooks**: Add to `/src/presentation/features/*/hooks/` for domain-specific business logic
+- **Legacy migration**: Move hooks from `/src/hooks/` to appropriate feature folders
 
 ## Key Development Workflows
+
+### Hook Organization
+**VCoin follows a structured hook organization:**
+
+```
+src/
+├── hooks/                     # 🔄 Legacy Location (Empty after migration)
+└── presentation/hooks/        # 🎨 Reusable UI Hooks
+    ├── index.ts              # Centralized exports
+    ├── useServerAction.ts    # Server action patterns
+    ├── useFormModal.ts       # Modal state management
+    ├── useDataTable.ts       # Table filtering/sorting
+    ├── useMediaQuery.ts      # Responsive breakpoint detection
+    └── useCollapsibleStore.tsx # Synchronized collapsible state
+└── presentation/features/*/hooks/ # 🎯 Feature-Specific Business Logic
+    └── admin/hooks/
+        └── useAdminFilters.ts # Admin filtering across pages
+```
+
+**Placement Rules:**
+- **Reusable UI patterns**: `/src/presentation/hooks/` (e.g., `useMediaQuery`, `useCollapsibleStore`, `useFormModal`)
+- **Data management patterns**: `/src/presentation/hooks/` (e.g., `useServerAction`, `useDataTable`)  
+- **Feature-specific business logic**: `/src/presentation/features/*/hooks/` (e.g., admin filtering, student-specific logic)
+- **Legacy location**: `/src/hooks/` is deprecated and should not be used for new hooks
 
 ### Setup Commands
 ```bash

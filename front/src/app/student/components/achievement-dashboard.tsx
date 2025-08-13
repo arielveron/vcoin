@@ -54,9 +54,10 @@ export function AchievementDashboard({
     return { unlockedAchievements: sortedUnlocked, lockedAchievements: sortedLocked };
   }, [filteredAchievements]);
 
-  const completionRate = Math.round(
-    (studentStats.achievements_unlocked / studentStats.achievements_total) * 100
-  );
+  // Completion rate calculation for potential future use
+  // const completionRate = Math.round(
+  //   (studentStats.achievements_unlocked / studentStats.achievements_total) * 100
+  // );
 
   return (
     <div className="space-y-6">

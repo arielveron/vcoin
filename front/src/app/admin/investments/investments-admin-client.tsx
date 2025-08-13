@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { InvestmentWithStudent, Student, InvestmentCategory } from '@/types/database'
 import { createInvestment, updateInvestment, deleteInvestment } from './actions'
-import { useAdminFilters } from '@/hooks/useAdminFilters'
+import { useAdminFilters } from '@/presentation/features/admin/hooks/useAdminFilters'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import ResponsiveTable from '@/components/admin/responsive-table'
 import MobileFilters from '@/components/admin/mobile-filters'

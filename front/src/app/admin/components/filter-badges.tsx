@@ -1,6 +1,6 @@
 'use client'
 
-import { useAdminFilters } from '@/hooks/useAdminFilters'
+import { useAdminFilters } from '@/presentation/features/admin/hooks/useAdminFilters'
 import { Class, Student } from '@/types/database'
 
 interface FilterBadgesProps {

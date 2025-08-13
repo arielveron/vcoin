@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { formatearMoneda } from "@/utils/format";
 import Image from "next/image";
 import HistoricalGainsGraph from "./historical-gains-graph";
+import { useCollapsibleStore } from "@/presentation/hooks/useCollapsibleStore";
+import { useMediaQuery } from "@/presentation/hooks/useMediaQuery";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GraphDataPoint, InvestmentMarker, RateChangeMarker } from "@/types/database";
@@ -21,7 +23,22 @@ export default function GananciaCollapsible({
   investmentMarkers,
   rateChangeMarkers,
 }: GananciaProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isLocalExpanded, setIsLocalExpanded] = useState(false);
+  
+  // Check if we're in a wide screen (md and above)
+  const isWideScreen = useMediaQuery('(min-width: 768px)');
+  
+  // Use shared state for wide screens, local state for narrow screens
+  const sharedState = useCollapsibleStore();
+  const isExpanded = isWideScreen ? sharedState.isExpanded : isLocalExpanded;
+  
+  const handleToggle = () => {
+    if (isWideScreen) {
+      sharedState.toggle();
+    } else {
+      setIsLocalExpanded(prev => !prev);
+    }
+  };
 
   // Determine styling based on gain/loss
   const isPositive = gananciaTotal >= 0;
@@ -35,7 +52,7 @@ export default function GananciaCollapsible({
       className={`bg-white rounded-lg shadow-sm border ${borderColor} overflow-hidden transition-all duration-300 hover:shadow-md`}
     >
       {/* Collapsed View - Always Visible */}
-      <div className="p-4 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+      <div className="p-4 cursor-pointer" onClick={handleToggle}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 flex-1">
             <div className={`p-2 rounded-lg ${iconBgColor}`}>

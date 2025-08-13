@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { InvestmentWithStudent, Student, InvestmentCategory } from '@/types/database';
 import { createInvestment, updateInvestment, deleteInvestment } from '@/app/admin/investments/actions';
-import { useAdminFilters } from '@/hooks/useAdminFilters';
+import { useAdminFilters } from '../../hooks/useAdminFilters';
 import { WithFormattedDates } from '@/utils/format-dates';
 
 // Types
