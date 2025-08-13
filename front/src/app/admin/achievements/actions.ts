@@ -5,10 +5,11 @@ import { AchievementEngine } from '@/services/achievement-engine';
 import { AchievementBackgroundProcessor } from '@/services/achievement-background-processor';
 import { AdminService } from '@/services/admin-service';
 import { CreateAchievementRequest } from '@/types/database';
+import type { DeleteResult, OperationResult } from '@/utils/admin-server-action-types';
 
 const adminService = new AdminService();
 
-export const unlockManualAchievement = withAdminAuth(async (formData: FormData) => {
+export const unlockManualAchievement = withAdminAuth(async (formData: FormData): Promise<OperationResult> => {
   const studentId = parseFormNumber(formData, 'studentId');
   const achievementId = parseFormNumber(formData, 'achievementId');
   
@@ -20,7 +21,10 @@ export const unlockManualAchievement = withAdminAuth(async (formData: FormData) 
     throw new Error('Failed to award achievement');
   }
   
-  return null; // Interface expects null return type
+  return {
+    success: true,
+    message: 'Achievement unlocked successfully'
+  };
 }, 'unlock manual achievement');
 
 export const revokeManualAchievement = withAdminAuth(async (formData: FormData) => {
@@ -156,10 +160,19 @@ export const updateAchievement = withAdminAuth(async (formData: FormData) => {
   return result;
 }, 'update achievement');
 
-export const deleteAchievement = withAdminAuth(async (formData: FormData) => {
+export const deleteAchievement = withAdminAuth(async (formData: FormData): Promise<DeleteResult> => {
   const id = parseFormNumber(formData, 'id');
-  await adminService.deleteAchievement(id);
-  return null; // Delete operations return null for consistency
+  const success = await adminService.deleteAchievement(id);
+  
+  if (!success) {
+    throw new Error('Failed to delete achievement');
+  }
+  
+  return {
+    success: true,
+    message: 'Achievement deleted successfully',
+    deletedId: id
+  };
 }, 'delete achievement');
 
 export const getStudentAchievements = withAdminAuth(async (studentId: number) => {

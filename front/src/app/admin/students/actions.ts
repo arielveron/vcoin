@@ -4,6 +4,7 @@ import { AdminService } from '@/services/admin-service'
 import { StudentAuthService } from '@/services/student-auth-service'
 import { CreateStudentRequest } from '@/types/database'
 import { withAdminAuth, validateRequired, parseFormNumber } from '@/utils/server-actions'
+import type { DeleteResult, PasswordResult } from '@/utils/admin-server-action-types'
 
 const adminService = new AdminService()
 
@@ -56,18 +57,27 @@ export const updateStudent = withAdminAuth(async (formData: FormData) => {
   return updatedStudent
 }, 'update student')
 
-export const deleteStudent = withAdminAuth(async (formData: FormData) => {
+export const deleteStudent = withAdminAuth(async (formData: FormData): Promise<DeleteResult> => {
   const missing = validateRequired(formData, ['id'])
   if (missing.length > 0) {
     throw new Error(`Missing required fields: ${missing.join(', ')}`)
   }
 
   const id = parseFormNumber(formData, 'id')
-  await adminService.deleteStudent(id)
-  return null
+  const success = await adminService.deleteStudent(id)
+  
+  if (!success) {
+    throw new Error('Failed to delete student')
+  }
+  
+  return {
+    success: true,
+    message: 'Student deleted successfully',
+    deletedId: id
+  }
 }, 'delete student')
 
-export const setStudentPassword = withAdminAuth(async (formData: FormData) => {
+export const setStudentPassword = withAdminAuth(async (formData: FormData): Promise<PasswordResult> => {
   const missing = validateRequired(formData, ['student_id', 'password'])
   if (missing.length > 0) {
     throw new Error(`Missing required fields: ${missing.join(', ')}`)
@@ -86,5 +96,8 @@ export const setStudentPassword = withAdminAuth(async (formData: FormData) => {
     throw new Error('Failed to set password')
   }
 
-  return null
+  return {
+    success: true,
+    message: 'Password set successfully'
+  }
 }, 'set student password')

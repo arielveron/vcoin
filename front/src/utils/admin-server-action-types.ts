@@ -18,6 +18,36 @@ import type { Student, Class, Investment, InvestmentWithStudent, InvestmentCateg
 import type { ActionResult } from '@/utils/server-actions'
 import type { InterestRateForClient, CurrentRateInfo, StudentForClient, ClassForClient } from '@/utils/admin-data-types'
 
+// ===================================================================
+// STANDARD OPERATION RESULT TYPES
+// ===================================================================
+
+/**
+ * Standard result for successful delete operations
+ */
+export interface DeleteResult {
+  success: true
+  message: string
+  deletedId: number
+}
+
+/**
+ * Standard result for operations that complete without returning data
+ */
+export interface OperationResult {
+  success: true
+  message: string
+}
+
+/**
+ * Standard result for password operations
+ */
+export interface PasswordResult {
+  success: true
+  message: string
+  temporaryPassword?: string
+}
+
 // Re-export ActionResult for convenience
 export type { ActionResult }
 
@@ -25,22 +55,22 @@ export type { ActionResult }
 export interface StudentAdminActions {
   createStudent: (formData: FormData) => Promise<ActionResult<Student>>
   updateStudent: (formData: FormData) => Promise<ActionResult<Student>>
-  deleteStudent: (formData: FormData) => Promise<ActionResult<null>>
-  setStudentPassword: (formData: FormData) => Promise<ActionResult<null>>
+  deleteStudent: (formData: FormData) => Promise<ActionResult<DeleteResult>>
+  setStudentPassword: (formData: FormData) => Promise<ActionResult<PasswordResult>>
 }
 
 // ===== CLASS ADMIN ACTIONS =====
 export interface ClassAdminActions {
   createClass: (formData: FormData) => Promise<ActionResult<Class>>
   updateClass: (formData: FormData) => Promise<ActionResult<Class>>
-  deleteClass: (formData: FormData) => Promise<ActionResult<null>>
+  deleteClass: (formData: FormData) => Promise<ActionResult<DeleteResult>>
 }
 
 // ===== INVESTMENT ADMIN ACTIONS =====
 export interface InvestmentAdminActions {
   createInvestment: (formData: FormData) => Promise<ActionResult<InvestmentWithStudent>>
   updateInvestment: (formData: FormData) => Promise<ActionResult<InvestmentWithStudent | null>>
-  deleteInvestment: (formData: FormData) => Promise<ActionResult<null>>
+  deleteInvestment: (formData: FormData) => Promise<ActionResult<DeleteResult>>
   createBatchInvestments: (formData: FormData) => Promise<ActionResult<BatchInvestmentResult>>
   getStudentsForBatch: (formData: FormData) => Promise<ActionResult<Student[]>>
 }
@@ -49,23 +79,23 @@ export interface InvestmentAdminActions {
 export interface CategoryAdminActions {
   createCategory: (formData: FormData) => Promise<ActionResult<InvestmentCategory>>
   updateCategory: (formData: FormData) => Promise<ActionResult<InvestmentCategory>>
-  deleteCategory: (formData: FormData) => Promise<ActionResult<null>>
+  deleteCategory: (formData: FormData) => Promise<ActionResult<DeleteResult>>
 }
 
 // ===== INTEREST RATE ADMIN ACTIONS =====
 export interface InterestRateAdminActions {
   createInterestRate: (formData: FormData) => Promise<ActionResult<InterestRateHistory>>
   updateInterestRate: (formData: FormData) => Promise<ActionResult<InterestRateHistory>>
-  deleteInterestRate: (formData: FormData) => Promise<ActionResult<null>>
+  deleteInterestRate: (formData: FormData) => Promise<ActionResult<DeleteResult>>
 }
 
 // ===== ACHIEVEMENT ADMIN ACTIONS =====
 export interface AchievementAdminActions {
   createAchievement: (formData: FormData) => Promise<ActionResult<Achievement>>
   updateAchievement: (formData: FormData) => Promise<ActionResult<Achievement>>
-  deleteAchievement: (formData: FormData) => Promise<ActionResult<null>>
+  deleteAchievement: (formData: FormData) => Promise<ActionResult<DeleteResult>>
   processAchievements: () => Promise<ActionResult<{ processed: number }>>
-  manualAward: (formData: FormData) => Promise<ActionResult<null>>
+  manualAward: (formData: FormData) => Promise<ActionResult<OperationResult>>
 }
 
 // ===== UNIFIED ADMIN ACTIONS (ALL COMBINED) =====
@@ -87,8 +117,8 @@ export interface StudentsPageProps {
   classes: Class[]
   createStudent: (formData: FormData) => Promise<ActionResult<Student>>
   updateStudent: (formData: FormData) => Promise<ActionResult<Student>>
-  deleteStudent: (formData: FormData) => Promise<ActionResult<null>>
-  setStudentPassword: (formData: FormData) => Promise<ActionResult<null>>
+  deleteStudent: (formData: FormData) => Promise<ActionResult<DeleteResult>>
+  setStudentPassword: (formData: FormData) => Promise<ActionResult<PasswordResult>>
 }
 
 /**
@@ -98,7 +128,7 @@ export interface ClassesPageProps {
   initialClasses: ClassForClient[]
   createClass: (formData: FormData) => Promise<ActionResult<Class>>
   updateClass: (formData: FormData) => Promise<ActionResult<Class>>
-  deleteClass: (formData: FormData) => Promise<ActionResult<null>>
+  deleteClass: (formData: FormData) => Promise<ActionResult<DeleteResult>>
 }
 
 /**
@@ -111,7 +141,7 @@ export interface InvestmentsPageProps {
   categories: InvestmentCategory[]
   createInvestment: (formData: FormData) => Promise<ActionResult<Investment>>
   updateInvestment: (formData: FormData) => Promise<ActionResult<Investment>>
-  deleteInvestment: (formData: FormData) => Promise<ActionResult<null>>
+  deleteInvestment: (formData: FormData) => Promise<ActionResult<DeleteResult>>
 }
 
 /**
@@ -122,7 +152,7 @@ export interface CategoriesPageProps {
   classes: Class[]
   createCategory: (formData: FormData) => Promise<ActionResult<InvestmentCategory>>
   updateCategory: (formData: FormData) => Promise<ActionResult<InvestmentCategory>>
-  deleteCategory: (formData: FormData) => Promise<ActionResult<null>>
+  deleteCategory: (formData: FormData) => Promise<ActionResult<DeleteResult>>
 }
 
 /**
@@ -134,7 +164,7 @@ export interface InterestRatesPageProps {
   currentRates: CurrentRateInfo[]
   createInterestRate: (formData: FormData) => Promise<ActionResult<InterestRateHistory>>
   updateInterestRate: (formData: FormData) => Promise<ActionResult<InterestRateHistory>>
-  deleteInterestRate: (formData: FormData) => Promise<ActionResult<null>>
+  deleteInterestRate: (formData: FormData) => Promise<ActionResult<DeleteResult>>
 }
 
 /**
@@ -146,9 +176,9 @@ export interface AchievementsPageProps {
   categories: InvestmentCategory[]
   createAchievement: (formData: FormData) => Promise<ActionResult<Achievement>>
   updateAchievement: (formData: FormData) => Promise<ActionResult<Achievement>>
-  deleteAchievement: (formData: FormData) => Promise<ActionResult<null>>
+  deleteAchievement: (formData: FormData) => Promise<ActionResult<DeleteResult>>
   processAchievements: () => Promise<ActionResult<{ processed: number }>>
-  manualAward: (formData: FormData) => Promise<ActionResult<null>>
+  manualAward: (formData: FormData) => Promise<ActionResult<OperationResult>>
   getStudentAchievements: (studentId: number) => Promise<ActionResult<AchievementWithProgress[]>>
 }
 

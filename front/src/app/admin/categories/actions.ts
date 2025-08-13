@@ -3,6 +3,7 @@
 import { AdminService } from '@/services/admin-service';
 import { CreateInvestmentCategoryRequest } from '@/types/database';
 import { withAdminAuth, validateRequired, parseFormNumber } from '@/utils/server-actions';
+import type { DeleteResult } from '@/utils/admin-server-action-types';
 
 const adminService = new AdminService();
 
@@ -130,7 +131,7 @@ export const updateCategory = withAdminAuth(async (formData: FormData) => {
   return result;
 }, 'update category');
 
-export const deleteCategory = withAdminAuth(async (formData: FormData) => {
+export const deleteCategory = withAdminAuth(async (formData: FormData): Promise<DeleteResult> => {
   const missing = validateRequired(formData, ['id']);
   if (missing.length > 0) {
     throw new Error(`Missing required fields: ${missing.join(', ')}`);
@@ -141,6 +142,15 @@ export const deleteCategory = withAdminAuth(async (formData: FormData) => {
     throw new Error('Invalid category ID');
   }
 
-  await adminService.deleteCategory(id);
-  return null;
+  const success = await adminService.deleteCategory(id);
+  
+  if (!success) {
+    throw new Error('Failed to delete category');
+  }
+
+  return {
+    success: true,
+    message: 'Category deleted successfully',
+    deletedId: id
+  };
 }, 'delete category');

@@ -3,6 +3,7 @@
 import { AdminService } from '@/services/admin-service'
 import { revalidatePath } from 'next/cache'
 import { withAdminAuth, validateRequired, parseFormDate, parseFormNumber } from '@/utils/server-actions'
+import type { DeleteResult } from '@/utils/admin-server-action-types'
 
 const adminService = new AdminService()
 
@@ -55,9 +56,18 @@ export const updateClass = withAdminAuth(async (formData: FormData) => {
   return result
 }, 'update class')
 
-export const deleteClass = withAdminAuth(async (formData: FormData) => {
+export const deleteClass = withAdminAuth(async (formData: FormData): Promise<DeleteResult> => {
   const id = parseFormNumber(formData, 'id')
-  await adminService.deleteClass(id)
+  const success = await adminService.deleteClass(id)
+  
+  if (!success) {
+    throw new Error('Failed to delete class')
+  }
+  
   revalidatePath('/admin/classes')
-  return null // Standard null return for delete operations
+  return {
+    success: true,
+    message: 'Class deleted successfully',
+    deletedId: id
+  }
 }, 'delete class')

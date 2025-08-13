@@ -8,14 +8,15 @@
 import type { Achievement } from '@/types/database'
 import IconRenderer from '@/components/icon-renderer'
 import type { ActionResult } from '@/utils/server-actions'
+import type { OperationResult } from '@/utils/admin-server-action-types'
 
 interface AwardFormProps {
   achievement: Achievement
   studentId: number
   isGranted?: boolean
   onSuccess?: () => void
-  onAward: (formData: FormData) => Promise<ActionResult<null>>
-  onRevoke?: (formData: FormData) => Promise<ActionResult<null>>
+  onAward: (formData: FormData) => Promise<ActionResult<OperationResult>>
+  onRevoke?: (formData: FormData) => Promise<ActionResult<OperationResult>>
 }
 
 export default function AwardForm({ 

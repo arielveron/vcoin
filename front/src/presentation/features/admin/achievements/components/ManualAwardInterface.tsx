@@ -13,6 +13,7 @@ import type { Student, Class, Achievement, AchievementWithProgress } from '@/typ
 import { formatAchievementForClient } from '@/utils/admin-data-types'
 import type { AchievementForClient } from '@/utils/admin-data-types'
 import type { ActionResult } from '@/utils/server-actions'
+import type { OperationResult } from '@/utils/admin-server-action-types'
 
 interface ManualAwardInterfaceProps {
   achievements: AchievementForClient[]
@@ -22,9 +23,9 @@ interface ManualAwardInterfaceProps {
   studentAchievements: AchievementWithProgress[]
   isLoadingStudent: boolean
   onStudentSelect: (studentId: number) => Promise<void>
-  onManualAward: (formData: FormData) => Promise<ActionResult<null>>
+  onManualAward: (formData: FormData) => Promise<ActionResult<OperationResult>>
   onManualAwardSuccess: () => Promise<void>
-  onRevokeAward?: (formData: FormData) => Promise<ActionResult<null>>
+  onRevokeAward?: (formData: FormData) => Promise<ActionResult<OperationResult>>
 }
 
 export default function ManualAwardInterface({ 

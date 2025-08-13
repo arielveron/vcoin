@@ -3,6 +3,7 @@
 import { AdminService } from '@/services/admin-service'
 import { CreateInterestRateRequest } from '@/types/database'
 import { withAdminAuth, validateRequired, parseFormNumber, parseFormFloat, parseFormDate } from '@/utils/server-actions'
+import type { DeleteResult } from '@/utils/admin-server-action-types'
 
 const adminService = new AdminService()
 
@@ -51,13 +52,22 @@ export const updateInterestRate = withAdminAuth(async (formData: FormData) => {
   return updatedRate
 }, 'update interest rate')
 
-export const deleteInterestRate = withAdminAuth(async (formData: FormData) => {
+export const deleteInterestRate = withAdminAuth(async (formData: FormData): Promise<DeleteResult> => {
   const missing = validateRequired(formData, ['id'])
   if (missing.length > 0) {
     throw new Error(`Missing required fields: ${missing.join(', ')}`)
   }
 
   const id = parseFormNumber(formData, 'id')
-  await adminService.deleteInterestRate(id)
-  return null
+  const success = await adminService.deleteInterestRate(id)
+  
+  if (!success) {
+    throw new Error('Failed to delete interest rate')
+  }
+  
+  return {
+    success: true,
+    message: 'Interest rate deleted successfully',
+    deletedId: id
+  }
 }, 'delete interest rate')

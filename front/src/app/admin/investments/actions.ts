@@ -3,6 +3,7 @@
 import { AdminService } from '@/services/admin-service'
 import { CreateInvestmentRequest, CreateBatchInvestmentRequest, BatchInvestmentRow } from '@/types/database'
 import { withAdminAuth, validateRequired, parseFormNumber, parseFormFloat, parseFormDate } from '@/utils/server-actions'
+import type { DeleteResult } from '@/utils/admin-server-action-types'
 import { AchievementEngine } from '@/services/achievement-engine'
 
 const adminService = new AdminService()
@@ -77,15 +78,24 @@ export const updateInvestment = withAdminAuth(async (formData: FormData) => {
   return investment
 }, 'update investment')
 
-export const deleteInvestment = withAdminAuth(async (formData: FormData) => {
+export const deleteInvestment = withAdminAuth(async (formData: FormData): Promise<DeleteResult> => {
   const missing = validateRequired(formData, ['id'])
   if (missing.length > 0) {
     throw new Error(`Missing required fields: ${missing.join(', ')}`)
   }
 
   const id = parseFormNumber(formData, 'id')
-  await adminService.deleteInvestment(id)
-  return null // Standard null return for delete operations
+  const success = await adminService.deleteInvestment(id)
+  
+  if (!success) {
+    throw new Error('Failed to delete investment')
+  }
+  
+  return {
+    success: true,
+    message: 'Investment deleted successfully',
+    deletedId: id
+  }
 }, 'delete investment')
 
 export const createBatchInvestments = withAdminAuth(async (formData: FormData) => {
