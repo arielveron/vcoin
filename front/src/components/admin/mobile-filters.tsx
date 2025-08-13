@@ -3,25 +3,33 @@
 import { useState } from 'react'
 import { Filter, X } from 'lucide-react'
 import { useAdminFilters } from '@/presentation/features/admin/hooks/useAdminFilters'
-import { Class, Student } from '@/types/database'
+import { Class, Student, InvestmentCategory } from '@/types/database'
 
 interface MobileFiltersProps {
   classes: Class[]
   students?: Student[]
+  categories?: InvestmentCategory[]
   showStudentFilter?: boolean
+  showCategoryFilter?: boolean
+  showDateFilter?: boolean
 }
 
 export default function MobileFilters({
   classes,
   students = [],
-  showStudentFilter = false
+  categories = [],
+  showStudentFilter = false,
+  showCategoryFilter = false,
+  showDateFilter = false
 }: MobileFiltersProps) {
   const { filters, updateFilters } = useAdminFilters()
   const [isOpen, setIsOpen] = useState(false)
 
   const activeFiltersCount = 
     (filters.classId ? 1 : 0) + 
-    (filters.studentId ? 1 : 0)
+    (filters.studentId ? 1 : 0) +
+    (filters.categoryId ? 1 : 0) +
+    (filters.date ? 1 : 0)
 
   const handleClassChange = (value: string) => {
     const classId = value ? parseInt(value) : null
@@ -34,7 +42,7 @@ export default function MobileFilters({
   }
 
   const clearFilters = () => {
-    updateFilters({ classId: null, studentId: null })
+    updateFilters({ classId: null, studentId: null, categoryId: null, date: null })
     setIsOpen(false)
   }
 
@@ -114,6 +122,50 @@ export default function MobileFilters({
                       </option>
                     ))}
                   </select>
+                </div>
+              )}
+
+              {/* Category Filter */}
+              {showCategoryFilter && (
+                <div>
+                  <label htmlFor="mobile-category" className="block text-sm font-medium text-gray-700 mb-2">
+                    Filter by Category
+                  </label>
+                  <select
+                    id="mobile-category"
+                    value={filters.categoryId || ''}
+                    onChange={(e) => {
+                      const categoryId = e.target.value ? parseInt(e.target.value) : null
+                      updateFilters({ categoryId })
+                    }}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  >
+                    <option value="">All Categories</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Date Filter */}
+              {showDateFilter && (
+                <div>
+                  <label htmlFor="mobile-date" className="block text-sm font-medium text-gray-700 mb-2">
+                    Filter by Date
+                  </label>
+                  <input
+                    type="date"
+                    id="mobile-date"
+                    value={filters.date || ''}
+                    onChange={(e) => {
+                      const date = e.target.value || null
+                      updateFilters({ date })
+                    }}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  />
                 </div>
               )}
 

@@ -173,6 +173,72 @@ export class InvestmentRepository {
     }
   }
 
+  async findWithStudentInfoById(id: number): Promise<InvestmentWithStudent | null> {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        SELECT 
+          i.id,
+          i.student_id,
+          i.fecha,
+          i.monto,
+          i.concepto,
+          i.category_id,
+          i.created_at,
+          i.updated_at,
+          s.name as student_name,
+          s.email as student_email,
+          c.name as class_name,
+          ic.id as category_id_full,
+          ic.name as category_name,
+          ic.level as category_level,
+          ic.text_style as category_text_style,
+          ic.icon_config as category_icon_config,
+          ic.is_active as category_is_active,
+          ic.sort_order as category_sort_order,
+          ic.created_at as category_created_at,
+          ic.updated_at as category_updated_at
+        FROM investments i
+        JOIN students s ON i.student_id = s.id
+        JOIN classes c ON s.class_id = c.id
+        LEFT JOIN investment_categories ic ON i.category_id = ic.id
+        WHERE i.id = $1
+      `, [id]);
+      
+      if (!result.rows[0]) {
+        return null;
+      }
+      
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        student_id: row.student_id,
+        fecha: row.fecha,
+        monto: row.monto,
+        concepto: row.concepto,
+        category_id: row.category_id,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        student_name: row.student_name,
+        student_email: row.student_email,
+        class_name: row.class_name,
+        category: row.category_id_full ? {
+          id: row.category_id_full,
+          name: row.category_name,
+          level: row.category_level,
+          text_style: row.category_text_style,
+          icon_config: row.category_icon_config,
+          is_active: row.category_is_active,
+          sort_order: row.category_sort_order,
+          created_at: row.category_created_at,
+          updated_at: row.category_updated_at
+        } : null
+      };
+    } finally {
+      client.release();
+    }
+  }
+
   async getTotalByStudentId(studentId: number): Promise<number> {
     const client = await pool.connect();
     try {
@@ -274,6 +340,74 @@ export class InvestmentRepository {
     try {
       const result = await client.query('DELETE FROM investments WHERE id = $1', [id]);
       return result.rowCount !== null && result.rowCount > 0;
+    } finally {
+      client.release();
+    }
+  }
+
+  async findByDateAndConcepto(fecha: Date, concepto: string): Promise<Investment[]> {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        SELECT id, student_id, fecha, monto, concepto, category_id, created_at, updated_at
+        FROM investments 
+        WHERE fecha = $1 AND concepto = $2
+        ORDER BY student_id
+      `, [fecha, concepto]);
+      
+      return result.rows;
+    } finally {
+      client.release();
+    }
+  }
+
+  async findByDateConceptoAndCategory(fecha: Date, concepto: string, categoryId?: number): Promise<Investment[]> {
+    const client = await pool.connect();
+    try {
+      let query = `
+        SELECT id, student_id, fecha, monto, concepto, category_id, created_at, updated_at
+        FROM investments 
+        WHERE fecha = $1 AND concepto = $2
+      `;
+      const params: (Date | string | number)[] = [fecha, concepto];
+      
+      if (categoryId !== undefined) {
+        query += ' AND category_id = $3';
+        params.push(categoryId);
+      } else {
+        query += ' AND category_id IS NULL';
+      }
+      
+      query += ' ORDER BY student_id';
+      
+      const result = await client.query(query, params);
+      return result.rows;
+    } finally {
+      client.release();
+    }
+  }
+
+  async findByDateAndCategory(fecha: Date, categoryId?: number): Promise<Investment[]> {
+    const client = await pool.connect();
+    try {
+      let query = `
+        SELECT id, student_id, fecha, monto, concepto, category_id, created_at, updated_at
+        FROM investments 
+        WHERE fecha = $1
+      `;
+      const params: (Date | number)[] = [fecha];
+      
+      if (categoryId !== undefined) {
+        query += ' AND category_id = $2';
+        params.push(categoryId);
+      } else {
+        query += ' AND category_id IS NULL';
+      }
+      
+      query += ' ORDER BY student_id';
+      
+      const result = await client.query(query, params);
+      return result.rows;
     } finally {
       client.release();
     }

@@ -63,8 +63,11 @@ export function useInvestments({ initialInvestments, students, categories }: Use
   const handleUpdateInvestment = async (formData: FormData) => {
     if (!editingInvestment) return;
     
+    // Include the investment ID in the FormData
+    formData.set('id', editingInvestment.id.toString());
+    
     try {
-      const result = await updateInvestment(editingInvestment.id, formData);
+      const result = await updateInvestment(formData);
       if (result.success) {
         // TODO: Replace with proper state update instead of reload
         window.location.reload();
@@ -80,7 +83,10 @@ export function useInvestments({ initialInvestments, students, categories }: Use
     if (!confirm('Are you sure you want to delete this investment?')) return;
     
     try {
-      const result = await deleteInvestment(id);
+      const formData = new FormData();
+      formData.set('id', id.toString());
+      
+      const result = await deleteInvestment(formData);
       if (result.success) {
         setInvestments(investments.filter(inv => inv.id !== id));
       } else if (!result.success) {

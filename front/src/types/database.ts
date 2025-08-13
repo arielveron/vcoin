@@ -315,3 +315,25 @@ export interface RateDataPoint {
   formattedPercentage: string;
   sortKey: number;
 }
+
+// Batch investment types
+export interface BatchInvestmentRow {
+  student_id: number;
+  student_name: string;
+  student_registro: number;
+  monto: number; // Amount in cents
+}
+
+export interface CreateBatchInvestmentRequest {
+  fecha: Date;
+  concepto: string;
+  category_id?: number;
+  investments: BatchInvestmentRow[];
+}
+
+export interface BatchInvestmentResult {
+  success: boolean;
+  created_count: number;
+  failed_count: number;
+  errors?: string[];
+}

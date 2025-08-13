@@ -14,7 +14,7 @@ interface InvestmentFormProps {
   categories: InvestmentCategory[]
   isOpen: boolean
   onClose: () => void
-  onSubmit: (formData: FormData) => Promise<ActionResult<InvestmentWithStudent>>
+  onSubmit: (formData: FormData) => Promise<ActionResult<InvestmentWithStudent | null>>
   editingInvestment?: {
     id: number
     student_id: number

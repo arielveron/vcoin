@@ -50,7 +50,7 @@ export const createAchievement = withAdminAuth(async (formData: FormData) => {
   const trigger_type = formData.get('trigger_type') as 'automatic' | 'manual';
   const points = parseFormNumber(formData, 'points') || 0;
   const sort_order = parseFormNumber(formData, 'sort_order') || 0;
-  const is_active = formData.get('is_active') === 'true';
+  const is_active = formData.get('is_active') === 'on'; // Checkbox input
 
   // Icon configuration
   const icon_config = {
@@ -108,7 +108,7 @@ export const updateAchievement = withAdminAuth(async (formData: FormData) => {
   const trigger_type = formData.get('trigger_type') as 'automatic' | 'manual';
   const points = parseFormNumber(formData, 'points') || 0;
   const sort_order = parseFormNumber(formData, 'sort_order') || 0;
-  const is_active = formData.get('is_active') === 'true';
+  const is_active = formData.get('is_active') === 'on'; // Checkbox input
 
   // Icon configuration
   const icon_config = {

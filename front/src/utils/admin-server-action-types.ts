@@ -14,7 +14,7 @@
  * - Type safety for server action responses
  */
 
-import type { Student, Class, Investment, InvestmentCategory, InterestRateHistory, Achievement, AchievementWithProgress } from '@/types/database'
+import type { Student, Class, Investment, InvestmentWithStudent, InvestmentCategory, InterestRateHistory, Achievement, AchievementWithProgress, BatchInvestmentResult } from '@/types/database'
 import type { ActionResult } from '@/utils/server-actions'
 import type { InterestRateForClient, CurrentRateInfo, StudentForClient, ClassForClient } from '@/utils/admin-data-types'
 
@@ -24,8 +24,8 @@ export type { ActionResult }
 // ===== STUDENT ADMIN ACTIONS =====
 export interface StudentAdminActions {
   createStudent: (formData: FormData) => Promise<ActionResult<Student>>
-  updateStudent: (id: number, formData: FormData) => Promise<ActionResult<Student>>
-  deleteStudent: (id: number) => Promise<ActionResult<null>>
+  updateStudent: (formData: FormData) => Promise<ActionResult<Student>>
+  deleteStudent: (formData: FormData) => Promise<ActionResult<null>>
   setStudentPassword: (formData: FormData) => Promise<ActionResult<null>>
 }
 
@@ -38,9 +38,11 @@ export interface ClassAdminActions {
 
 // ===== INVESTMENT ADMIN ACTIONS =====
 export interface InvestmentAdminActions {
-  createInvestment: (formData: FormData) => Promise<ActionResult<Investment>>
-  updateInvestment: (formData: FormData) => Promise<ActionResult<Investment>>
+  createInvestment: (formData: FormData) => Promise<ActionResult<InvestmentWithStudent>>
+  updateInvestment: (formData: FormData) => Promise<ActionResult<InvestmentWithStudent | null>>
   deleteInvestment: (formData: FormData) => Promise<ActionResult<null>>
+  createBatchInvestments: (formData: FormData) => Promise<ActionResult<BatchInvestmentResult>>
+  getStudentsForBatch: (formData: FormData) => Promise<ActionResult<Student[]>>
 }
 
 // ===== CATEGORY ADMIN ACTIONS =====
@@ -84,8 +86,8 @@ export interface StudentsPageProps {
   initialStudents: StudentForClient[]
   classes: Class[]
   createStudent: (formData: FormData) => Promise<ActionResult<Student>>
-  updateStudent: (id: number, formData: FormData) => Promise<ActionResult<Student>>
-  deleteStudent: (id: number) => Promise<ActionResult<null>>
+  updateStudent: (formData: FormData) => Promise<ActionResult<Student>>
+  deleteStudent: (formData: FormData) => Promise<ActionResult<null>>
   setStudentPassword: (formData: FormData) => Promise<ActionResult<null>>
 }
 

@@ -41,8 +41,11 @@ export default function StudentsAdminClient({ students: initialStudents, classes
   const handleUpdateStudent = async (formData: FormData) => {
     if (!editingStudent) return
     
+    // Include the student ID in the FormData
+    formData.set('id', editingStudent.id.toString())
+    
     try {
-      const result = await updateStudent(editingStudent.id, formData)
+      const result = await updateStudent(formData)
       if (result.success && result.data) {
         setStudents(students.map(s => 
           s.id === editingStudent.id ? result.data! : s
@@ -61,7 +64,10 @@ export default function StudentsAdminClient({ students: initialStudents, classes
     if (!confirm('¿Estás seguro de que quieres eliminar este estudiante?')) return
     
     try {
-      const result = await deleteStudent(id)
+      const formData = new FormData()
+      formData.set('id', id.toString())
+      
+      const result = await deleteStudent(formData)
       if (result.success) {
         setStudents(students.filter(s => s.id !== id))
       } else if (!result.success) {

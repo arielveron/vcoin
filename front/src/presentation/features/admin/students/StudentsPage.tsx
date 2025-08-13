@@ -48,9 +48,13 @@ export default function StudentsPage({
     : students
 
   const handleFormSubmit = async (formData: FormData): Promise<ActionResult<Student>> => {
-    return editingStudent ? 
-      await updateStudent(editingStudent.id, formData) : 
-      await createStudent(formData)
+    if (editingStudent) {
+      // Include the student ID in the FormData for update
+      formData.set('id', editingStudent.id.toString())
+      return await updateStudent(formData)
+    } else {
+      return await createStudent(formData)
+    }
   }
 
   const handleFormSuccess = (student: Student) => {
@@ -92,7 +96,10 @@ export default function StudentsPage({
   const handleDeleteStudent = async (id: number) => {
     if (!confirm('¿Estás seguro de que quieres eliminar este estudiante?')) return
     
-    const result = await executeDelete(id)
+    const formData = new FormData()
+    formData.set('id', id.toString())
+    
+    const result = await executeDelete(formData)
     if (!result?.success) {
       alert(result?.error || 'Failed to delete student')
     } else {

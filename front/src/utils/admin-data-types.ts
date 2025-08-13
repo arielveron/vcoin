@@ -13,13 +13,15 @@
  */
 
 import { withFormattedDates, DateFieldSets, WithFormattedDates } from '@/utils/format-dates'
+import { formatCurrency } from '@/shared/utils/formatting'
 import type { 
   Student, 
   Class, 
   InvestmentWithStudent, 
   InvestmentCategory,
   InterestRateHistory,
-  Achievement
+  Achievement,
+  BatchInvestmentRow
 } from '@/types/database'
 
 // ============================================================================
@@ -75,6 +77,14 @@ export interface CurrentRateInfo {
  * Used across all admin components that display achievement data
  */
 export type AchievementForClient = WithFormattedDates<Achievement, 'created_at' | 'updated_at'>
+
+/**
+ * Batch Investment Row for client display with formatted amounts
+ * Used in batch investment components
+ */
+export type BatchInvestmentRowForClient = BatchInvestmentRow & {
+  monto_formatted: string
+}
 
 // ============================================================================
 // STANDARDIZED DATA TRANSFORMATION FUNCTIONS
@@ -203,6 +213,25 @@ export function formatInterestRateForClient(rate: InterestRateHistory): Interest
  */
 export function formatAchievementForClient(achievement: Achievement): AchievementForClient {
   return formatAchievementsForClient([achievement])[0]
+}
+
+/**
+ * Convert raw batch investment rows to BatchInvestmentRowForClient format
+ * Formats monetary amounts consistently
+ */
+export function formatBatchInvestmentRowsForClient(rows: BatchInvestmentRow[]): BatchInvestmentRowForClient[] {
+  return rows.map(row => ({
+    ...row,
+    monto_formatted: formatCurrency(row.monto)
+  }))
+}
+
+/**
+ * Convert a single raw batch investment row to BatchInvestmentRowForClient format
+ * Useful for form operations and individual row updates
+ */
+export function formatBatchInvestmentRowForClient(row: BatchInvestmentRow): BatchInvestmentRowForClient {
+  return formatBatchInvestmentRowsForClient([row])[0]
 }
 
 // ============================================================================

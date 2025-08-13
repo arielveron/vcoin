@@ -1,19 +1,22 @@
 /**
  * Investment Filters Component
- * Handles filtering of investments by class and student
+ * Handles filtering of investments by class, student, date, and category
  */
 'use client'
 
-import type { Class, Student } from '@/types/database'
+import type { Class, Student, InvestmentCategory } from '@/types/database'
 
 interface AdminFilters {
   classId: number | null
   studentId: number | null
+  categoryId: number | null
+  date: string | null
 }
 
 interface InvestmentFiltersProps {
   classes: Class[]
   students: Student[]
+  categories: InvestmentCategory[]
   filters: AdminFilters
   onFiltersChange: (filters: Partial<AdminFilters>) => void
   className?: string
@@ -22,6 +25,7 @@ interface InvestmentFiltersProps {
 export default function InvestmentFilters({
   classes,
   students,
+  categories,
   filters,
   onFiltersChange,
   className = ""
@@ -32,7 +36,7 @@ export default function InvestmentFilters({
     : students
 
   return (
-    <div className={`flex items-center space-x-3 ${className}`}>
+    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 ${className}`}>
       {/* Class Filter */}
       <select
         value={filters.classId || ''}
@@ -63,6 +67,31 @@ export default function InvestmentFilters({
           </option>
         ))}
       </select>
+
+      {/* Category Filter */}
+      <select
+        value={filters.categoryId || ''}
+        onChange={(e) => onFiltersChange({ 
+          categoryId: e.target.value ? parseInt(e.target.value) : null 
+        })}
+        className="rounded-md border-gray-300 text-sm py-2 px-3 focus:border-indigo-500 focus:ring-indigo-500"
+      >
+        <option value="">All Categories</option>
+        {categories.map((category) => (
+          <option key={category.id} value={category.id}>{category.name}</option>
+        ))}
+      </select>
+
+      {/* Date Filter */}
+      <input
+        type="date"
+        value={filters.date || ''}
+        onChange={(e) => onFiltersChange({ 
+          date: e.target.value || null 
+        })}
+        placeholder="Filter by date"
+        className="rounded-md border-gray-300 text-sm py-2 px-3 focus:border-indigo-500 focus:ring-indigo-500"
+      />
     </div>
   )
 }

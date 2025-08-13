@@ -20,7 +20,7 @@ export const createCategory = withAdminAuth(async (formData: FormData) => {
   const effectClass = formData.get('effectClass') as string;
   const customCSS = formData.get('customCSS') as string;
   const sortOrder = parseFormNumber(formData, 'sort_order') || 0;
-  const isActive = formData.get('is_active') === 'on';
+  const isActive = formData.get('is_active') === 'true'; // Read from select (true/false strings)
 
   // Handle icon data
   const iconName = formData.get('iconName') as string;
@@ -78,7 +78,7 @@ export const updateCategory = withAdminAuth(async (formData: FormData) => {
   const effectClass = formData.get('effectClass') as string;
   const customCSS = formData.get('customCSS') as string;
   const sortOrder = parseFormNumber(formData, 'sort_order') || 0;
-  const isActive = formData.get('is_active') === 'on';
+  const isActive = formData.get('is_active') === 'true'; // Read from select (true/false strings)
 
   // Handle icon data
   const iconName = formData.get('iconName') as string;

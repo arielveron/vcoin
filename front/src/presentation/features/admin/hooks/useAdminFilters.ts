@@ -6,6 +6,8 @@ import { useCallback } from 'react'
 export interface AdminFilters {
   classId: number | null
   studentId: number | null
+  categoryId: number | null
+  date: string | null
 }
 
 export function useAdminFilters() {
@@ -15,7 +17,9 @@ export function useAdminFilters() {
 
   const filters: AdminFilters = {
     classId: searchParams.get('qc') ? parseInt(searchParams.get('qc')!) : null,
-    studentId: searchParams.get('qs') ? parseInt(searchParams.get('qs')!) : null
+    studentId: searchParams.get('qs') ? parseInt(searchParams.get('qs')!) : null,
+    categoryId: searchParams.get('qcat') ? parseInt(searchParams.get('qcat')!) : null,
+    date: searchParams.get('qd') || null
   }
 
   const updateFilters = useCallback((newFilters: Partial<AdminFilters>) => {
@@ -40,6 +44,24 @@ export function useAdminFilters() {
         params.delete('qs')
       } else {
         params.set('qs', newFilters.studentId.toString())
+      }
+    }
+
+    // Update category filter
+    if (newFilters.categoryId !== undefined) {
+      if (newFilters.categoryId === null) {
+        params.delete('qcat')
+      } else {
+        params.set('qcat', newFilters.categoryId.toString())
+      }
+    }
+
+    // Update date filter
+    if (newFilters.date !== undefined) {
+      if (newFilters.date === null) {
+        params.delete('qd')
+      } else {
+        params.set('qd', newFilters.date)
       }
     }
 

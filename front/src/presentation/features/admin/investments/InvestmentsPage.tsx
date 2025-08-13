@@ -6,7 +6,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Users } from 'lucide-react'
 import { useAdminFilters } from '../hooks/useAdminFilters'
 import { useServerAction } from '@/presentation/hooks'
 import FilterBadges from '@/app/admin/components/filter-badges'
@@ -15,24 +15,27 @@ import {
   InvestmentsSummaryStats,
   InvestmentForm,
   InvestmentFilters,
-  InvestmentsTable
+  InvestmentsTable,
+  BatchInvestmentModal
 } from './components'
-import type { InvestmentWithStudent, InvestmentCategory } from '@/types/database'
+import type { InvestmentCategory } from '@/types/database'
 import { 
   InvestmentForClient, 
   StudentForClient, 
   ClassForClient
 } from '@/utils/admin-data-types'
-import { ActionResult } from '@/utils/server-actions'
+import type { InvestmentAdminActions } from '@/utils/admin-server-action-types'
 
 interface InvestmentsPageProps {
   initialInvestments: InvestmentForClient[]
   students: StudentForClient[]
   classes: ClassForClient[]
   categories: InvestmentCategory[]
-  createInvestment: (formData: FormData) => Promise<ActionResult<InvestmentWithStudent>>
-  updateInvestment: (formData: FormData) => Promise<ActionResult<InvestmentWithStudent>>
-  deleteInvestment: (formData: FormData) => Promise<ActionResult<null>>
+  createInvestment: InvestmentAdminActions['createInvestment']
+  updateInvestment: InvestmentAdminActions['updateInvestment']
+  deleteInvestment: InvestmentAdminActions['deleteInvestment']
+  createBatchInvestments: InvestmentAdminActions['createBatchInvestments']
+  getStudentsForBatch: InvestmentAdminActions['getStudentsForBatch']
 }
 
 export default function InvestmentsPage({
@@ -42,10 +45,13 @@ export default function InvestmentsPage({
   categories,
   createInvestment,
   updateInvestment,
-  deleteInvestment
+  deleteInvestment,
+  createBatchInvestments,
+  getStudentsForBatch
 }: InvestmentsPageProps) {
   const { filters, updateFilters } = useAdminFilters()
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isBatchModalOpen, setIsBatchModalOpen] = useState(false)
   const [editingInvestment, setEditingInvestment] = useState<InvestmentForClient | null>(null)
   
   // Server actions
@@ -58,6 +64,11 @@ export default function InvestmentsPage({
       if (!student || student.class_id !== filters.classId) return false
     }
     if (filters.studentId && investment.student_id !== filters.studentId) return false
+    if (filters.categoryId && investment.category_id !== filters.categoryId) return false
+    if (filters.date) {
+      const investmentDate = new Date(investment.fecha).toISOString().split('T')[0]
+      if (investmentDate !== filters.date) return false
+    }
     return true
   })
 
@@ -65,6 +76,10 @@ export default function InvestmentsPage({
   const handleCreateInvestment = () => {
     setEditingInvestment(null)
     setIsFormOpen(true)
+  }
+
+  const handleCreateBatchInvestment = () => {
+    setIsBatchModalOpen(true)
   }
 
   const handleEditInvestment = (investment: InvestmentForClient) => {
@@ -139,6 +154,7 @@ export default function InvestmentsPage({
           <InvestmentFilters
             classes={classes}
             students={students}
+            categories={categories}
             filters={filters}
             onFiltersChange={updateFilters}
             className="hidden lg:flex"
@@ -148,17 +164,30 @@ export default function InvestmentsPage({
           <MobileFilters 
             classes={classes}
             students={students}
+            categories={categories}
             showStudentFilter={true}
+            showCategoryFilter={true}
+            showDateFilter={true}
           />
           
-          {/* Add Investment Button */}
-          <button
-            onClick={handleCreateInvestment}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Investment
-          </button>
+          {/* Add Investment Buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={handleCreateInvestment}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Investment
+            </button>
+            
+            <button
+              onClick={handleCreateBatchInvestment}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Batch Investments
+            </button>
+          </div>
         </div>
       </div>
 
@@ -186,6 +215,19 @@ export default function InvestmentsPage({
         } : null}
         classId={filters.classId}
         studentId={filters.studentId}
+      />
+
+      {/* Batch Investment Modal */}
+      <BatchInvestmentModal
+        isOpen={isBatchModalOpen}
+        onClose={() => setIsBatchModalOpen(false)}
+        classes={classes}
+        categories={categories}
+        onSubmit={createBatchInvestments}
+        getStudentsForBatch={getStudentsForBatch}
+        classId={filters.classId}
+        categoryId={filters.categoryId}
+        date={filters.date}
       />
     </div>
   )

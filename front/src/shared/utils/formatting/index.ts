@@ -8,7 +8,13 @@ export {
   formatDate,
   formatDateTime,
   formatTimeAgo,
-  formatearFecha
+  formatDateForDisplay,
+  formatearFecha,
+  toDateInputValue,
+  fromDateInputValue,
+  getTodayInputValue,
+  toDBDateValue,
+  fromDBDateValue
 } from './date';
 
 // Currency formatting

@@ -19,6 +19,8 @@ import {
   CreateInterestRateRequest,
   CreateInvestmentCategoryRequest,
   CreateAchievementRequest,
+  CreateBatchInvestmentRequest,
+  BatchInvestmentResult,
 } from "../types/database";
 
 export interface AdminStats {
@@ -155,21 +157,89 @@ export class AdminService {
     return await this.investmentRepo.findByStudentId(studentId);
   }
 
-  async createInvestment(data: CreateInvestmentRequest): Promise<Investment> {
+  async createInvestment(data: CreateInvestmentRequest): Promise<InvestmentWithStudent> {
     // Validate student exists
     const student = await this.studentRepo.findById(data.student_id);
     if (!student) {
       throw new Error("Student not found");
     }
-    return await this.investmentRepo.create(data);
+    
+    const investment = await this.investmentRepo.create(data);
+    
+    // Get the complete investment with student info
+    const investmentWithStudent = await this.investmentRepo.findWithStudentInfoById(investment.id);
+    if (!investmentWithStudent) {
+      throw new Error("Failed to retrieve created investment");
+    }
+    
+    return investmentWithStudent;
   }
 
-  async updateInvestment(id: number, data: Partial<CreateInvestmentRequest>): Promise<Investment | null> {
-    return await this.investmentRepo.update(id, data);
+  async updateInvestment(id: number, data: Partial<CreateInvestmentRequest>): Promise<InvestmentWithStudent | null> {
+    const updatedInvestment = await this.investmentRepo.update(id, data);
+    if (!updatedInvestment) {
+      return null;
+    }
+    
+    // Get the complete investment with student info
+    const investmentWithStudent = await this.investmentRepo.findWithStudentInfoById(id);
+    return investmentWithStudent;
   }
 
   async deleteInvestment(id: number): Promise<boolean> {
     return await this.investmentRepo.delete(id);
+  }
+
+  async createBatchInvestments(data: CreateBatchInvestmentRequest): Promise<BatchInvestmentResult> {
+    let createdCount = 0;
+    let failedCount = 0;
+    const errors: string[] = [];
+
+    for (const investmentRow of data.investments) {
+      try {
+        // Validate student exists
+        const student = await this.studentRepo.findById(investmentRow.student_id);
+        if (!student) {
+          throw new Error(`Student with ID ${investmentRow.student_id} not found`);
+        }
+
+        // Create individual investment
+        const investmentData: CreateInvestmentRequest = {
+          student_id: investmentRow.student_id,
+          fecha: data.fecha,
+          monto: investmentRow.monto,
+          concepto: data.concepto,
+          category_id: data.category_id
+        };
+
+        await this.investmentRepo.create(investmentData);
+        createdCount++;
+      } catch (error) {
+        failedCount++;
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        errors.push(`Student ${investmentRow.student_name}: ${errorMessage}`);
+      }
+    }
+
+    return {
+      success: failedCount === 0,
+      created_count: createdCount,
+      failed_count: failedCount,
+      errors: errors.length > 0 ? errors : undefined
+    };
+  }
+
+  async getStudentsAvailableForBatchInvestment(classId: number, fecha: Date, concepto: string, categoryId: number): Promise<Student[]> {
+    // Get all students from the class
+    const allStudents = await this.studentRepo.findByClassId(classId);
+    
+    // Get students who already have an investment with the same date and category
+    // (regardless of concept, to prevent duplicate investments on same date/category)
+    const existingInvestments = await this.investmentRepo.findByDateAndCategory(fecha, categoryId);
+    const studentIdsWithInvestment = new Set(existingInvestments.map(inv => inv.student_id));
+    
+    // Filter out students who already have the investment
+    return allStudents.filter(student => !studentIdsWithInvestment.has(student.id));
   }
 
   // Interest rate management

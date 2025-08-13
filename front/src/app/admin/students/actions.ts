@@ -28,12 +28,13 @@ export const createStudent = withAdminAuth(async (formData: FormData) => {
   return await adminService.createStudent(studentData)
 }, 'create student')
 
-export const updateStudent = withAdminAuth(async (id: number, formData: FormData) => {
-  const missing = validateRequired(formData, ['registro', 'name', 'class_id'])
+export const updateStudent = withAdminAuth(async (formData: FormData) => {
+  const missing = validateRequired(formData, ['id', 'registro', 'name', 'class_id'])
   if (missing.length > 0) {
     throw new Error(`Missing required fields: ${missing.join(', ')}`)
   }
 
+  const id = parseFormNumber(formData, 'id')
   const registro = parseFormNumber(formData, 'registro')
   const name = formData.get('name') as string
   const email = formData.get('email') as string
@@ -55,7 +56,13 @@ export const updateStudent = withAdminAuth(async (id: number, formData: FormData
   return updatedStudent
 }, 'update student')
 
-export const deleteStudent = withAdminAuth(async (id: number) => {
+export const deleteStudent = withAdminAuth(async (formData: FormData) => {
+  const missing = validateRequired(formData, ['id'])
+  if (missing.length > 0) {
+    throw new Error(`Missing required fields: ${missing.join(', ')}`)
+  }
+
+  const id = parseFormNumber(formData, 'id')
   await adminService.deleteStudent(id)
   return null
 }, 'delete student')

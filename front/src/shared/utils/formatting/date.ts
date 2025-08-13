@@ -41,3 +41,75 @@ export const formatTimeAgo = (date: Date | string): string => {
 
 // Legacy alias for backward compatibility
 export const formatearFecha = formatDate;
+
+/**
+ * Convert a date string or Date object to YYYY-MM-DD format for HTML date inputs
+ * Handles timezone conversion to avoid date shifting
+ */
+export const toDateInputValue = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  
+  // Use local date parts to avoid timezone issues
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * Convert a YYYY-MM-DD date input value to a Date object in local timezone
+ * Avoids timezone shifting when creating Date from input
+ */
+export const fromDateInputValue = (dateString: string): Date => {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+/**
+ * Get today's date in YYYY-MM-DD format for date inputs
+ */
+export const getTodayInputValue = (): string => {
+  return toDateInputValue(new Date());
+};
+
+/**
+ * Format date for database storage (ISO string)
+ * Ensures consistent timezone handling
+ */
+export const toDBDateValue = (date: Date | string): string => {
+  const d = typeof date === 'string' ? fromDateInputValue(date) : date;
+  return d.toISOString().split('T')[0];
+};
+
+/**
+ * Format date for display, handling YYYY-MM-DD input strings correctly
+ * Avoids timezone issues when displaying dates from form inputs
+ */
+export const formatDateForDisplay = (date: Date | string, locale = 'es-AR'): string => {
+  let d: Date;
+  
+  if (typeof date === 'string') {
+    // If it's a YYYY-MM-DD string from date input, parse it in local timezone
+    if (date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      d = fromDateInputValue(date);
+    } else {
+      d = new Date(date);
+    }
+  } else {
+    d = date;
+  }
+  
+  return d.toLocaleDateString(locale, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+};
+
+/**
+ * Parse database date string to local Date object
+ */
+export const fromDBDateValue = (dateString: string): Date => {
+  return fromDateInputValue(dateString);
+};
