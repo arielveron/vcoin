@@ -123,25 +123,8 @@ export function useFormModal<T>() {
 
 **Aplicar en**: Todos los componentes `*-admin-client.tsx`
 
-### 4. Sistema de Autenticación Unificado
 
-**Problema Actual**: Lógica de auth duplicada entre admin y student.
-
-**Solución Propuesta**:
-
-```
-src/infrastructure/auth/
-├── core/
-│   ├── AuthProvider.tsx       # Provider unificado
-│   ├── authStrategies.ts      # Estrategias de auth
-│   └── sessionManager.ts      # Gestión de sesiones
-├── admin/
-│   └── adminAuth.ts          # Específico de admin
-└── student/
-    └── studentAuth.ts        # Específico de student
-```
-
-### 5. Utilidades Centralizadas
+### 4. Utilidades Centralizadas
 
 **Problema Actual**: Formateo y validación dispersos.
 
@@ -161,7 +144,7 @@ src/shared/utils/
     └── messages.ts     # Mensajes de error
 ```
 
-### 6. Componentes Divididos por Responsabilidad
+### 5. Componentes Divididos por Responsabilidad
 
 **Ejemplo: `achievements-admin-client.tsx` (600+ líneas)**
 
@@ -179,7 +162,7 @@ src/presentation/features/admin/achievements/
     └── useBackgroundJobs.ts       # Lógica de jobs
 ```
 
-### 7. Sistema de Acceso a Datos Consistente
+### 6. Sistema de Acceso a Datos Consistente
 
 **Problema Actual**: Repos y services mezclados sin clara separación.
 
@@ -203,7 +186,7 @@ src/core/use-cases/           # Lógica de negocio
     └── ViewInvestments.ts
 ```
 
-### 8. Manejo de Estado Global
+### 7. Manejo de Estado Global
 
 **Problema Actual**: Estado disperso, props drilling excesivo.
 
