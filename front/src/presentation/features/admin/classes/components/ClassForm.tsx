@@ -5,14 +5,15 @@
  */
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
-import { Class, CreateClassRequest } from '@/types/database'
+import { CreateClassRequest } from '@/types/database'
 import { ClassesPageProps } from '@/utils/admin-server-action-types'
+import { ClassForClient } from '@/utils/admin-data-types'
 
 interface ClassFormProps {
   showForm: boolean
-  editingClass: Class | null
+  editingClass: ClassForClient | null
   onClose: () => void
   onCreate: ClassesPageProps['createClass']
   onUpdate: ClassesPageProps['updateClass']
@@ -25,12 +26,32 @@ export default function ClassForm({
   onCreate,
   onUpdate
 }: ClassFormProps) {
-  const [formData] = useState<CreateClassRequest>({
-    name: editingClass?.name || '',
-    description: editingClass?.description || '',
-    end_date: editingClass?.end_date || new Date(),
-    timezone: editingClass?.timezone || 'America/Argentina/Buenos_Aires'
+  const [formData, setFormData] = useState<CreateClassRequest>({
+    name: '',
+    description: '',
+    end_date: new Date(),
+    timezone: 'America/Argentina/Buenos_Aires'
   })
+
+  // Update form data when editingClass changes
+  useEffect(() => {
+    if (editingClass) {
+      setFormData({
+        name: editingClass.name || '',
+        description: editingClass.description || '',
+        end_date: editingClass.end_date || new Date(),
+        timezone: editingClass.timezone || 'America/Argentina/Buenos_Aires'
+      })
+    } else {
+      // Reset form for creating new class
+      setFormData({
+        name: '',
+        description: '',
+        end_date: new Date(),
+        timezone: 'America/Argentina/Buenos_Aires'
+      })
+    }
+  }, [editingClass])
 
   const handleCreateClass = async (formData: FormData) => {
     try {
@@ -90,6 +111,7 @@ export default function ClassForm({
           
           {/* Form content with padding for mobile */}
           <form 
+            key={editingClass ? `edit-${editingClass.id}` : 'create'}
             action={editingClass ? handleUpdateClass : handleCreateClass} 
             className="flex-1 overflow-y-auto p-4 lg:p-0 space-y-4"
           >
@@ -98,7 +120,8 @@ export default function ClassForm({
               <input
                 type="text"
                 name="name"
-                defaultValue={formData.name}
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-3 lg:py-2 text-base lg:text-sm"
                 required
               />
@@ -108,7 +131,8 @@ export default function ClassForm({
               <label className="block text-sm font-medium text-gray-700">Description</label>
               <textarea
                 name="description"
-                defaultValue={formData.description}
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 rows={3}
                 className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-3 lg:py-2 text-base lg:text-sm"
                 placeholder="Optional description"
@@ -120,7 +144,8 @@ export default function ClassForm({
               <input
                 type="date"
                 name="end_date"
-                defaultValue={formData.end_date.toISOString().split('T')[0]}
+                value={formData.end_date.toISOString().split('T')[0]}
+                onChange={(e) => setFormData(prev => ({ ...prev, end_date: new Date(e.target.value) }))}
                 className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-3 lg:py-2 text-base lg:text-sm"
                 required
               />
@@ -130,7 +155,8 @@ export default function ClassForm({
               <label className="block text-sm font-medium text-gray-700">Timezone</label>
               <select
                 name="timezone"
-                defaultValue={formData.timezone}
+                value={formData.timezone}
+                onChange={(e) => setFormData(prev => ({ ...prev, timezone: e.target.value }))}
                 className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-3 lg:py-2 text-base lg:text-sm"
               >
                 <option value="America/Argentina/Buenos_Aires">Argentina/Buenos Aires</option>

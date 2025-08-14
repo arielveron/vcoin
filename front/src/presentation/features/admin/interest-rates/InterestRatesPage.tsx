@@ -13,7 +13,8 @@ import MobileFilters from '@/components/admin/mobile-filters'
 import {
   CurrentRatesStats,
   InterestRatesTable,
-  InterestRateForm
+  InterestRateForm,
+  InterestRateFilters
 } from './components'
 import type { InterestRateHistory } from '@/types/database'
 import { 
@@ -36,7 +37,7 @@ export default function InterestRatesPage({
   const [rates, setRates] = useState<InterestRateForClient[]>(initialRates)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingRate, setEditingRate] = useState<InterestRateForClient | null>(null)
-  const { filters } = useAdminFilters()
+  const { filters, updateFilters } = useAdminFilters()
 
   // Filter rates based on selected class
   const filteredRates = filters.classId 
@@ -102,13 +103,26 @@ export default function InterestRatesPage({
   return (
     <div className="space-y-6">
       {/* Filters */}
-      <FilterBadges classes={classes} />
-      
-      <div className="block lg:hidden">
-        <MobileFilters 
-          classes={classes}
-          showStudentFilter={false}
-        />
+      <div className="space-y-4">
+        <FilterBadges classes={classes} />
+        
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Desktop Filters */}
+          <InterestRateFilters
+            classes={classes}
+            filters={filters}
+            onFiltersChange={updateFilters}
+            className="hidden lg:block"
+          />
+          
+          {/* Mobile Filters */}
+          <div className="block lg:hidden">
+            <MobileFilters 
+              classes={classes}
+              showStudentFilter={false}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Current Rates Summary */}

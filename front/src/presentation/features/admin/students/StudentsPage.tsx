@@ -14,7 +14,8 @@ import MobileFilters from '@/components/admin/mobile-filters'
 import {
   StudentsTable,
   StudentForm,
-  PasswordDialog
+  PasswordDialog,
+  StudentFilters
 } from './components'
 import type { Student } from '@/types/database'
 import { 
@@ -37,7 +38,7 @@ export default function StudentsPage({
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingStudent, setEditingStudent] = useState<StudentForClient | null>(null)
   const [passwordDialogStudent, setPasswordDialogStudent] = useState<StudentForClient | null>(null)
-  const { filters } = useAdminFilters()
+  const { filters, updateFilters } = useAdminFilters()
 
   // Server actions
   const { execute: executeDelete } = useServerAction(deleteStudent)
@@ -148,14 +149,26 @@ export default function StudentsPage({
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="space-y-4">
         <FilterBadges classes={classes} students={students} />
-        <div className="block lg:hidden">
-          <MobileFilters 
+        
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Desktop Filters */}
+          <StudentFilters
             classes={classes}
-            students={students}
-            showStudentFilter={false}
+            filters={filters}
+            onFiltersChange={updateFilters}
+            className="hidden lg:block"
           />
+          
+          {/* Mobile Filters */}
+          <div className="block lg:hidden">
+            <MobileFilters 
+              classes={classes}
+              students={students}
+              showStudentFilter={false}
+            />
+          </div>
         </div>
       </div>
 

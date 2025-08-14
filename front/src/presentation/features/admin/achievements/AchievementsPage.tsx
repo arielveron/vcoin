@@ -6,11 +6,15 @@
 'use client'
 
 import { useState } from 'react'
+import { useAdminFilters } from '../hooks/useAdminFilters'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import MobileFilters from '@/components/admin/mobile-filters'
-import BackgroundJobsStatus from './components/BackgroundJobsStatus'
-import AchievementsOverview from './components/AchievementsOverview'
-import ManualAwardInterface from './components/ManualAwardInterface'
+import {
+  BackgroundJobsStatus,
+  AchievementsOverview,
+  ManualAwardInterface,
+  AchievementFilters
+} from './components'
 import type { Student, AchievementWithProgress } from '@/types/database'
 import {
   AchievementsPageProps
@@ -54,6 +58,7 @@ export default function AchievementsPage({
   getStudentAchievements
 }: AchievementsPageProps) {
   const achievements: AchievementForClient[] = initialAchievements.map(formatAchievementForClient)
+  const { filters, updateFilters } = useAdminFilters()
   
   // State for manual award interface
   const [selectedStudent, setSelectedStudent] = useState<number | null>(null)
@@ -129,12 +134,22 @@ export default function AchievementsPage({
       </div>
 
       {/* Admin Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1">
-          <FilterBadges classes={classes} />
-        </div>
-        <div className="md:hidden">
-          <MobileFilters classes={classes} showStudentFilter={true} />
+      <div className="space-y-4">
+        <FilterBadges classes={classes} />
+        
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Desktop Filters */}
+          <AchievementFilters
+            classes={classes}
+            filters={filters}
+            onFiltersChange={updateFilters}
+            className="hidden lg:block"
+          />
+          
+          {/* Mobile Filters */}
+          <div className="block lg:hidden">
+            <MobileFilters classes={classes} showStudentFilter={true} />
+          </div>
         </div>
       </div>
 

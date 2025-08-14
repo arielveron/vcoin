@@ -7,10 +7,14 @@
 
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
+import { useAdminFilters } from '../hooks/useAdminFilters'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import MobileFilters from '@/components/admin/mobile-filters'
-import CategoriesTable from './components/CategoriesTable'
-import CategoryForm from './components/CategoryForm'
+import {
+  CategoriesTable,
+  CategoryForm,
+  CategoryFilters
+} from './components'
 import type { InvestmentCategory } from '@/types/database'
 import { 
   CategoriesPageProps
@@ -32,6 +36,7 @@ export default function CategoriesPage({
   )
   const [showForm, setShowForm] = useState(false)
   const [editingCategory, setEditingCategory] = useState<CategoryForClient | null>(null)
+  const { filters, updateFilters } = useAdminFilters()
 
   // Handlers
   const handleCreateCategory = () => {
@@ -99,12 +104,22 @@ export default function CategoriesPage({
       </div>
 
       {/* Admin Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1">
-          <FilterBadges classes={classes} />
-        </div>
-        <div className="md:hidden">
-          <MobileFilters classes={classes} />
+      <div className="space-y-4">
+        <FilterBadges classes={classes} />
+        
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Desktop Filters */}
+          <CategoryFilters
+            classes={classes}
+            filters={filters}
+            onFiltersChange={updateFilters}
+            className="hidden lg:block"
+          />
+          
+          {/* Mobile Filters */}
+          <div className="block lg:hidden">
+            <MobileFilters classes={classes} />
+          </div>
         </div>
       </div>
 
