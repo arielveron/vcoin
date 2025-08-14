@@ -87,34 +87,47 @@ export default async function Ganancia({ gananciaTotal, studentId }: GananciaPro
       </div>
 
       {/* Graph Section */}
-      {graphData.length > 0 && (
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-xs text-gray-500 mb-2">Evolución de tu inversión</p>
-          <HistoricalGainsGraph
-            data={graphData}
-            investmentMarkers={investmentMarkers}
-            rateChangeMarkers={rateChangeMarkers}
-            className="w-full h-full"
-            isCollapsed={false}
-          />
-          <div className="mt-2 flex items-center justify-center space-x-4 text-xs">
-            <div className="flex items-center space-x-1">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span className="text-gray-600">Inversiones</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <div
-                className="w-8 h-0.5 bg-red-400"
-                style={{
-                  backgroundImage:
-                    "repeating-linear-gradient(to right, transparent, transparent 2px, #f87171 2px, #f87171 4px)",
-                }}
-              ></div>
-              <span className="text-gray-600">Cambio de tasa</span>
+      <div className="bg-gray-50 rounded-lg p-3">
+        <p className="text-xs text-gray-500 mb-2">Evolución de tu inversión</p>
+        {graphData.length === 0 ? (
+          <div className="h-20 flex items-center justify-center">
+            <div className="text-gray-400 text-sm">Sin inversiones registradas</div>
+          </div>
+        ) : graphData.length === 1 ? (
+          <div className="h-20 flex items-center justify-center">
+            <div className="text-gray-600 text-sm text-center">
+              <div>Inversión inicial: {graphData[0].formattedAmount}</div>
+              <div className="text-gray-400 text-xs mt-1">Desde {graphData[0].date}</div>
             </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <>
+            <HistoricalGainsGraph
+              data={graphData}
+              investmentMarkers={investmentMarkers}
+              rateChangeMarkers={rateChangeMarkers}
+              className="w-full h-full"
+              isCollapsed={false}
+            />
+            <div className="mt-2 flex items-center justify-center space-x-4 text-xs">
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span className="text-gray-600">Inversiones</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <div
+                  className="w-8 h-0.5 bg-red-400"
+                  style={{
+                    backgroundImage:
+                      "repeating-linear-gradient(to right, transparent, transparent 2px, #f87171 2px, #f87171 4px)",
+                  }}
+                ></div>
+                <span className="text-gray-600">Cambio de tasa</span>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

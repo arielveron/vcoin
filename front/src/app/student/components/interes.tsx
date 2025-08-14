@@ -52,7 +52,8 @@ export default async function Interes({ studentId }: InteresProps) {
   let borderColor = "border-gray-200";
   let iconBgColor = "bg-gray-100";
 
-  if (latestRateChange) {
+  // Only show direction and styling if there's a valid rate change with previous rate
+  if (latestRateChange && latestRateChange.previous_rate !== null && latestRateChange.previous_rate !== undefined && !isNaN(latestRateChange.previous_rate)) {
     if (latestRateChange.rate_direction === "up") {
       direction = "up";
       Icon = TrendingUp;
@@ -96,7 +97,7 @@ export default async function Interes({ studentId }: InteresProps) {
       <div className={`bg-gradient-to-r ${bgGradient} rounded-lg p-4 mb-4`}>
         <div className="flex items-baseline justify-center space-x-2">
           <span className={`text-3xl font-bold ${trendColor}`}>{formatearMoneda(currentRate * 100)}%</span>
-          {latestRateChange && latestRateChange.previous_rate !== null && (
+          {latestRateChange && latestRateChange.previous_rate !== null && latestRateChange.previous_rate !== undefined && !isNaN(latestRateChange.previous_rate) && (
             <span className={`text-sm ${trendColor} font-medium`}>
               {direction === "up" ? "+" : "-"}
               {Math.abs(
@@ -106,7 +107,7 @@ export default async function Interes({ studentId }: InteresProps) {
             </span>
           )}
         </div>
-        {latestRateChange && latestRateChange.previous_rate !== null && (
+        {latestRateChange && latestRateChange.previous_rate !== null && latestRateChange.previous_rate !== undefined && !isNaN(latestRateChange.previous_rate) && (
           <div>
             <p className="text-xs text-center mt-2 text-gray-600">
               {direction === "up" ? "Subió" : "Bajó"} desde {formatearMoneda(latestRateChange.previous_rate * 100)}%
@@ -119,12 +120,23 @@ export default async function Interes({ studentId }: InteresProps) {
       </div>
 
       {/* Graph Section */}
-      {rateData.length > 0 && (
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-xs text-gray-500 mb-2">Historial de tasas</p>
+      <div className="bg-gray-50 rounded-lg p-3">
+        <p className="text-xs text-gray-500 mb-2">Historial de tasas</p>
+        {rateData.length === 0 ? (
+          <div className="h-20 flex items-center justify-center">
+            <div className="text-gray-400 text-sm">Sin historial disponible</div>
+          </div>
+        ) : rateData.length === 1 ? (
+          <div className="h-20 flex items-center justify-center">
+            <div className="text-gray-600 text-sm text-center">
+              <div>Tasa única: {rateData[0].formattedPercentage}%</div>
+              <div className="text-gray-400 text-xs mt-1">Desde {rateData[0].date}</div>
+            </div>
+          </div>
+        ) : (
           <InterestRateGraph rates={rateData} className="w-full" />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

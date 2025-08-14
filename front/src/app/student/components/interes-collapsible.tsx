@@ -47,7 +47,8 @@ export default function InteresCollapsible({
   let borderColor = "border-gray-200";
   let iconBgColor = "bg-gray-100";
 
-  if (latestRateChange) {
+  // Only show direction and styling if there's a valid rate change with previous rate
+  if (latestRateChange && latestRateChange.previous_rate !== null && latestRateChange.previous_rate !== undefined && !isNaN(latestRateChange.previous_rate)) {
     if (latestRateChange.rate_direction === "up") {
       direction = "up";
       Icon = TrendingUp;
@@ -110,7 +111,7 @@ export default function InteresCollapsible({
                       {formatearMoneda(currentRate * 100)}%
                     </span>
                     {direction && <Icon className={`w-4 h-4 ${trendColor}`} />}
-                    {latestRateChange && latestRateChange.previous_rate !== null && (
+                    {latestRateChange && latestRateChange.previous_rate !== null && latestRateChange.previous_rate !== undefined && !isNaN(latestRateChange.previous_rate) && (
                       <span className={`text-xs ${trendColor} font-medium`}>
                         {direction === "up" ? "+" : "-"}
                         {Math.abs(((currentRate - latestRateChange.previous_rate) / latestRateChange.previous_rate) * 100).toFixed(1)}%
@@ -124,7 +125,7 @@ export default function InteresCollapsible({
 
           {/* Mini Graph - Only in collapsed view */}
           <AnimatePresence>
-            {!isExpanded && rateData.length > 0 && (
+            {!isExpanded && (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -132,7 +133,17 @@ export default function InteresCollapsible({
                 transition={{ duration: 0.2 }}
                 className="w-32 h-12 ml-4"
               >
-                <InterestRateGraph rates={rateData} className="w-full h-full" />
+                {rateData.length === 0 ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                  </div>
+                ) : rateData.length === 1 ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  </div>
+                ) : (
+                  <InterestRateGraph rates={rateData} className="w-full h-full" />
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -172,14 +183,14 @@ export default function InteresCollapsible({
                   >
                     ⚠️ {formatearMoneda(currentRate * 100)}%
                   </span>
-                  {latestRateChange && latestRateChange.previous_rate !== null && (
+                  {latestRateChange && latestRateChange.previous_rate !== null && latestRateChange.previous_rate !== undefined && !isNaN(latestRateChange.previous_rate) && (
                     <span className={`text-sm ${trendColor} font-medium`}>
                       {direction === "up" ? "+" : "-"}
                       {Math.abs(((currentRate - latestRateChange.previous_rate) / latestRateChange.previous_rate) * 100).toFixed(1)}%
                     </span>
                   )}
                 </div>
-                {latestRateChange && latestRateChange.previous_rate !== null && (
+                {latestRateChange && latestRateChange.previous_rate !== null && latestRateChange.previous_rate !== undefined && !isNaN(latestRateChange.previous_rate) && (
                   <p className="text-xs text-center mt-2 text-gray-600">
                     {direction === "up" ? "Subió" : "Bajó"} desde {formatearMoneda(latestRateChange.previous_rate * 100)}%
                   </p>
@@ -187,14 +198,25 @@ export default function InteresCollapsible({
               </div>
 
               {/* Full Graph */}
-              {rateData.length > 0 && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-xs text-gray-500 mb-3">Historial de tasas</p>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-xs text-gray-500 mb-3">Historial de tasas</p>
+                {rateData.length === 0 ? (
+                  <div className="h-32 flex items-center justify-center">
+                    <div className="text-gray-400 text-sm">Sin historial disponible</div>
+                  </div>
+                ) : rateData.length === 1 ? (
+                  <div className="h-32 flex items-center justify-center">
+                    <div className="text-gray-600 text-sm text-center">
+                      <div>Tasa única: {rateData[0].formattedPercentage}%</div>
+                      <div className="text-gray-400 text-xs mt-1">Desde {rateData[0].date}</div>
+                    </div>
+                  </div>
+                ) : (
                   <div className="h-32">
                     <InterestRateGraph rates={rateData} className="w-full h-full" />
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </motion.div>
         )}

@@ -17,7 +17,7 @@ export default async function StudentPage() {
       
       <footer className="py-8 text-center">
         <div className="text-sm text-gray-500">
-          VCOIN - Plataforma de Inversión Virtual
+          VCOIN - Simulador Educativo de Inversiones Virtuales
         </div>
         <div className="text-xs text-gray-400 mt-1">
           © 2025 veron.com.ar

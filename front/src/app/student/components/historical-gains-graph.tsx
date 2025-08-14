@@ -50,12 +50,37 @@ export default function HistoricalGainsGraph({
     // Sort data by date
     const sortedData = [...data].sort((a, b) => a.sortKey - b.sortKey);
 
-    if (sortedData.length < 2) {
-      // Draw "No sufficient data" message
+    if (sortedData.length === 0) {
+      // Draw "No data" message
       ctx.fillStyle = '#9ca3af';
       ctx.font = '14px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('Datos insuficientes', rect.width / 2, rect.height / 2);
+      ctx.fillText('Sin datos disponibles', rect.width / 2, rect.height / 2);
+      return;
+    }
+
+    if (sortedData.length === 1) {
+      // Draw single data point
+      const singlePoint = sortedData[0];
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      // Draw a single dot
+      ctx.fillStyle = '#10b981';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, isCollapsed ? 3 : 5, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Add text below the dot (only when not collapsed)
+      if (!isCollapsed) {
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '12px system-ui, -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(singlePoint.formattedAmount, centerX, centerY + 20);
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '10px system-ui, -apple-system, sans-serif';
+        ctx.fillText(singlePoint.date, centerX, centerY + 35);
+      }
       return;
     }
 

@@ -22,6 +22,24 @@ export default function InterestRateGraph({ rates, className = "" }: InterestRat
 
   const sortedRates = rates;
 
+  // Handle single data point case
+  if (sortedRates.length === 1) {
+    const singleRate = sortedRates[0];
+    return (
+      <div className={`${className}`}>
+        <div className="relative bg-white rounded-lg p-4">
+          <div className="h-20 flex items-center justify-center flex-col space-y-1">
+            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+            <div className="text-gray-600 text-xs text-center">
+              <div>{singleRate.formattedPercentage}%</div>
+              <div className="text-gray-400">{singleRate.date}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Find min and max rates for scaling
   const minRate = Math.min(...sortedRates.map(r => r.rate));
   const maxRate = Math.max(...sortedRates.map(r => r.rate));

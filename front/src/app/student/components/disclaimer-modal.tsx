@@ -87,7 +87,7 @@ export default function DisclaimerModal({ isOpen, onClose }: DisclaimerModalProp
 
                 <div className="text-center pt-4">
                   <p className="text-xs text-gray-500">
-                    VCoin - Simulador educativo de inversiones
+                    VCOIN - Simulador Educativo de Inversiones Virtuales
                   </p>
                 </div>
               </div>
