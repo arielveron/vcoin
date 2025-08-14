@@ -8,6 +8,7 @@ export interface AdminFilters {
   studentId: number | null
   categoryId: number | null
   date: string | null
+  searchText: string | null
 }
 
 export function useAdminFilters() {
@@ -19,7 +20,8 @@ export function useAdminFilters() {
     classId: searchParams.get('qc') ? parseInt(searchParams.get('qc')!) : null,
     studentId: searchParams.get('qs') ? parseInt(searchParams.get('qs')!) : null,
     categoryId: searchParams.get('qcat') ? parseInt(searchParams.get('qcat')!) : null,
-    date: searchParams.get('qd') || null
+    date: searchParams.get('qd') || null,
+    searchText: searchParams.get('qt') || null
   }
 
   const updateFilters = useCallback((newFilters: Partial<AdminFilters>) => {
@@ -62,6 +64,15 @@ export function useAdminFilters() {
         params.delete('qd')
       } else {
         params.set('qd', newFilters.date)
+      }
+    }
+
+    // Update search text filter
+    if (newFilters.searchText !== undefined) {
+      if (newFilters.searchText === null || newFilters.searchText === '') {
+        params.delete('qt')
+      } else {
+        params.set('qt', newFilters.searchText)
       }
     }
 

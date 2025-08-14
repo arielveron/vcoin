@@ -69,6 +69,10 @@ export default function InvestmentsPage({
       const investmentDate = new Date(investment.fecha).toISOString().split('T')[0]
       if (investmentDate !== filters.date) return false
     }
+    if (filters.searchText) {
+      const searchTerm = filters.searchText.toLowerCase()
+      if (!investment.concepto.toLowerCase().includes(searchTerm)) return false
+    }
     return true
   })
 
@@ -168,6 +172,7 @@ export default function InvestmentsPage({
             showStudentFilter={true}
             showCategoryFilter={true}
             showDateFilter={true}
+            showSearchFilter={true}
           />
           
           {/* Add Investment Buttons */}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Filter, X } from 'lucide-react'
+import { Filter, X, Search } from 'lucide-react'
 import { useAdminFilters } from '@/presentation/features/admin/hooks/useAdminFilters'
 import { Class, Student, InvestmentCategory } from '@/types/database'
 
@@ -12,6 +12,7 @@ interface MobileFiltersProps {
   showStudentFilter?: boolean
   showCategoryFilter?: boolean
   showDateFilter?: boolean
+  showSearchFilter?: boolean
 }
 
 export default function MobileFilters({
@@ -20,7 +21,8 @@ export default function MobileFilters({
   categories = [],
   showStudentFilter = false,
   showCategoryFilter = false,
-  showDateFilter = false
+  showDateFilter = false,
+  showSearchFilter = false
 }: MobileFiltersProps) {
   const { filters, updateFilters } = useAdminFilters()
   const [isOpen, setIsOpen] = useState(false)
@@ -29,7 +31,8 @@ export default function MobileFilters({
     (filters.classId ? 1 : 0) + 
     (filters.studentId ? 1 : 0) +
     (filters.categoryId ? 1 : 0) +
-    (filters.date ? 1 : 0)
+    (filters.date ? 1 : 0) +
+    (filters.searchText ? 1 : 0)
 
   const handleClassChange = (value: string) => {
     const classId = value ? parseInt(value) : null
@@ -42,7 +45,7 @@ export default function MobileFilters({
   }
 
   const clearFilters = () => {
-    updateFilters({ classId: null, studentId: null, categoryId: null, date: null })
+    updateFilters({ classId: null, studentId: null, categoryId: null, date: null, searchText: null })
     setIsOpen(false)
   }
 
@@ -83,6 +86,31 @@ export default function MobileFilters({
             </div>
 
             <div className="p-4 space-y-4">
+              {/* Search Filter - First in mobile for better UX */}
+              {showSearchFilter && (
+                <div>
+                  <label htmlFor="mobile-search" className="block text-sm font-medium text-gray-700 mb-2">
+                    Search by Concept
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      id="mobile-search"
+                      value={filters.searchText || ''}
+                      onChange={(e) => {
+                        const searchText = e.target.value || null
+                        updateFilters({ searchText })
+                      }}
+                      placeholder="Search by concept..."
+                      className="block w-full pl-10 pr-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Class Filter */}
               <div>
                 <label htmlFor="mobile-class" className="block text-sm font-medium text-gray-700 mb-2">

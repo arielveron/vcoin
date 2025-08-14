@@ -1,9 +1,10 @@
 /**
  * Investment Filters Component
- * Handles filtering of investments by class, student, date, and category
+ * Handles filtering of investments by class, student, date, category, and text search
  */
 'use client'
 
+import { Search } from 'lucide-react'
 import type { Class, Student, InvestmentCategory } from '@/types/database'
 
 interface AdminFilters {
@@ -11,6 +12,7 @@ interface AdminFilters {
   studentId: number | null
   categoryId: number | null
   date: string | null
+  searchText: string | null
 }
 
 interface InvestmentFiltersProps {
@@ -36,7 +38,25 @@ export default function InvestmentFilters({
     : students
 
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 ${className}`}>
+    <div className={`space-y-3 ${className}`}>
+      {/* Search Text Filter - Separate line */}
+      <div className="w-full relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Search className="h-4 w-4 text-gray-400" />
+        </div>
+        <input
+          type="text"
+          value={filters.searchText || ''}
+          onChange={(e) => onFiltersChange({ 
+            searchText: e.target.value || null 
+          })}
+          placeholder="Search by concept..."
+          className="w-full pl-10 pr-3 py-2 rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+        />
+      </div>
+      
+      {/* Other Filters - Grid layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
       {/* Class Filter */}
       <select
         value={filters.classId || ''}
@@ -92,6 +112,7 @@ export default function InvestmentFilters({
         placeholder="Filter by date"
         className="rounded-md border-gray-300 text-sm py-2 px-3 focus:border-indigo-500 focus:ring-indigo-500"
       />
+      </div>
     </div>
   )
 }
