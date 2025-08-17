@@ -53,8 +53,11 @@ interface BackgroundJobStatus {
 export default function AchievementsPage({
   initialAchievements,
   classes,
+  categories, // eslint-disable-line @typescript-eslint/no-unused-vars
+  students,
   processAchievements,
   manualAward,
+  manualRevoke,
   getStudentAchievements
 }: AchievementsPageProps) {
   const achievements: AchievementForClient[] = initialAchievements.map(formatAchievementForClient)
@@ -66,8 +69,10 @@ export default function AchievementsPage({
   const [isLoadingStudent, setIsLoadingStudent] = useState(false)
   
   // Mock data for now - in real implementation these would come from props or be fetched
-  const students: Student[] = []
   const backgroundJobStatus: BackgroundJobStatus | undefined = undefined
+
+  // Ensure TypeScript recognizes Student type usage
+  const studentsData: Student[] = students
 
   // Server actions - no need for useServerAction wrapper for simple cases
   
@@ -76,6 +81,18 @@ export default function AchievementsPage({
     const result = await manualAward(formData)
     if (result.success) {
       await handleManualAwardSuccess()
+    }
+    return result
+  }
+
+  // Handle manual revoke with success callback
+  const handleManualRevoke = async (formData: FormData) => {
+    if (!manualRevoke) {
+      return { success: false, error: 'Revoke functionality not available' }
+    }
+    const result = await manualRevoke(formData)
+    if (result.success) {
+      await handleManualAwardSuccess() // Refresh the student achievements list
     }
     return result
   }
@@ -164,10 +181,10 @@ export default function AchievementsPage({
         onProcess={handleProcessAchievements}
       />
 
-      {/* Manual Award Interface */}
+      {/* Student Achievement Management Interface */}
       <ManualAwardInterface
         achievements={achievements}
-        students={students}
+        students={studentsData}
         classes={classes}
         selectedStudent={selectedStudent}
         studentAchievements={studentAchievements}
@@ -175,6 +192,7 @@ export default function AchievementsPage({
         onStudentSelect={handleStudentSelect}
         onManualAward={handleManualAward}
         onManualAwardSuccess={handleManualAwardSuccess}
+        onRevokeAward={handleManualRevoke}
       />
     </div>
   )

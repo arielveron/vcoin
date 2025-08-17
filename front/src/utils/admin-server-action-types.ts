@@ -175,11 +175,13 @@ export interface AchievementsPageProps {
   initialAchievements: Achievement[]
   classes: Class[]
   categories: InvestmentCategory[]
+  students: Student[]
   createAchievement: (formData: FormData) => Promise<ActionResult<Achievement>>
   updateAchievement: (formData: FormData) => Promise<ActionResult<Achievement>>
   deleteAchievement: (formData: FormData) => Promise<ActionResult<DeleteResult>>
   processAchievements: () => Promise<ActionResult<{ processed: number }>>
   manualAward: (formData: FormData) => Promise<ActionResult<OperationResult>>
+  manualRevoke?: (formData: FormData) => Promise<ActionResult<OperationResult>>
   getStudentAchievements: (studentId: number) => Promise<ActionResult<AchievementWithProgress[]>>
 }
 

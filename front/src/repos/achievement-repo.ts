@@ -124,15 +124,7 @@ export class AchievementRepository {
   async delete(id: number): Promise<boolean> {
     const client = await pool.connect();
     try {
-      // First check if there are any student achievements for this achievement
-      const studentAchievements = await client.query(`
-        SELECT COUNT(*) as count FROM student_achievements WHERE achievement_id = $1
-      `, [id]);
-      
-      if (parseInt(studentAchievements.rows[0].count) > 0) {
-        throw new Error('Cannot delete achievement that has been unlocked by students');
-      }
-
+      // Delete the achievement (CASCADE will automatically delete related student_achievements)
       const result = await client.query(`
         DELETE FROM achievements WHERE id = $1
       `, [id]);

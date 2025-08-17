@@ -64,7 +64,7 @@ export default function AwardForm({
 
   return (
     <div className="border rounded-lg p-4 flex items-center justify-between">
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-3 flex-1">
         <IconRenderer 
           name={achievement.icon_config.name}
           library={achievement.icon_config.library}
@@ -73,13 +73,29 @@ export default function AwardForm({
           animationClass={achievement.icon_config.animationClass}
           className="w-6 h-6"
         />
-        <div>
-          <h4 className="text-sm font-medium text-gray-900">
-            {achievement.name}
-          </h4>
-          <p className="text-xs text-gray-500">
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-medium text-gray-900">
+              {achievement.name}
+            </h4>
+            <span 
+              className={`px-2 py-1 text-xs rounded-full ${
+                achievement.trigger_type === 'manual' 
+                  ? 'bg-blue-100 text-blue-800' 
+                  : 'bg-green-100 text-green-800'
+              }`}
+            >
+              {achievement.trigger_type === 'manual' ? 'Manual' : 'Automatic'}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
             {achievement.description}
           </p>
+          {achievement.trigger_type === 'automatic' && achievement.trigger_config && (
+            <p className="text-xs text-gray-400 mt-1">
+              Triggers: {achievement.trigger_config.metric} {achievement.trigger_config.operator} {achievement.trigger_config.value}
+            </p>
+          )}
         </div>
       </div>
       
@@ -90,21 +106,27 @@ export default function AwardForm({
           <button
             type="submit"
             className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            title={achievement.trigger_type === 'automatic' ? 'Revoke (will be re-granted if conditions are met during reprocessing)' : 'Revoke this manual achievement'}
           >
             Revoke
           </button>
         </form>
-      ) : (
+      ) : achievement.trigger_type === 'manual' ? (
         <form action={handleAwardAchievement}>
           <input type="hidden" name="studentId" value={studentId} />
           <input type="hidden" name="achievementId" value={achievement.id} />
           <button
             type="submit"
-            className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Award
+            Grant
           </button>
         </form>
+      ) : (
+        <div className="text-xs text-gray-500 text-center px-3">
+          <div>Automatic</div>
+          <div>Achievement</div>
+        </div>
       )}
     </div>
   )

@@ -7,6 +7,7 @@ import {
   updateAchievement, 
   deleteAchievement, 
   unlockManualAchievement,
+  revokeManualAchievement,
   processAchievements,
   getStudentAchievements
 } from './actions';
@@ -21,10 +22,11 @@ export default async function AchievementsAdminPage() {
   const adminService = new AdminService();
   
   // Fetch all required data
-  const [achievements, classes, categories] = await Promise.all([
+  const [achievements, classes, categories, students] = await Promise.all([
     adminService.getAllAchievements(),
     adminService.getAllClasses(),
-    adminService.getAllCategories()
+    adminService.getAllCategories(),
+    adminService.getAllStudents()
   ]);
 
   return (
@@ -38,11 +40,13 @@ export default async function AchievementsAdminPage() {
         initialAchievements={achievements}
         classes={classes}
         categories={categories}
+        students={students}
         createAchievement={createAchievement}
         updateAchievement={updateAchievement}
         deleteAchievement={deleteAchievement}
         processAchievements={processAchievements}
         manualAward={unlockManualAchievement}
+        manualRevoke={revokeManualAchievement}
         getStudentAchievements={getStudentAchievements}
       />
     </div>

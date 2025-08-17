@@ -27,7 +27,7 @@ export const unlockManualAchievement = withAdminAuth(async (formData: FormData):
   };
 }, 'unlock manual achievement');
 
-export const revokeManualAchievement = withAdminAuth(async (formData: FormData) => {
+export const revokeManualAchievement = withAdminAuth(async (formData: FormData): Promise<OperationResult> => {
   const studentId = parseFormNumber(formData, 'studentId');
   const achievementId = parseFormNumber(formData, 'achievementId');
   
