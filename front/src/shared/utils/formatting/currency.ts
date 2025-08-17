@@ -45,6 +45,3 @@ export const formatCompactCurrency = (amount: number, locale = 'es-AR'): string 
   }
   return formatCurrency(amount, { locale });
 };
-
-// Legacy aliases for backward compatibility
-export const formatearMoneda = formatCurrency;

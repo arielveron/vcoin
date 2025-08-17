@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { formatearMoneda } from "@/utils/format";
+import { formatCurrency } from "@/shared/utils/formatting";
 import { ClassSettings } from "@/db/pseudo-db";
 import { calculateDiasRestantes } from "@/logic/calculations";
 import { Calendar, TrendingUp, Target, ChevronDown } from "lucide-react";
@@ -81,7 +81,7 @@ export default function EstimadoCollapsible({
                     className="flex items-baseline space-x-2 mt-1"
                   >
                     <span className="text-1xl font-bold text-purple-700">
-                      {formatearMoneda(montoEstimado)}
+                      {formatCurrency(montoEstimado)}
                     </span>
                     <span className="text-xs text-purple-600 font-medium">
                       en {diasRestantes} días
@@ -174,7 +174,7 @@ export default function EstimadoCollapsible({
                   <span className="text-sm font-medium text-green-600">Proyección optimista</span>
                 </div>
                 <div className="text-3xl font-bold text-gray-800">
-                  {formatearMoneda(montoEstimado)}
+                  {formatCurrency(montoEstimado)}
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
                   Basado en la tasa de interés actual

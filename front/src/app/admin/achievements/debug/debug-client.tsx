@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Achievement, InvestmentCategory, Student, Investment } from '@/types/database';
 import { checkStudentAchievements } from './actions';
 import { sortAchievements } from '@/utils/achievement-sorting';
+import { formatCurrency, formatDate } from '@/shared/utils/formatting';
 
 interface Props {
   achievements: Achievement[];
@@ -143,8 +144,8 @@ export default function DebugClient({ achievements, categories, students, invest
                   <tbody>
                     {getStudentInvestments(selectedStudent).map(inv => (
                       <tr key={inv.id} className="border-t">
-                        <td className="px-3 py-2">{new Date(inv.fecha).toLocaleDateString()}</td>
-                        <td className="px-3 py-2">${inv.monto.toLocaleString()}</td>
+                        <td className="px-3 py-2">{formatDate(inv.fecha)}</td>
+                        <td className="px-3 py-2">{formatCurrency(inv.monto)}</td>
                         <td className="px-3 py-2">{inv.concepto}</td>
                         <td className="px-3 py-2">{getCategoryName(inv.category_id)}</td>
                       </tr>

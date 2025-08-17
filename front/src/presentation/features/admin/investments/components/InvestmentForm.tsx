@@ -8,6 +8,7 @@ import { X } from 'lucide-react'
 import type { Student, InvestmentCategory, InvestmentWithStudent } from '@/types/database'
 import { useServerAction } from '@/presentation/hooks'
 import type { ActionResult } from '@/utils/server-actions'
+import { toDBDateValue, getTodayInputValue } from '@/shared/utils/formatting/date'
 
 interface InvestmentFormProps {
   students: Student[]
@@ -118,8 +119,8 @@ export default function InvestmentForm({
                 required
                 defaultValue={
                   editingInvestment 
-                    ? editingInvestment.fecha.toISOString().split('T')[0]
-                    : new Date().toLocaleDateString('en-CA')
+                    ? toDBDateValue(editingInvestment.fecha)
+                    : getTodayInputValue()
                 }
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
               />

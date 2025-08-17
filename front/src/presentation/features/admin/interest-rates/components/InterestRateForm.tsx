@@ -8,6 +8,7 @@
 import { X } from 'lucide-react'
 import type { InterestRateHistory, Class } from '@/types/database'
 import { ActionResult } from '@/utils/admin-server-action-types'
+import { toDBDateValue } from '@/shared/utils/formatting/date'
 import { InterestRateForClient } from '@/utils/admin-data-types'
 
 interface InterestRateFormProps {
@@ -111,7 +112,7 @@ export default function InterestRateForm({
                   id="effective_date"
                   name="effective_date"
                   required
-                  defaultValue={editingRate ? new Date(editingRate.effective_date).toISOString().split('T')[0] : ''}
+                  defaultValue={editingRate ? toDBDateValue(editingRate.effective_date) : ''}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 lg:py-2"
                 />
               </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { formatearMoneda } from "@/utils/format";
+import { formatCurrency } from "@/shared/utils/formatting";
 import { ClassSettings } from "@/types/database";
 import { calculateDiasRestantes } from "@/logic/calculations";
 import { Calendar, TrendingUp, Target } from "lucide-react";
@@ -55,7 +55,7 @@ export default function Estimado({ montoEstimado, classSettings, className, ...p
           <span className="text-sm font-medium text-green-600">Proyección optimista</span>
         </div>
         <div className="text-4xl font-bold text-gray-800">
-          {formatearMoneda(montoEstimado)}
+          {formatCurrency(montoEstimado)}
         </div>
         <p className="text-xs text-gray-500 mt-2">
           Basado en la tasa de interés actual

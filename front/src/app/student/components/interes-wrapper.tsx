@@ -3,6 +3,7 @@ import React from "react";
 import { ServerDataService } from "@/services/server-data-service";
 import InteresCollapsible from "./interes-collapsible";
 import { InterestRateHistory, RateDataPoint } from "@/types/database";
+import { formatPercentage } from "@/shared/utils/formatting";
 
 interface InteresWrapperProps {
   studentId: number;
@@ -23,11 +24,7 @@ export default async function InteresWrapper({ studentId }: InteresWrapperProps)
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const day = String(date.getDate()).padStart(2, "0");
       const formattedDate = `${day}/${month}/${year}`;
-      const percentage = rate.monthly_interest_rate * 100;
-      const formattedPercentage = percentage.toLocaleString("es-AR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
+      const formattedPercentage = formatPercentage(rate.monthly_interest_rate);
 
       return {
         date: formattedDate,

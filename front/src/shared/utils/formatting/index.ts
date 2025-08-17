@@ -9,7 +9,6 @@ export {
   formatDateTime,
   formatTimeAgo,
   formatDateForDisplay,
-  formatearFecha,
   toDateInputValue,
   fromDateInputValue,
   getTodayInputValue,
@@ -21,14 +20,12 @@ export {
 export {
   formatCurrency,
   formatNumber,
-  formatCompactCurrency,
-  formatearMoneda
+  formatCompactCurrency
 } from './currency';
 
 // Percentage formatting
 export {
   formatPercentage,
   formatPercentageFromDecimal,
-  formatPercentageFromWhole,
-  formatearPorcentaje
+  formatPercentageFromWhole
 } from './percentage';

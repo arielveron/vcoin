@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { formatearMoneda } from "@/utils/format";
+import { formatCurrency } from "@/shared/utils/formatting";
 import InterestRateGraph from "./interest-rate-graph";
 import DisclaimerModal from "./disclaimer-modal";
 import { useCollapsibleStore } from "@/presentation/hooks/useCollapsibleStore";
@@ -108,7 +108,7 @@ export default function InteresCollapsible({
                       }}
                       title="Haz clic para ver información importante"
                     >
-                      {formatearMoneda(currentRate * 100)}%
+                      {formatCurrency(currentRate * 100)}%
                     </span>
                     {direction && <Icon className={`w-4 h-4 ${trendColor}`} />}
                     {latestRateChange && latestRateChange.previous_rate !== null && latestRateChange.previous_rate !== undefined && !isNaN(latestRateChange.previous_rate) && (
@@ -181,7 +181,7 @@ export default function InteresCollapsible({
                     }}
                     title="Haz clic para ver información importante"
                   >
-                    ⚠️ {formatearMoneda(currentRate * 100)}%
+                    ⚠️ {formatCurrency(currentRate * 100)}%
                   </span>
                   {latestRateChange && latestRateChange.previous_rate !== null && latestRateChange.previous_rate !== undefined && !isNaN(latestRateChange.previous_rate) && (
                     <span className={`text-sm ${trendColor} font-medium`}>
@@ -192,7 +192,7 @@ export default function InteresCollapsible({
                 </div>
                 {latestRateChange && latestRateChange.previous_rate !== null && latestRateChange.previous_rate !== undefined && !isNaN(latestRateChange.previous_rate) && (
                   <p className="text-xs text-center mt-2 text-gray-600">
-                    {direction === "up" ? "Subió" : "Bajó"} desde {formatearMoneda(latestRateChange.previous_rate * 100)}%
+                    {direction === "up" ? "Subió" : "Bajó"} desde {formatCurrency(latestRateChange.previous_rate * 100)}%
                   </p>
                 )}
               </div>

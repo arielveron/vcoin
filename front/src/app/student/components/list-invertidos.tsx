@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import IconRenderer from "@/components/icon-renderer";
 import { InvestmentCategory } from "@/types/database";
 import { ChevronDown, ChevronRight, Wallet, Calendar, DollarSign } from "lucide-react";
+import { formatCurrency } from "@/shared/utils/formatting";
 
 interface InvestmentItem {
   id: number;
@@ -35,7 +36,8 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
 
   // Group investments by month for better organization
   const investmentsByMonth = listInvertidos.reduce((acc, item) => {
-    const monthKey = item.fecha.toLocaleDateString("es-AR", { year: "numeric", month: "long" });
+    const date = new Date(item.fecha);
+    const monthKey = date.toLocaleDateString("es-AR", { year: "numeric", month: "long" });
     if (!acc[monthKey]) {
       acc[monthKey] = [];
     }
@@ -69,7 +71,7 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
           <div className="text-right">
             <p className="text-xs text-gray-500">Total invertido</p>
             <p className="text-base sm:text-xl font-bold text-indigo-600 whitespace-nowrap">
-              $ {totalInvertido.toLocaleString("es-AR")}
+              {formatCurrency(totalInvertido)}
             </p>
           </div>
           <div className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors">
@@ -184,7 +186,7 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
                                   )}
                                 </div>
                                 <p className="text-xs text-gray-500 mt-1">
-                                  {item.fecha.toLocaleDateString("es-AR", {
+                                  {new Date(item.fecha).toLocaleDateString("es-AR", {
                                     weekday: "short",
                                     day: "numeric",
                                     month: "short",
@@ -199,7 +201,7 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
                         <div className="flex-shrink-0 ml-4">
                           <div className="flex items-center space-x-1 text-green-600">
                             <DollarSign className="w-4 h-4" />
-                            <span className="font-semibold">{item.monto.toLocaleString("es-AR")}</span>
+                                                        <span className="font-semibold">{formatCurrency(item.monto)}</span>
                           </div>
                         </div>
                       </div>
@@ -215,11 +217,7 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-600">Total de {listInvertidos.length} inversiones registradas</p>
               <p className="text-sm font-medium text-gray-800">
-                Promedio:{" "}
-                {(totalInvertido / listInvertidos.length).toLocaleString("es-AR", {
-                  maximumFractionDigits: 0,
-                })}{" "}
-                $
+                Promedio: {formatCurrency(totalInvertido / listInvertidos.length)}
               </p>
             </div>
           </div>

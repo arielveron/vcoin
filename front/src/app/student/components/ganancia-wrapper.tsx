@@ -1,6 +1,6 @@
 // ganancia-wrapper.tsx
 import React from "react";
-import { formatearMoneda } from "@/utils/format";
+import { formatCurrency } from "@/shared/utils/formatting";
 import { ServerDataService } from "@/services/server-data-service";
 import GananciaCollapsible from "./ganancia-collapsible";
 import { GraphDataPoint, InvestmentMarker, RateChangeMarker, HistoricalAmount } from "@/types/database";
@@ -20,7 +20,7 @@ export default async function GananciaWrapper({ gananciaTotal, studentId }: Gana
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const day = String(date.getDate()).padStart(2, "0");
       const formattedDate = `${day}/${month}/${year}`;
-      const formattedAmount = formatearMoneda(item.amount, 0);
+      const formattedAmount = formatCurrency(item.amount, { decimals: 0 });
 
       return {
         date: formattedDate,

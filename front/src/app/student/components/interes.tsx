@@ -1,9 +1,10 @@
 import React from "react";
-import { formatearMoneda } from "@/utils/format";
+import { formatCurrency } from "@/shared/utils/formatting";
 import { ClassSettings, InterestRateHistory } from "@/types/database";
 import { ServerDataService } from "@/services/server-data-service";
 import InterestRateGraph from "./interest-rate-graph";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { formatPercentage } from "@/shared/utils/formatting";
 
 interface InteresProps {
   classSettings: ClassSettings;
@@ -29,11 +30,7 @@ export default async function Interes({ studentId }: InteresProps) {
       const formattedDate = `${day}/${month}/${year}`;
 
       // Pre-format the percentage to avoid locale-based hydration issues
-      const percentage = rate.monthly_interest_rate * 100;
-      const formattedPercentage = percentage.toLocaleString("es-AR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
+      const formattedPercentage = formatPercentage(rate.monthly_interest_rate);
 
       return {
         date: formattedDate,
@@ -96,7 +93,7 @@ export default async function Interes({ studentId }: InteresProps) {
       {/* Main Rate Display */}
       <div className={`bg-gradient-to-r ${bgGradient} rounded-lg p-4 mb-4`}>
         <div className="flex items-baseline justify-center space-x-2">
-          <span className={`text-3xl font-bold ${trendColor}`}>{formatearMoneda(currentRate * 100)}%</span>
+          <span className={`text-3xl font-bold ${trendColor}`}>{formatCurrency(currentRate * 100)}%</span>
           {latestRateChange && latestRateChange.previous_rate !== null && latestRateChange.previous_rate !== undefined && !isNaN(latestRateChange.previous_rate) && (
             <span className={`text-sm ${trendColor} font-medium`}>
               {direction === "up" ? "+" : "-"}
@@ -110,7 +107,7 @@ export default async function Interes({ studentId }: InteresProps) {
         {latestRateChange && latestRateChange.previous_rate !== null && latestRateChange.previous_rate !== undefined && !isNaN(latestRateChange.previous_rate) && (
           <div>
             <p className="text-xs text-center mt-2 text-gray-600">
-              {direction === "up" ? "Subió" : "Bajó"} desde {formatearMoneda(latestRateChange.previous_rate * 100)}%
+              {direction === "up" ? "Subió" : "Bajó"} desde {formatCurrency(latestRateChange.previous_rate * 100)}%
             </p>
             <p className="text-xs text-center mt-2 text-gray-600">
               {direction === "up" ? "¡Excelente rendimiento!" : "Mantén la calma, el mercado fluctúa"}

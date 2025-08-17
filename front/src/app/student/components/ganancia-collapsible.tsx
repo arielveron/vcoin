@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { formatearMoneda } from "@/utils/format";
+import { formatCurrency } from "@/shared/utils/formatting";
 import Image from "next/image";
 import HistoricalGainsGraph from "./historical-gains-graph";
 import { useCollapsibleStore } from "@/presentation/hooks/useCollapsibleStore";
@@ -83,7 +83,7 @@ export default function GananciaCollapsible({
                     <div className="flex items-baseline space-x-1">
                       {isPositive && <span className={`text-xl font-bold ${textColor}`}>+</span>}
                       <span className={`text-2xl font-bold ${textColor}`}>
-                        {formatearMoneda(Math.abs(gananciaTotal), 2)}%
+                        {formatCurrency(Math.abs(gananciaTotal), { decimals: 2 })}%
                       </span>
                     </div>
                     <Image src="/vcoin-xs.gif" alt="Vcoin Logo" width={16} height={16} className="opacity-60" unoptimized />
@@ -152,7 +152,7 @@ export default function GananciaCollapsible({
                   <div className="flex items-baseline space-x-1">
                     {isPositive && <span className={`text-2xl font-bold ${textColor}`}>+</span>}
                     <span className={`text-3xl font-bold ${textColor}`}>
-                      {formatearMoneda(Math.abs(gananciaTotal), 2)}%
+                      {formatCurrency(Math.abs(gananciaTotal), { decimals: 2 })}%
                     </span>
                   </div>
                 </div>

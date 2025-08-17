@@ -3,7 +3,7 @@
  * Follows the project's server-side formatting principle to prevent hydration mismatches
  */
 
-import { formatDate } from './format'
+import { formatDate } from '@/shared/utils/formatting'
 
 /**
  * Adds formatted date fields to an array of entities

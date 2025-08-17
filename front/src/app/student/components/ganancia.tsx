@@ -1,4 +1,4 @@
-import { formatearMoneda } from "@/utils/format";
+import { formatCurrency } from "@/shared/utils/formatting";
 import Image from "next/image";
 import React from "react";
 import { ServerDataService } from "@/services/server-data-service";
@@ -21,7 +21,7 @@ export default async function Ganancia({ gananciaTotal, studentId }: GananciaPro
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const day = String(date.getDate()).padStart(2, "0");
       const formattedDate = `${day}/${month}/${year}`;
-      const formattedAmount = formatearMoneda(item.amount, 0);
+      const formattedAmount = formatCurrency(item.amount, { decimals: 0 });
 
       return {
         date: formattedDate,
@@ -81,7 +81,7 @@ export default async function Ganancia({ gananciaTotal, studentId }: GananciaPro
         <div className="flex items-center justify-center space-x-3">
           <div className="flex items-baseline space-x-1">
             {isPositive && <span className={`text-2xl font-bold ${textColor}`}>+</span>}
-            <span className={`text-3xl font-bold ${textColor}`}>{formatearMoneda(Math.abs(gananciaTotal), 2)}%</span>
+            <span className={`text-3xl font-bold ${textColor}`}>{formatCurrency(Math.abs(gananciaTotal), { decimals: 2 })}%</span>
           </div>
         </div>
       </div>

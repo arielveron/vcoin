@@ -39,9 +39,6 @@ export const formatTimeAgo = (date: Date | string): string => {
   return formatDate(d);
 };
 
-// Legacy alias for backward compatibility
-export const formatearFecha = formatDate;
-
 /**
  * Convert a date string or Date object to YYYY-MM-DD format for HTML date inputs
  * Handles timezone conversion to avoid date shifting

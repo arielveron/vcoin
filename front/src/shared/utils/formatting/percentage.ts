@@ -43,6 +43,3 @@ export const formatPercentageFromWhole = (
 ): string => {
   return formatPercentage(wholeNumber / 100, options);
 };
-
-// Legacy alias for backward compatibility
-export const formatearPorcentaje = formatPercentage;

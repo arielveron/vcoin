@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { CreateClassRequest } from '@/types/database'
+import { toDBDateValue } from '@/shared/utils/formatting/date'
 import { ClassesPageProps } from '@/utils/admin-server-action-types'
 import { ClassForClient } from '@/utils/admin-data-types'
 
@@ -144,7 +145,7 @@ export default function ClassForm({
               <input
                 type="date"
                 name="end_date"
-                value={formData.end_date.toISOString().split('T')[0]}
+                value={toDBDateValue(formData.end_date)}
                 onChange={(e) => setFormData(prev => ({ ...prev, end_date: new Date(e.target.value) }))}
                 className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-3 lg:py-2 text-base lg:text-sm"
                 required
