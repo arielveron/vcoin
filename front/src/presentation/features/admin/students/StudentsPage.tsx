@@ -15,7 +15,8 @@ import {
   StudentsTable,
   StudentForm,
   PasswordDialog,
-  StudentFilters
+  StudentFilters,
+  StudentInvestmentFilters
 } from './components'
 import type { Student } from '@/types/database'
 import { 
@@ -30,6 +31,7 @@ import {
 export default function StudentsPage({
   initialStudents,
   classes,
+  categories,
   createStudent,
   updateStudent,
   deleteStudent,
@@ -166,6 +168,14 @@ export default function StudentsPage({
             />
           </div>
         </div>
+        
+        {/* Investment Filters */}
+        <StudentInvestmentFilters
+          categories={categories}
+          filters={filters}
+          onFiltersChange={updateFilters}
+          className="lg:max-w-md"
+        />
       </div>
 
       {/* Student Form Modal */}

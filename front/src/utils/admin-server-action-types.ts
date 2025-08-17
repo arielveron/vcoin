@@ -115,6 +115,7 @@ export interface AdminActions extends
 export interface StudentsPageProps {
   initialStudents: StudentForClient[]
   classes: Class[]
+  categories: InvestmentCategory[]
   createStudent: (formData: FormData) => Promise<ActionResult<Student>>
   updateStudent: (formData: FormData) => Promise<ActionResult<Student>>
   deleteStudent: (formData: FormData) => Promise<ActionResult<DeleteResult>>

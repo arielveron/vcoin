@@ -167,6 +167,57 @@ export class AdminService {
     return investmentCounts;
   }
 
+  async getFilteredInvestmentCountsByStudents(
+    studentIds: number[],
+    filters: {
+      searchText?: string | null
+      categoryId?: number | null
+      date?: string | null
+    }
+  ): Promise<Map<number, number>> {
+    const investmentCounts = new Map<number, number>();
+    
+    // Initialize all students with 0 counts
+    studentIds.forEach(id => investmentCounts.set(id, 0));
+    
+    // Get all investments and apply filters
+    const allInvestments = await this.investmentRepo.findAll();
+    
+    const filteredInvestments = allInvestments.filter(investment => {
+      // Filter by student IDs
+      if (!studentIds.includes(investment.student_id)) return false;
+      
+      // Filter by search text (concept)
+      if (filters.searchText && !investment.concepto.toLowerCase().includes(filters.searchText.toLowerCase())) {
+        return false;
+      }
+      
+      // Filter by category
+      if (filters.categoryId && investment.category_id !== filters.categoryId) {
+        return false;
+      }
+      
+      // Filter by date
+      if (filters.date) {
+        const filterDate = new Date(filters.date);
+        const investmentDate = new Date(investment.fecha);
+        if (investmentDate.toDateString() !== filterDate.toDateString()) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+    
+    // Count filtered investments by student
+    filteredInvestments.forEach(investment => {
+      const currentCount = investmentCounts.get(investment.student_id) || 0;
+      investmentCounts.set(investment.student_id, currentCount + 1);
+    });
+    
+    return investmentCounts;
+  }
+
   // Investment management
   async getAllInvestments(): Promise<InvestmentWithStudent[]> {
     return await this.investmentRepo.findWithStudentInfo();

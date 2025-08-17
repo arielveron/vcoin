@@ -7,7 +7,13 @@ import { createStudent, updateStudent, deleteStudent, setStudentPassword } from 
 import { formatStudentsForClient } from '@/utils/admin-data-types'
 
 interface StudentsPageProps {
-  searchParams: Promise<{ qc?: string, qs?: string }>
+  searchParams: Promise<{ 
+    qc?: string, 
+    qs?: string, 
+    qcat?: string, 
+    qd?: string, 
+    qt?: string 
+  }>
 }
 
 export default async function StudentsAdminPage({ searchParams }: StudentsPageProps) {
@@ -27,10 +33,22 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
     : await adminService.getAllStudents()
   
   const classes = await adminService.getAllClasses()
+  const categories = await adminService.getAllCategories(true) // Only active categories
 
-  // Get investment counts for all students
+  // Check if investment filters are active
+  const investmentFilters = {
+    categoryId: params.qcat ? parseInt(params.qcat) : null,
+    date: params.qd || null,
+    searchText: params.qt || null
+  }
+  
+  const hasInvestmentFilters = investmentFilters.categoryId || investmentFilters.date || investmentFilters.searchText
+
+  // Get investment counts for all students (filtered or unfiltered)
   const studentIds = students.map(student => student.id)
-  const investmentCounts = await adminService.getInvestmentCountsByStudents(studentIds)
+  const investmentCounts = hasInvestmentFilters
+    ? await adminService.getFilteredInvestmentCountsByStudents(studentIds, investmentFilters)
+    : await adminService.getInvestmentCountsByStudents(studentIds)
 
   // Format data for client components with investment counts
   const studentsForClient = formatStudentsForClient(students, investmentCounts)
@@ -48,6 +66,7 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
         <StudentsPage 
           initialStudents={studentsForClient} 
           classes={classes}
+          categories={categories}
           createStudent={createStudent}
           updateStudent={updateStudent}
           deleteStudent={deleteStudent}

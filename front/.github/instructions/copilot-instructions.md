@@ -62,6 +62,23 @@ Complex financial calculations in `/src/core/domain/investment/calculations.ts`:
 - Historical rate tracking with effective dates
 - End-date finalization vs. real-time calculations
 
+#### Cross-Entity Filter Pattern
+For features requiring filtered data from related entities (e.g., filtered investment counts on Students page):
+- **Enhanced Service Methods**: Add filtered versions alongside basic methods (`getInvestmentCountsByStudents` + `getFilteredInvestmentCountsByStudents`)
+- **Server Component Logic**: Detect active filters and choose appropriate service method
+- **Reusable Filter Components**: Create entity-specific filter components that share the same URL parameters
+- **Client-Side Transformation**: Use centralized utilities to transform server action results to match client component expectations
+
+```typescript
+// Example: Students page with investment count filtering
+const hasInvestmentFilters = filters.categoryId || filters.date || filters.searchText
+const investmentCounts = hasInvestmentFilters
+  ? await adminService.getFilteredInvestmentCountsByStudents(studentIds, investmentFilters)
+  : await adminService.getInvestmentCountsByStudents(studentIds)
+```
+
+**Benefits**: Maintains architectural consistency, reuses existing filter infrastructure, preserves separation of concerns
+
 ## Development Workflows
 
 ### Database Setup
@@ -178,7 +195,13 @@ import {
 
 // In server components (page.tsx)
 const rawStudents = await adminService.getAllStudents()
-const studentsForClient = formatStudentsForClient(rawStudents)
+
+// Get investment counts for computed properties
+const studentIds = rawStudents.map(student => student.id)
+const investmentCounts = await adminService.getInvestmentCountsByStudents(studentIds)
+
+// Use centralized formatters with computed data
+const studentsForClient = formatStudentsForClient(rawStudents, investmentCounts)
 
 // Pass to client component with proper typing
 <StudentsAdminClient initialStudents={studentsForClient} />
@@ -223,10 +246,32 @@ const isWideScreen = useMediaQuery('(min-width: 768px)')
 const { isExpanded, toggle } = useCollapsibleStore()
 ```
 
+**Client-Side Transformation Pattern:**
+```typescript
+// When server actions return raw database objects but client expects formatted types
+const handleFormSuccess = (rawStudent: Student) => {
+  // Transform raw result to match client component expectations
+  const studentForClient = formatStudentForClient(rawStudent, 0) // 0 investment count for new student
+  
+  if (editingStudent) {
+    // Update existing student in state
+    setStudents(students.map(s =>
+      s.id === editingStudent.id ? studentForClient : s
+    ))
+  } else {
+    // Add new student to state
+    setStudents([studentForClient, ...students])
+  }
+}
+```
+
+**Benefits**: Maintains server action return type consistency while enabling rich client-side data
+
 ### Data Types
 - **Dates**: Always use `Date` objects, not strings (PostgreSQL handles conversion)
 - **Currency**: Integer storage (cents), formatted display with `es-AR` locale
 - **Registry Numbers**: Student identification system via `registro` field
+- **Computed Properties**: Include computed fields like `investment_count` in `*ForClient` types for rich UI data
 
 ### Formatting Standards
 - **Currency**: `es-AR` locale with ARS symbol
@@ -262,7 +307,7 @@ const classesForClient = withFormattedDates(classes, [...DateFieldSets.CLASS_FIE
 **Available Centralized Formatters:**
 ```typescript
 // From /src/utils/admin-data-types.ts
-formatStudentsForClient(students) → StudentForClient[]
+formatStudentsForClient(students, investmentCounts?) → StudentForClient[] // Includes investment_count
 formatClassesForClient(classes) → ClassForClient[]
 formatInvestmentsForClient(investments) → InvestmentForClient[]
 formatCategoriesForClient(categories) → CategoryForClient[]
@@ -469,6 +514,7 @@ npm run setup     # Complete database + auth setup
 - **Student password management**: Use admin panel or `StudentAuthService` methods
 - **New admin features**: Create `page.tsx` (server), `*-admin-client.tsx` (client), `actions.ts` (forms)
 - **New server actions**: Use `withAdminAuth()` or `withStudentAuth()` wrappers from `/src/utils/server-actions.ts`
+- **Cross-entity filtering**: Add filtered service methods (e.g., `getFilteredInvestmentCountsByStudents`), detect filter state in server components, create reusable filter components
 - **Shared utilities**: Add to `/src/shared/utils/` for pure functions (formatting, validation, errors)
 - **Business logic**: Add to `/src/core/domain/` organized by entity (investment, student, etc.)
 - **UI patterns**: Create reusable hooks in `/src/presentation/hooks/` for common component logic
