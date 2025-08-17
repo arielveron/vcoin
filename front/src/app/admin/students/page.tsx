@@ -28,8 +28,12 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
   
   const classes = await adminService.getAllClasses()
 
-  // Format data for client components
-  const studentsForClient = formatStudentsForClient(students)
+  // Get investment counts for all students
+  const studentIds = students.map(student => student.id)
+  const investmentCounts = await adminService.getInvestmentCountsByStudents(studentIds)
+
+  // Format data for client components with investment counts
+  const studentsForClient = formatStudentsForClient(students, investmentCounts)
 
   return (
     <div className="space-y-6">

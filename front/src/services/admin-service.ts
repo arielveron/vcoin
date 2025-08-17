@@ -148,6 +148,25 @@ export class AdminService {
     return await this.studentRepo.delete(id);
   }
 
+  async getInvestmentCountsByStudents(studentIds: number[]): Promise<Map<number, number>> {
+    const investmentCounts = new Map<number, number>();
+    
+    // Initialize all students with 0 counts
+    studentIds.forEach(id => investmentCounts.set(id, 0));
+    
+    // Get all investments and count by student
+    const allInvestments = await this.investmentRepo.findAll();
+    
+    allInvestments.forEach(investment => {
+      if (studentIds.includes(investment.student_id)) {
+        const currentCount = investmentCounts.get(investment.student_id) || 0;
+        investmentCounts.set(investment.student_id, currentCount + 1);
+      }
+    });
+    
+    return investmentCounts;
+  }
+
   // Investment management
   async getAllInvestments(): Promise<InvestmentWithStudent[]> {
     return await this.investmentRepo.findWithStudentInfo();

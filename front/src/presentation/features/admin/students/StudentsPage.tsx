@@ -23,7 +23,8 @@ import {
   ActionResult 
 } from '@/utils/admin-server-action-types'
 import { 
-  StudentForClient 
+  StudentForClient,
+  formatStudentForClient 
 } from '@/utils/admin-data-types'
 
 export default function StudentsPage({
@@ -60,20 +61,15 @@ export default function StudentsPage({
 
   const handleFormSuccess = (student: Student) => {
     if (editingStudent) {
-      // Update existing student
+      // Update existing student - preserve investment_count from original
+      const updatedStudent = formatStudentForClient(student, editingStudent.investment_count)
       setStudents(students.map(s => 
-        s.id === editingStudent.id 
-          ? { ...student, created_at_formatted: s.created_at_formatted, updated_at_formatted: s.updated_at_formatted }
-          : s
+        s.id === editingStudent.id ? updatedStudent : s
       ))
       setEditingStudent(null)
     } else {
-      // Add new student
-      const newStudentForClient = {
-        ...student,
-        created_at_formatted: new Date(student.created_at).toLocaleDateString('es-AR'),
-        updated_at_formatted: new Date(student.updated_at).toLocaleDateString('es-AR')
-      }
+      // Add new student - new students start with 0 investments
+      const newStudentForClient = formatStudentForClient(student, 0)
       setStudents([...students, newStudentForClient])
     }
     setIsFormOpen(false)

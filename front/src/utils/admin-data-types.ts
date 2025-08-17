@@ -32,7 +32,9 @@ import type {
  * Student with formatted dates for client display
  * Used across all admin components that display student data
  */
-export type StudentForClient = WithFormattedDates<Student, 'created_at' | 'updated_at'>
+export type StudentForClient = WithFormattedDates<Student, 'created_at' | 'updated_at'> & {
+  investment_count: number
+}
 
 /**
  * Class with formatted dates for client display
@@ -91,13 +93,22 @@ export type BatchInvestmentRowForClient = BatchInvestmentRow & {
 // ============================================================================
 
 /**
- * Transform raw students array to client-ready format with formatted dates
+ * Transform raw students array to client-ready format with formatted dates and investment counts
  */
-export function formatStudentsForClient(students: Student[]): StudentForClient[] {
-  return withFormattedDates(
+export function formatStudentsForClient(
+  students: Student[], 
+  investmentCounts: Map<number, number> = new Map()
+): StudentForClient[] {
+  const formattedStudents = withFormattedDates(
     students as unknown as Record<string, unknown>[], 
     [...DateFieldSets.AUDIT_FIELDS]
   ) as unknown as StudentForClient[]
+
+  // Add investment counts
+  return formattedStudents.map(student => ({
+    ...student,
+    investment_count: investmentCounts.get(student.id) || 0
+  }))
 }
 
 /**
@@ -170,9 +181,12 @@ export function formatAchievementsForClient(achievements: Achievement[]): Achiev
 /**
  * Convert a single raw Student to StudentForClient format
  * Useful for form callbacks and individual student operations
+ * Note: investment_count will be 0 unless provided via optional parameter
  */
-export function formatStudentForClient(student: Student): StudentForClient {
-  return formatStudentsForClient([student])[0]
+export function formatStudentForClient(student: Student, investmentCount: number = 0): StudentForClient {
+  const investmentCounts = new Map<number, number>()
+  investmentCounts.set(student.id, investmentCount)
+  return formatStudentsForClient([student], investmentCounts)[0]
 }
 
 /**

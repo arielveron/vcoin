@@ -29,9 +29,13 @@ export default async function InvestmentsAdminPage({ searchParams }: Investments
   const classes = await adminService.getAllClasses()
   const categories = await adminService.getAllCategories(true) // Only active categories
 
+  // Get investment counts for students
+  const studentIds = students.map(student => student.id)
+  const investmentCounts = await adminService.getInvestmentCountsByStudents(studentIds)
+
   // Use centralized formatting utilities
   const investmentsForClient = formatInvestmentsForClient(investments)
-  const studentsForClient = formatStudentsForClient(students)
+  const studentsForClient = formatStudentsForClient(students, investmentCounts)
   const classesForClient = formatClassesForClient(classes)
 
   return (

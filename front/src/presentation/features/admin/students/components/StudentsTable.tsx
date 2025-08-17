@@ -61,6 +61,18 @@ export default function StudentsTable({
       }
     },
     {
+      key: 'investment_count',
+      header: 'Inversiones',
+      hideOnMobile: true,
+      render: (student: StudentForClient) => (
+        <div className="text-center">
+          <span className="inline-flex px-2 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800">
+            {student.investment_count}
+          </span>
+        </div>
+      )
+    },
+    {
       key: 'password_status',
       header: 'Password Status',
       hideOnMobile: true,
@@ -150,10 +162,16 @@ export default function StudentsTable({
           </div>
         )}
         
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-2">
           <span className="text-sm text-gray-600">
             Clase: {studentClass?.name || 'Sin clase asignada'}
           </span>
+          <span className="inline-flex px-2 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800">
+            {student.investment_count} inversiones
+          </span>
+        </div>
+        
+        <div className="flex justify-end">
           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
             student.password_hash 
               ? 'bg-green-100 text-green-800' 
