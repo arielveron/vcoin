@@ -12,7 +12,7 @@ export default async function StudentPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <main className="py-6 sm:py-8 lg:py-12">
-        <StudentMainScreen studentId={session.student_id} />
+        <StudentMainScreen studentId={session.student_id} studentSession={session} />
       </main>
       
       <footer className="py-8 text-center">

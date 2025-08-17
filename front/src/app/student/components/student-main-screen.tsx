@@ -7,12 +7,14 @@ import ListInvertidos from "./list-invertidos";
 import DashboardAchievementCelebrations from "./dashboard-achievement-celebrations";
 import { CollapsibleProvider } from "@/presentation/hooks/useCollapsibleStore";
 import { ServerDataService } from "@/services/server-data-service";
+import { StudentSession } from "@/types/database";
 
 interface StudentMainScreenProps {
   studentId: number;
+  studentSession: StudentSession;
 }
 
-export default async function StudentMainScreen({ studentId }: StudentMainScreenProps) {
+export default async function StudentMainScreen({ studentId, studentSession }: StudentMainScreenProps) {
   // Fetch data for the specific student
   const totalInvertido = await ServerDataService.getTotalInvested(studentId);
   const listInvertidos = await ServerDataService.getInvestmentsList(studentId);
@@ -23,8 +25,11 @@ export default async function StudentMainScreen({ studentId }: StudentMainScreen
   const gananciaTotal = await ServerDataService.calculateGananciaTotal(studentId);
   const montoEstimado = await ServerDataService.calculateMontoEstimado(studentId);
 
-  // Fetch achievement data for celebrations
-  const unseenAchievements = await ServerDataService.getUnseenAchievements(studentId);
+  // Fetch achievement data for celebrations with personalization
+  const unseenAchievements = await ServerDataService.getPersonalizedUnseenAchievements(
+    studentId, 
+    studentSession.personalizacion || null
+  );
 
   // Determine the first investment date for the list
   const firstInvestmentDate =

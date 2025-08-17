@@ -10,8 +10,11 @@ export default async function AchievementsPage() {
     redirect('/login');
   }
 
-  // Fetch achievement data for the authenticated student
-  const achievements = await ServerDataService.getStudentAchievements(session.student_id);
+  // Fetch achievement data for the authenticated student with personalization
+  const achievements = await ServerDataService.getPersonalizedStudentAchievements(
+    session.student_id, 
+    session.personalizacion || null
+  );
   const achievementStats = await ServerDataService.getStudentAchievementStats(session.student_id);
   // Note: We don't fetch unseenAchievements here because celebrations happen on dashboard
 

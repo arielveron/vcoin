@@ -123,16 +123,22 @@ export const updateStudentProfile = withStudentAuth(async (formData: FormData) =
     throw new Error('Not authenticated')
   }
 
-  const missing = validateRequired(formData, ['current_password'])
-  if (missing.length > 0) {
-    throw new Error(`Missing required fields: ${missing.join(', ')}`)
-  }
-
   const email = formData.get('email') as string
   const current_password = formData.get('current_password') as string
   const new_password = formData.get('new_password') as string
+  const personalizacion = formData.get('personalizacion') as string
 
-  const updateData: { email?: string; password?: string; current_password?: string } = {}
+  // Only require current_password if changing email or password
+  if ((email !== session.email || new_password) && !current_password) {
+    throw new Error('Current password is required to change email or password')
+  }
+
+  const updateData: { 
+    email?: string; 
+    password?: string; 
+    current_password?: string; 
+    personalizacion?: 'A' | 'O' | null;
+  } = {}
   
   if (email !== session.email) {
     updateData.email = email
@@ -146,7 +152,15 @@ export const updateStudentProfile = withStudentAuth(async (formData: FormData) =
     updateData.current_password = current_password
   }
 
-  if (Object.keys(updateData).length <= 1) { // Only current_password
+  // Handle personalization - convert empty string to null
+  const personalizedValue = personalizacion === '' ? null : (personalizacion as 'A' | 'O' | null)
+  if (personalizedValue !== session.personalizacion) {
+    updateData.personalizacion = personalizedValue
+  }
+
+  // Check if there are actual changes (excluding current_password which is just for verification)
+  const changeFields = Object.keys(updateData).filter(key => key !== 'current_password')
+  if (changeFields.length === 0) {
     throw new Error('No changes to save')
   }
 

@@ -14,9 +14,12 @@ export default async function StudentLayout({
     redirect('/login');
   }
 
-  // Fetch achievement data for navigation
+  // Fetch achievement data for navigation with personalization
   const achievementStats = await ServerDataService.getStudentAchievementStats(session.student_id);
-  const unseenAchievements = await ServerDataService.getUnseenAchievements(session.student_id);
+  const unseenAchievements = await ServerDataService.getPersonalizedUnseenAchievements(
+    session.student_id, 
+    session.personalizacion || null
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">

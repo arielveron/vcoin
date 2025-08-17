@@ -141,6 +141,12 @@ export class StudentAuthService {
         values.push(request.email);
       }
 
+      // Update personalization if provided
+      if (request.personalizacion !== undefined) {
+        updates.push(`personalizacion = $${paramCount++}`);
+        values.push(request.personalizacion);
+      }
+
       if (updates.length === 0) {
         return { success: false, error: 'No updates provided' };
       }
@@ -170,7 +176,7 @@ export class StudentAuthService {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        SELECT s.id, s.registro, s.name, s.email, s.class_id, c.name as class_name
+        SELECT s.id, s.registro, s.name, s.email, s.class_id, s.personalizacion, c.name as class_name
         FROM students s
         JOIN classes c ON s.class_id = c.id
         WHERE s.id = $1
@@ -187,7 +193,8 @@ export class StudentAuthService {
         name: student.name,
         email: student.email,
         class_id: student.class_id,
-        class_name: student.class_name
+        class_name: student.class_name,
+        personalizacion: student.personalizacion
       };
     } finally {
       client.release();

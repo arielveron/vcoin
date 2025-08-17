@@ -91,6 +91,7 @@ export interface Student {
   email: string;
   class_id: number;
   password_hash?: string; // Optional password hash for student authentication
+  personalizacion?: 'A' | 'O' | null; // Personalization preference: A (feminine), O (masculine), null (not defined)
   created_at: Date;
   updated_at: Date;
 }
@@ -184,6 +185,7 @@ export interface StudentSession {
   email: string;
   class_id: number;
   class_name: string;
+  personalizacion?: 'A' | 'O' | null;
 }
 
 export interface StudentPasswordChangeRequest {
@@ -195,12 +197,15 @@ export interface StudentProfileUpdateRequest {
   email?: string;
   password?: string;
   current_password?: string;
+  personalizacion?: 'A' | 'O' | null;
 }
 
 // Achievement types
 export interface Achievement {
   id: number;
   name: string;
+  name_a?: string | null; // Optional feminine variant name
+  name_o?: string | null; // Optional masculine variant name
   description: string;
   category: 'academic' | 'consistency' | 'milestone' | 'special';
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
@@ -260,6 +265,8 @@ export interface AchievementWithProgress extends Achievement {
 
 export interface CreateAchievementRequest {
   name: string;
+  name_a?: string; // Optional feminine variant name
+  name_o?: string; // Optional masculine variant name
   description: string;
   category: Achievement['category'];
   rarity: Achievement['rarity'];

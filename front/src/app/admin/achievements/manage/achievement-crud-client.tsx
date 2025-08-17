@@ -14,6 +14,8 @@ interface Props {
 
 interface AchievementFormData {
   name: string;
+  name_a?: string; // Optional feminine variant name
+  name_o?: string; // Optional masculine variant name
   description: string;
   category: 'academic' | 'consistency' | 'milestone' | 'special';
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
@@ -34,6 +36,8 @@ interface AchievementFormData {
 
 const initialFormData: AchievementFormData = {
   name: '',
+  name_a: '',
+  name_o: '',
   description: '',
   category: 'academic',
   rarity: 'common',
@@ -173,6 +177,38 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
+          />
+        </div>
+
+        {/* Name Feminine Variant (A) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Feminine Variant (A)
+            <span className="text-xs text-gray-500 ml-1">(Optional)</span>
+          </label>
+          <input
+            type="text"
+            name="name_a"
+            value={formData.name_a || ''}
+            onChange={(e) => setFormData({ ...formData, name_a: e.target.value })}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="e.g., Inversora"
+          />
+        </div>
+
+        {/* Name Masculine Variant (O) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Masculine Variant (O)
+            <span className="text-xs text-gray-500 ml-1">(Optional)</span>
+          </label>
+          <input
+            type="text"
+            name="name_o"
+            value={formData.name_o || ''}
+            onChange={(e) => setFormData({ ...formData, name_o: e.target.value })}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="e.g., Inversor"
           />
         </div>
 
@@ -649,6 +685,8 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
               setEditingAchievement(achievement);
               setFormData({
                 name: achievement.name,
+                name_a: achievement.name_a || '',
+                name_o: achievement.name_o || '',
                 description: achievement.description,
                 category: achievement.category,
                 rarity: achievement.rarity,
@@ -709,6 +747,8 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
               setEditingAchievement(achievement);
               setFormData({
                 name: achievement.name,
+                name_a: achievement.name_a || '',
+                name_o: achievement.name_o || '',
                 description: achievement.description,
                 category: achievement.category,
                 rarity: achievement.rarity,

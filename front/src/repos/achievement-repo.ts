@@ -13,7 +13,7 @@ export class AchievementRepository {
     try {
       const whereClause = activeOnly ? 'WHERE is_active = true' : '';
       const result = await client.query(`
-        SELECT id, name, description, category, rarity, icon_config, 
+        SELECT id, name, name_a, name_o, description, category, rarity, icon_config, 
                trigger_type, trigger_config, celebration_config, points, 
                sort_order, is_active, created_at, updated_at
         FROM achievements
@@ -30,7 +30,7 @@ export class AchievementRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        SELECT id, name, description, category, rarity, icon_config, 
+        SELECT id, name, name_a, name_o, description, category, rarity, icon_config, 
                trigger_type, trigger_config, celebration_config, points, 
                sort_order, is_active, created_at, updated_at
         FROM achievements
@@ -48,14 +48,16 @@ export class AchievementRepository {
     try {
       const result = await client.query(`
         INSERT INTO achievements (
-          name, description, category, rarity, icon_config, 
+          name, name_a, name_o, description, category, rarity, icon_config, 
           trigger_type, trigger_config, celebration_config, 
           points, sort_order, is_active
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING *
       `, [
         data.name,
+        data.name_a || null,
+        data.name_o || null,
         data.description,
         data.category,
         data.rarity,
@@ -81,22 +83,26 @@ export class AchievementRepository {
         UPDATE achievements
         SET 
           name = COALESCE($2, name),
-          description = COALESCE($3, description),
-          category = COALESCE($4, category),
-          rarity = COALESCE($5, rarity),
-          icon_config = COALESCE($6, icon_config),
-          trigger_type = COALESCE($7, trigger_type),
-          trigger_config = COALESCE($8, trigger_config),
-          celebration_config = COALESCE($9, celebration_config),
-          points = COALESCE($10, points),
-          sort_order = COALESCE($11, sort_order),
-          is_active = COALESCE($12, is_active),
+          name_a = COALESCE($3, name_a),
+          name_o = COALESCE($4, name_o),
+          description = COALESCE($5, description),
+          category = COALESCE($6, category),
+          rarity = COALESCE($7, rarity),
+          icon_config = COALESCE($8, icon_config),
+          trigger_type = COALESCE($9, trigger_type),
+          trigger_config = COALESCE($10, trigger_config),
+          celebration_config = COALESCE($11, celebration_config),
+          points = COALESCE($12, points),
+          sort_order = COALESCE($13, sort_order),
+          is_active = COALESCE($14, is_active),
           updated_at = CURRENT_TIMESTAMP
         WHERE id = $1
         RETURNING *
       `, [
         id,
         data.name,
+        data.name_a !== undefined ? data.name_a || null : undefined,
+        data.name_o !== undefined ? data.name_o || null : undefined,
         data.description,
         data.category,
         data.rarity,
@@ -143,7 +149,9 @@ export class AchievementRepository {
     try {
       const result = await client.query(`
         SELECT 
-          a.*,
+          a.id, a.name, a.name_a, a.name_o, a.description, a.category, a.rarity, 
+          a.icon_config, a.trigger_type, a.trigger_config, a.celebration_config, 
+          a.points, a.sort_order, a.is_active, a.created_at, a.updated_at,
           sa.unlocked_at,
           sa.seen,
           CASE WHEN sa.student_id IS NOT NULL THEN true ELSE false END as unlocked,
@@ -236,7 +244,9 @@ export class AchievementRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        SELECT a.*
+        SELECT a.id, a.name, a.name_a, a.name_o, a.description, a.category, a.rarity, 
+               a.icon_config, a.trigger_type, a.trigger_config, a.celebration_config, 
+               a.points, a.sort_order, a.is_active, a.created_at, a.updated_at
         FROM achievements a
         JOIN student_achievements sa ON a.id = sa.achievement_id
         WHERE sa.student_id = $1 AND sa.seen = false

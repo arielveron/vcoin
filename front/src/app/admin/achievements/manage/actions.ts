@@ -15,6 +15,8 @@ export const createAchievement = withAdminAuth(async (formData: FormData) => {
   }
 
   const name = formData.get('name') as string;
+  const name_a = formData.get('name_a') as string || undefined;
+  const name_o = formData.get('name_o') as string || undefined;
   const description = formData.get('description') as string;
   const category = formData.get('category') as 'academic' | 'consistency' | 'milestone' | 'special';
   const rarity = formData.get('rarity') as 'common' | 'rare' | 'epic' | 'legendary';
@@ -57,6 +59,8 @@ export const createAchievement = withAdminAuth(async (formData: FormData) => {
 
   const achievementData: CreateAchievementRequest = {
     name,
+    name_a,
+    name_o,
     description,
     category,
     rarity,
@@ -79,6 +83,8 @@ export const updateAchievement = withAdminAuth(async (formData: FormData) => {
 
   const id = parseFormNumber(formData, 'id');
   const name = formData.get('name') as string;
+  const name_a = formData.get('name_a') as string || undefined;
+  const name_o = formData.get('name_o') as string || undefined;
   const description = formData.get('description') as string;
   const category = formData.get('category') as 'academic' | 'consistency' | 'milestone' | 'special';
   const rarity = formData.get('rarity') as 'common' | 'rare' | 'epic' | 'legendary';
@@ -121,6 +127,8 @@ export const updateAchievement = withAdminAuth(async (formData: FormData) => {
 
   const updateData: Partial<CreateAchievementRequest> = {
     name,
+    name_a,
+    name_o,
     description,
     category,
     rarity,

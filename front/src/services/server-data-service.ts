@@ -687,6 +687,20 @@ export class ServerDataService {
     }
   }
 
+  static async getPersonalizedStudentAchievements(studentId: number, personalizacion: 'A' | 'O' | null = null) {
+    try {
+      const achievements = await this.getStudentAchievements(studentId);
+      
+      // Import personalization utilities
+      const { createPersonalizedAchievements } = await import('@/shared/utils/personalization');
+      
+      return createPersonalizedAchievements(achievements, personalizacion);
+    } catch (error) {
+      console.error('Error getting personalized student achievements, using fallback:', error);
+      return [];
+    }
+  }
+
   static async getStudentAchievementStats(studentId: number) {
     try {
       if (!this.achievementRepo) {
@@ -712,6 +726,20 @@ export class ServerDataService {
       return await this.achievementRepo.getUnseenAchievements(studentId);
     } catch (error) {
       console.error('Error getting unseen achievements, using fallback:', error);
+      return [];
+    }
+  }
+
+  static async getPersonalizedUnseenAchievements(studentId: number, personalizacion: 'A' | 'O' | null = null) {
+    try {
+      const achievements = await this.getUnseenAchievements(studentId);
+      
+      // Import personalization utilities
+      const { createPersonalizedAchievements } = await import('@/shared/utils/personalization');
+      
+      return createPersonalizedAchievements(achievements, personalizacion);
+    } catch (error) {
+      console.error('Error getting personalized unseen achievements, using fallback:', error);
       return [];
     }
   }

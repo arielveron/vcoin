@@ -47,6 +47,7 @@ CREATE TABLE students (
     email VARCHAR(255) NOT NULL, -- Email (unique within class)
     class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
     password_hash VARCHAR(255), -- For student authentication
+    personalizacion VARCHAR(1) DEFAULT NULL CHECK (personalizacion IN ('A', 'O')), -- Personalization preference: A (feminine), O (masculine), NULL (not defined)
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     
@@ -89,6 +90,8 @@ ADD COLUMN category_id INTEGER REFERENCES investment_categories(id) ON DELETE SE
 CREATE TABLE achievements (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
+    name_a VARCHAR(100) NULL, -- Optional feminine variant name
+    name_o VARCHAR(100) NULL, -- Optional masculine variant name
     description TEXT NOT NULL,
     category VARCHAR(50) NOT NULL CHECK (category IN ('academic', 'consistency', 'milestone', 'special')),
     rarity VARCHAR(20) NOT NULL CHECK (rarity IN ('common', 'rare', 'epic', 'legendary')),
@@ -311,65 +314,65 @@ INSERT INTO interest_rate_history (class_id, monthly_interest_rate, effective_da
 (3, 0.075, '2025-05-15');  -- Rate increased to 7.5%
 
 -- Insert default achievements
-INSERT INTO achievements (name, description, category, rarity, icon_config, trigger_type, trigger_config, points) VALUES
+INSERT INTO achievements (name, name_a, name_o, description, category, rarity, icon_config, trigger_type, trigger_config, points) VALUES
 -- Academic achievements
-('First Steps', 'Receive your first investment', 'academic', 'common', 
+('First Steps', NULL, NULL, 'Receive your first investment', 'academic', 'common', 
  '{"name": "Trophy", "library": "lucide", "size": 24, "color": "#10B981"}', 
  'automatic', '{"metric": "investment_count", "operator": ">=", "value": 1}', 10),
 
-('Getting Started', 'Receive 5 investments', 'academic', 'common',
+('Getting Started', NULL, NULL, 'Receive 5 investments', 'academic', 'common',
  '{"name": "Star", "library": "lucide", "size": 24, "color": "#3B82F6"}',
  'automatic', '{"metric": "investment_count", "operator": ">=", "value": 5}', 25),
 
-('Active Learner', 'Receive 10 investments', 'academic', 'rare',
+('Active Learner', 'Estudiante Activa', 'Estudiante Activo', 'Receive 10 investments', 'academic', 'rare',
  '{"name": "GraduationCap", "library": "lucide", "size": 28, "color": "#8B5CF6"}',
  'automatic', '{"metric": "investment_count", "operator": ">=", "value": 10}', 50),
 
-('Scholar', 'Receive 25 investments', 'academic', 'epic',
+('Scholar', 'Académica', 'Académico', 'Receive 25 investments', 'academic', 'epic',
  '{"name": "Award", "library": "lucide", "size": 32, "color": "#EC4899", "animationClass": "animate-pulse"}',
  'automatic', '{"metric": "investment_count", "operator": ">=", "value": 25}', 100),
 
 -- Consistency achievements
-('On a Roll', 'Receive investments 3 days in a row', 'consistency', 'rare',
+('On a Roll', NULL, NULL, 'Receive investments 3 days in a row', 'consistency', 'rare',
  '{"name": "Flame", "library": "lucide", "size": 24, "color": "#F59E0B", "animationClass": "animate-bounce"}',
  'automatic', '{"metric": "streak_days", "operator": ">=", "value": 3}', 30),
 
-('Dedicated', 'Receive investments 7 days in a row', 'consistency', 'epic',
+('Dedicated', 'Dedicada', 'Dedicado', 'Receive investments 7 days in a row', 'consistency', 'epic',
  '{"name": "Flame", "library": "lucide", "size": 28, "color": "#EF4444", "animationClass": "animate-pulse"}',
  'automatic', '{"metric": "streak_days", "operator": ">=", "value": 7}', 75),
 
-('Unstoppable', 'Receive investments 14 days in a row', 'consistency', 'legendary',
+('Unstoppable', 'Imparable', 'Imparable', 'Receive investments 14 days in a row', 'consistency', 'legendary',
  '{"name": "Zap", "library": "lucide", "size": 32, "color": "#F59E0B", "animationClass": "animate-bounce"}',
  'automatic', '{"metric": "streak_days", "operator": ">=", "value": 14}', 150),
 
 -- Milestone achievements
-('Saver', 'Accumulate 10,000 VCoins', 'milestone', 'common',
+('Saver', 'Ahorradora', 'Ahorrador', 'Accumulate 10,000 VCoins', 'milestone', 'common',
  '{"name": "Coins", "library": "lucide", "size": 24, "color": "#10B981"}',
  'automatic', '{"metric": "total_invested", "operator": ">=", "value": 10000}', 20),
 
-('Investor', 'Accumulate 50,000 VCoins', 'milestone', 'rare',
+('Investor', 'Inversora', 'Inversor', 'Accumulate 50,000 VCoins', 'milestone', 'rare',
  '{"name": "DollarSign", "library": "lucide", "size": 28, "color": "#3B82F6"}',
  'automatic', '{"metric": "total_invested", "operator": ">=", "value": 50000}', 50),
 
-('Wealthy', 'Accumulate 100,000 VCoins', 'milestone', 'epic',
+('Wealthy', 'Adinerada', 'Adinerado', 'Accumulate 100,000 VCoins', 'milestone', 'epic',
  '{"name": "Gem", "library": "lucide", "size": 32, "color": "#8B5CF6", "animationClass": "animate-spin"}',
  'automatic', '{"metric": "total_invested", "operator": ">=", "value": 100000}', 100),
 
-('Millionaire', 'Accumulate 1,000,000 VCoins', 'milestone', 'legendary',
+('Millionaire', 'Millonaria', 'Millonario', 'Accumulate 1,000,000 VCoins', 'milestone', 'legendary',
  '{"name": "Crown", "library": "lucide", "size": 36, "color": "#EAB308", "animationClass": "animate-bounce"}',
  'automatic', '{"metric": "total_invested", "operator": ">=", "value": 1000000}', 500),
 
 -- Category-specific achievements
-('Standard Achiever', 'Receive 5 investments in Standard category', 'academic', 'rare',
+('Standard Achiever', 'Destacada Estándar', 'Destacado Estándar', 'Receive 5 investments in Standard category', 'academic', 'rare',
  '{"name": "Award", "library": "lucide", "size": 28, "color": "#06B6D4"}',
  'automatic', '{"metric": "category_count", "operator": ">=", "value": 5, "category_id": 1}', 40),
 
 -- Special achievements (manual)
-('Teacher''s Pet', 'Awarded by professor for exceptional performance', 'special', 'epic',
+('Teacher''s Pet', 'Favorita del Profesor', 'Favorito del Profesor', 'Awarded by professor for exceptional performance', 'special', 'epic',
  '{"name": "Heart", "library": "lucide", "size": 32, "color": "#EC4899", "animationClass": "animate-heartbeat"}',
  'manual', null, 200),
 
-('Class Champion', 'Finish in top 3 of the class', 'special', 'legendary',
+('Class Champion', 'Campeona de Clase', 'Campeón de Clase', 'Finish in top 3 of the class', 'special', 'legendary',
  '{"name": "Crown", "library": "lucide", "size": 40, "color": "#FFD700", "animationClass": "animate-float"}',
  'manual', null, 1000);
 

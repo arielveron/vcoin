@@ -7,16 +7,16 @@ import { sortAchievements } from '@/utils/achievement-sorting';
 import { markAchievementSeen } from '@/actions/student-actions';
 
 interface DashboardAchievementCelebrationsProps {
-  unseenAchievements: Achievement[];
+  unseenAchievements: Achievement[]; // Already personalized achievements
 }
 
 export default function DashboardAchievementCelebrations({ 
-  unseenAchievements 
+  unseenAchievements
 }: DashboardAchievementCelebrationsProps) {
   const [currentCelebration, setCurrentCelebration] = useState<Achievement | null>(null);
   const [celebrationQueue, setCelebrationQueue] = useState<Achievement[]>([]);
 
-  // Initialize and update celebration queue with only unseen achievements
+  // Initialize and update celebration queue with already personalized achievements
   useEffect(() => {
     if (unseenAchievements.length > 0) {
       setCelebrationQueue(unseenAchievements);
