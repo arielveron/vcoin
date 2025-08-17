@@ -4,6 +4,8 @@
  * Based on the pattern mentioned in the refactoring guide
  */
 
+'use client'
+
 import { useState } from 'react';
 
 export interface ActionResult<T = unknown> {

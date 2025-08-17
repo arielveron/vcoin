@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Student, Class } from '@/types/database'
 import { createStudent, updateStudent, deleteStudent, setStudentPassword } from './actions'
 import { useAdminFilters } from '@/presentation/features/admin/hooks/useAdminFilters'
+import { useAutoRefresh } from '@/presentation/hooks/useAutoRefresh'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import ResponsiveTable from '@/components/admin/responsive-table'
 import MobileFilters from '@/components/admin/mobile-filters'
@@ -15,26 +16,21 @@ interface StudentsAdminClientProps {
 }
 
 export default function StudentsAdminClient({ students: initialStudents, classes }: StudentsAdminClientProps) {
-  const [students, setStudents] = useState(initialStudents)
+  const [students] = useState(initialStudents) // setStudents removed since we use auto-refresh
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingStudent, setEditingStudent] = useState<Student | null>(null)
   const [passwordDialogStudent, setPasswordDialogStudent] = useState<Student | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [settingPassword, setSettingPassword] = useState(false)
   const { filters } = useAdminFilters()
+  const { refreshAfterFormAction, isPending } = useAutoRefresh({
+    showAlerts: true
+  })
 
   const handleCreateStudent = async (formData: FormData) => {
-    try {
-      const result = await createStudent(formData)
-      if (result.success && result.data) {
-        setStudents([...students, result.data])
-        setShowCreateForm(false)
-      } else if (!result.success) {
-        alert(result.error || 'Error al crear estudiante')
-      }
-    } catch (error) {
-      console.error('Create student error:', error)
-      alert('Error al crear estudiante: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    const result = await refreshAfterFormAction(createStudent, formData, 'Student created successfully')
+    if (result.success) {
+      setShowCreateForm(false)
     }
   }
 
@@ -44,39 +40,19 @@ export default function StudentsAdminClient({ students: initialStudents, classes
     // Include the student ID in the FormData
     formData.set('id', editingStudent.id.toString())
     
-    try {
-      const result = await updateStudent(formData)
-      if (result.success && result.data) {
-        setStudents(students.map(s => 
-          s.id === editingStudent.id ? result.data! : s
-        ))
-        setEditingStudent(null)
-      } else if (!result.success) {
-        alert(result.error || 'Error al actualizar estudiante')
-      }
-    } catch (error) {
-      console.error('Update student error:', error)
-      alert('Error al actualizar estudiante: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    const result = await refreshAfterFormAction(updateStudent, formData, 'Student updated successfully')
+    if (result.success) {
+      setEditingStudent(null)
     }
   }
 
   const handleDeleteStudent = async (id: number) => {
     if (!confirm('¿Estás seguro de que quieres eliminar este estudiante?')) return
     
-    try {
-      const formData = new FormData()
-      formData.set('id', id.toString())
-      
-      const result = await deleteStudent(formData)
-      if (result.success) {
-        setStudents(students.filter(s => s.id !== id))
-      } else if (!result.success) {
-        alert(result.error || 'Error al eliminar estudiante')
-      }
-    } catch (error) {
-      console.error('Delete student error:', error)
-      alert('Error al eliminar estudiante: ' + (error instanceof Error ? error.message : 'Unknown error'))
-    }
+    const formData = new FormData()
+    formData.set('id', id.toString())
+    
+    await refreshAfterFormAction(deleteStudent, formData, 'Student deleted successfully')
   }
 
   const handleSetPassword = async () => {
@@ -88,20 +64,11 @@ export default function StudentsAdminClient({ students: initialStudents, classes
       formData.append('student_id', passwordDialogStudent.id.toString())
       formData.append('password', newPassword)
 
-      const result = await setStudentPassword(formData)
+      const result = await refreshAfterFormAction(setStudentPassword, formData, 'Password set successfully')
       
       if (result.success) {
-        // Update student in state to show password is set
-        setStudents(students.map(s => 
-          s.id === passwordDialogStudent.id 
-            ? { ...s, password_hash: 'set' }
-            : s
-        ))
         setPasswordDialogStudent(null)
         setNewPassword('')
-        alert('Password set successfully')
-      } else {
-        alert(result.error || 'Error setting password')
       }
     } catch {
       alert('Error setting password')
@@ -257,6 +224,13 @@ export default function StudentsAdminClient({ students: initialStudents, classes
 
   return (
     <div className="space-y-6">
+      {/* Loading indicator */}
+      {isPending && (
+        <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-lg z-50">
+          Updating...
+        </div>
+      )}
+
       {/* Filter Badges */}
       <FilterBadges classes={classes} students={students} />
 
@@ -272,7 +246,8 @@ export default function StudentsAdminClient({ students: initialStudents, classes
           />
           <button
             onClick={() => setShowCreateForm(true)}
-            className="flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 min-h-[44px]"
+            disabled={isPending}
+            className="flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="h-4 w-4 mr-2" />
             Crear Nuevo Estudiante

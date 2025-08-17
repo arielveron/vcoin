@@ -593,15 +593,94 @@ npm run db:test   # Verify database connectivity
 5. **Client Component**: `*-admin-client.tsx` with forms
 6. **Server Actions**: `actions.ts` with `withAdminAuth`/`withStudentAuth` wrappers
 
+## Centralized Utilities & Architectural Philosophy
+
+**Don't reinvent the wheel!** This motto drives VCoin because it already includes comprehensive tools and centralized solutions for most common fundamental operations. Look for existing solutions, upgrade them if you need an improvement, or create new ones if you expect that what you need to do will be used again somewhere else.
+
+### Key Utility Locations
+
+**Date Operations** - `/src/shared/utils/formatting/date.ts`:
+```typescript
+import { isSameDate, toDBDateValue, formatDate, formatDateTime } from '@/shared/utils/formatting/date'
+
+// ✅ Correct: Use centralized date comparison
+if (filters.date && !isSameDate(investment.fecha, filters.date)) return false
+
+// ❌ Wrong: Manual date comparison that can cause bugs
+const investmentDate = new Date(investment.fecha).toISOString().split('T')[0]
+if (investmentDate !== filters.date) return false
+```
+
+**Currency & Number Formatting** - `/src/shared/utils/formatting/`:
+```typescript
+import { formatCurrency, formatPercentage } from '@/shared/utils/formatting'
+
+// ✅ Consistent formatting across the app
+<td>{formatCurrency(investment.monto)}</td>
+<td>{formatPercentage(rate.monthly_rate)}</td>
+```
+
+**Data Type Transformations** - `/src/utils/admin-data-types.ts`:
+```typescript
+import { formatStudentsForClient, StudentForClient } from '@/utils/admin-data-types'
+
+// ✅ Centralized data formatting with computed properties
+const studentsForClient = formatStudentsForClient(students, investmentCounts)
+```
+
+**Server Action Patterns** - `/src/utils/server-actions.ts`:
+```typescript
+import { withAdminAuth, validateRequired } from '@/utils/server-actions'
+
+// ✅ Standardized authentication and validation
+export const createEntity = withAdminAuth(async (formData: FormData) => {
+  const missing = validateRequired(formData, ['name', 'email'])
+  if (missing.length > 0) throw new Error(`Missing: ${missing.join(', ')}`)
+  // ... entity creation logic
+}, 'create entity')
+```
+
+**Error Handling** - `/src/shared/utils/errors/`:
+```typescript
+import { handleError, formatErrorMessage } from '@/shared/utils/errors'
+
+// ✅ Consistent error processing
+try {
+  return await operation()
+} catch (error) {
+  return handleError(error, 'Operation failed')
+}
+```
+
+### Before Creating New Utilities
+
+1. **Search existing solutions**: Check `/src/shared/utils/`, `/src/utils/`, and `/src/presentation/hooks/`
+2. **Evaluate enhancement**: Can existing utilities be extended instead of creating new ones?
+3. **Consider reusability**: Will this be used in multiple places? Create centralized solution
+4. **Follow patterns**: Match existing naming conventions and file organization
+5. **Update documentation**: Add to this guide if creating new architectural patterns
+
+### Utility Organization Hierarchy
+
+```
+src/
+├── shared/utils/          # 🌟 Pure, reusable functions (formatting, validation, errors)
+├── utils/                 # 📊 Admin-specific utilities (data types, server actions)
+├── presentation/hooks/    # 🎨 UI-focused reusable hooks (modals, tables, media queries)
+└── presentation/features/*/hooks/ # 🎯 Feature-specific business logic hooks
+```
+
 ## Common Pitfalls
 
 ❌ **Don't**: Use API routes for forms (except auth or third-party requirements)
 ❌ **Don't**: Format dates in client components (causes hydration mismatches)  
 ❌ **Don't**: Skip authentication wrappers in server actions
 ❌ **Don't**: Use string dates - always `Date` objects
+❌ **Don't**: Create manual date comparisons - use `isSameDate()` from centralized utilities
 ❌ **Don't**: Forget to handle auth configuration errors gracefully
 ❌ **Don't**: Define duplicate types - use centralized utilities from `/src/utils/admin-data-types.ts`
 ❌ **Don't**: Create large components - follow single responsibility principle
+❌ **Don't**: Reinvent existing utilities - search `/src/shared/utils/` and `/src/utils/` first
 
 ✅ **Do**: Use server actions for all form processing
 ✅ **Do**: Pre-format dates/currency in server components with centralized formatters
@@ -612,6 +691,8 @@ npm run db:test   # Verify database connectivity
 ✅ **Do**: Use centralized data types and formatters from `/src/utils/admin-data-types.ts`
 ✅ **Do**: Extract reusable logic to hooks in `/src/presentation/hooks/`
 ✅ **Do**: Organize components by feature in `/src/presentation/features/`
+✅ **Do**: Use centralized date utilities like `isSameDate()` for consistent filtering
+✅ **Do**: Search existing utilities before creating new ones
 
 ## Documentation Structure
 All detailed documentation is located in the `/documentation` and `/implementation` folders:

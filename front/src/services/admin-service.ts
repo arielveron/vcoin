@@ -5,6 +5,7 @@ import { InterestRateHistoryRepository } from "../repos/interest-rate-history-re
 import { InvestmentCategoryRepository } from "../repos/investment-category-repo";
 import { AchievementRepository } from "../repos/achievement-repo";
 import { formatDate, formatCurrency, formatPercentage } from "@/shared/utils/formatting";
+import { isSameDate } from "@/shared/utils/formatting/date";
 import {
   Class,
   Student,
@@ -199,9 +200,7 @@ export class AdminService {
       
       // Filter by date
       if (filters.date) {
-        const filterDate = new Date(filters.date);
-        const investmentDate = new Date(investment.fecha);
-        if (investmentDate.toDateString() !== filterDate.toDateString()) {
+        if (!isSameDate(investment.fecha, filters.date)) {
           return false;
         }
       }

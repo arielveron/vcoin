@@ -3,6 +3,8 @@
  * Centralizes modal state and form submission logic
  */
 
+'use client'
+
 import { useState } from 'react';
 
 interface UseFormModalOptions {

@@ -1,16 +1,17 @@
 /**
  * Investments Page Component
  * Main orchestrator component for the investments admin
- * Refactored from large investments-admin-client.tsx
+ * Updated to use auto-refresh on CRUD operations
  */
 'use client'
 
 import { useState } from 'react'
 import { Plus, Users } from 'lucide-react'
 import { useAdminFilters } from '../hooks/useAdminFilters'
-import { useServerAction } from '@/presentation/hooks'
+import { useAutoRefresh } from '@/presentation/hooks/useAutoRefresh'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import MobileFilters from '@/components/admin/mobile-filters'
+import { isSameDate } from '@/shared/utils/formatting/date'
 import {
   InvestmentsSummaryStats,
   InvestmentForm,
@@ -54,8 +55,10 @@ export default function InvestmentsPage({
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false)
   const [editingInvestment, setEditingInvestment] = useState<InvestmentForClient | null>(null)
   
-  // Server actions
-  const { execute: executeDelete } = useServerAction(deleteInvestment)
+  // Auto-refresh functionality
+  const { refreshAfterFormAction, isPending } = useAutoRefresh({
+    showAlerts: true
+  })
   
   // Filter investments based on current filters
   const filteredInvestments = initialInvestments.filter(investment => {
@@ -66,8 +69,7 @@ export default function InvestmentsPage({
     if (filters.studentId && investment.student_id !== filters.studentId) return false
     if (filters.categoryId && investment.category_id !== filters.categoryId) return false
     if (filters.date) {
-      const investmentDate = new Date(investment.fecha).toISOString().split('T')[0]
-      if (investmentDate !== filters.date) return false
+      if (!isSameDate(investment.fecha, filters.date)) return false
     }
     if (filters.searchText) {
       const searchTerm = filters.searchText.toLowerCase()
@@ -95,10 +97,7 @@ export default function InvestmentsPage({
     const formData = new FormData()
     formData.append('id', id.toString())
     
-    const result = await executeDelete(formData)
-    if (!result?.success) {
-      alert(result?.error || 'Failed to delete investment')
-    }
+    await refreshAfterFormAction(deleteInvestment, formData, 'Investment deleted successfully')
   }
 
   const handleFormSubmit = editingInvestment ? updateInvestment : createInvestment
@@ -141,6 +140,13 @@ export default function InvestmentsPage({
 
   return (
     <div className="space-y-6">
+      {/* Loading indicator */}
+      {isPending && (
+        <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-lg z-50">
+          Updating...
+        </div>
+      )}
+
       <FilterBadges classes={classes} students={students} />
       
       {/* Summary Stats */}

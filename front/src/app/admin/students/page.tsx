@@ -6,6 +6,10 @@ import StudentsPage from '@/presentation/features/admin/students/StudentsPage'
 import { createStudent, updateStudent, deleteStudent, setStudentPassword } from './actions'
 import { formatStudentsForClient } from '@/utils/admin-data-types'
 
+// Force dynamic rendering to ensure searchParams changes trigger re-rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 interface StudentsPageProps {
   searchParams: Promise<{ 
     qc?: string, 
@@ -53,6 +57,9 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
   // Format data for client components with investment counts
   const studentsForClient = formatStudentsForClient(students, investmentCounts)
 
+  // Create a filter key to force re-render when investment filters change
+  const filterKey = `${classId || 'all'}-${investmentFilters.categoryId || 'all'}-${investmentFilters.date || 'all'}-${investmentFilters.searchText || 'all'}`
+
   return (
     <div className="space-y-6">
       <div>
@@ -64,6 +71,7 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
       
       <Suspense fallback={<div>Loading students...</div>}>
         <StudentsPage 
+          key={filterKey}
           initialStudents={studentsForClient} 
           classes={classes}
           categories={categories}

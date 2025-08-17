@@ -3,6 +3,8 @@
  * Provides filtering, sorting, and pagination logic
  */
 
+'use client'
+
 import { useState, useMemo } from 'react';
 
 export interface TableColumn<T> {

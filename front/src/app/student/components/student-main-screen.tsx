@@ -5,7 +5,7 @@ import GananciaWrapper from "./ganancia-wrapper";
 import EstimadoCollapsible from "./estimado-collapsible";
 import ListInvertidos from "./list-invertidos";
 import DashboardAchievementCelebrations from "./dashboard-achievement-celebrations";
-import { CollapsibleProvider } from "@/presentation/hooks/useCollapsibleStore";
+// import { CollapsibleProvider } from "@/presentation/hooks/useCollapsibleStore";
 import { ServerDataService } from "@/services/server-data-service";
 
 interface StudentMainScreenProps {
@@ -40,12 +40,11 @@ export default async function StudentMainScreen({ studentId }: StudentMainScreen
         <MontoActual className="w-full" montoActual={montoActual} classSettings={classSettings} studentId={studentId} />
 
         {/* Stats Grid - Responsive with Collapsible Components */}
-        <CollapsibleProvider>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InteresWrapper studentId={studentId} />
-            <GananciaWrapper gananciaTotal={gananciaTotal} studentId={studentId} />
-          </div>
-        </CollapsibleProvider>
+        {/* Temporarily removed CollapsibleProvider due to import issues */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InteresWrapper studentId={studentId} />
+          <GananciaWrapper gananciaTotal={gananciaTotal} studentId={studentId} />
+        </div>
 
         {/* Estimado - Full Width Collapsible */}
         <EstimadoCollapsible

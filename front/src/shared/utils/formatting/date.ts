@@ -113,3 +113,14 @@ export const formatDateForDisplay = (date: Date | string, locale = 'es-AR'): str
 export const fromDBDateValue = (dateString: string): Date => {
   return fromDateInputValue(dateString);
 };
+
+/**
+ * Compare two dates for equality (date part only, ignoring time)
+ * Handles Date objects, ISO strings, and YYYY-MM-DD strings consistently
+ * @param date1 First date to compare
+ * @param date2 Second date to compare
+ * @returns true if dates are the same day
+ */
+export const isSameDate = (date1: Date | string, date2: Date | string): boolean => {
+  return toDBDateValue(date1) === toDBDateValue(date2);
+};
