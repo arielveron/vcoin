@@ -2,9 +2,13 @@
 
 import Link from "next/link"
 import { AdminStats } from '@/services/admin-service'
-import { Class, Student } from '@/types/database'
+import { Class, Student, Achievement } from '@/types/database'
 import { useAdminFilters } from '@/presentation/features/admin/hooks/useAdminFilters'
 import FilterBadges from './filter-badges'
+import MobileFilters from '@/components/admin/mobile-filters'
+import { AchievementsOverview, AchievementFilters } from '@/presentation/features/admin/achievements'
+import { formatAchievementsForClient } from '@/utils/admin-data-types'
+import { processAchievements } from '@/app/admin/actions'
 import { Users, TrendingUp, Percent, Tags, Trophy, DollarSign, GraduationCap, Target } from 'lucide-react'
 
 interface AdminDashboardClientProps {
@@ -12,16 +16,25 @@ interface AdminDashboardClientProps {
   user: { name?: string } | null
   classes: Class[]
   students: Student[]
+  achievements: Achievement[]
+  achievementStudentCounts: Map<number, number>
 }
 
-export default function AdminDashboardClient({ stats, user, classes, students }: AdminDashboardClientProps) {
-  const { getUrlWithFilters } = useAdminFilters()
+export default function AdminDashboardClient({ stats, user, classes, students, achievements, achievementStudentCounts }: AdminDashboardClientProps) {
+  const { getUrlWithFilters, filters, updateFilters } = useAdminFilters()
+
+  // Process achievements handler
+  const handleProcessAchievements = async () => {
+    const result = await processAchievements()
+    if (!result.success) {
+      alert('error' in result ? result.error : 'Failed to process achievements')
+    } else {
+      alert(`Successfully processed ${result.data?.processed || 0} achievements`)
+    }
+  }
 
   return (
     <div>
-      {/* Filter Badges */}
-      <FilterBadges classes={classes} students={students} />
-
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Panel de Control de Administración</h1>
         <p className="mt-2 text-gray-600">
@@ -70,6 +83,34 @@ export default function AdminDashboardClient({ stats, user, classes, students }:
           </div>
         </div>
       </div>
+
+      {/* Achievement Filters */}
+      <div className="space-y-4">
+        {/* Filter Badges */}
+        <FilterBadges classes={classes} students={students} />
+        
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Desktop Filters */}
+          <AchievementFilters
+            classes={classes}
+            filters={filters}
+            onFiltersChange={updateFilters}
+            className="hidden lg:block"
+          />
+          
+          {/* Mobile Filters */}
+          <div className="block lg:hidden">
+            <MobileFilters classes={classes} showStudentFilter={false} />
+          </div>
+        </div>
+      </div>
+
+      {/* Achievement Overview */}
+      <AchievementsOverview 
+        achievements={formatAchievementsForClient(achievements)}
+        achievementStudentCounts={achievementStudentCounts}
+        onProcess={handleProcessAchievements}
+      />
 
       {/* Quick Actions - Responsive */}
       <div className="bg-white shadow rounded-lg">

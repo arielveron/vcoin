@@ -28,10 +28,11 @@ import type { AchievementForClient } from '@/utils/admin-data-types'
 
 interface AchievementsOverviewProps {
   achievements: AchievementForClient[]
+  achievementStudentCounts: Map<number, number>
   onProcess: () => Promise<void>
 }
 
-export default function AchievementsOverview({ achievements, onProcess }: AchievementsOverviewProps) {
+export default function AchievementsOverview({ achievements, achievementStudentCounts, onProcess }: AchievementsOverviewProps) {
   const [filter, setFilter] = useState<'all' | 'automatic' | 'manual'>('all')
   const [isProcessing, setIsProcessing] = useState(false)
 
@@ -91,45 +92,61 @@ export default function AchievementsOverview({ achievements, onProcess }: Achiev
 
       {/* Achievement Grid - Responsive */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filteredAchievements.map((achievement) => (
-          <div key={achievement.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0">
-                <IconRenderer 
-                  name={achievement.icon_config.name}
-                  library={achievement.icon_config.library}
-                  size={achievement.icon_config.size}
-                  color={achievement.icon_config.color}
-                  animationClass={achievement.icon_config.animationClass}
-                  className="w-8 h-8"
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-medium text-gray-900 truncate">
-                  {achievement.name}
-                </h3>
-                <p className="text-xs text-gray-500 mt-1">
-                  {achievement.description}
-                </p>
-                <div className="flex items-center space-x-2 mt-2">
-                  <span className={`px-2 py-1 text-xs rounded-full ${getRarityClasses(achievement.rarity)}`}>
-                    {achievement.rarity}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {achievement.points} pts
-                  </span>
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    achievement.trigger_type === 'manual' 
-                      ? 'bg-orange-100 text-orange-700'
-                      : 'bg-green-100 text-green-700'
-                  }`}>
-                    {achievement.trigger_type}
-                  </span>
+        {filteredAchievements.map((achievement) => {
+          const studentCount = achievementStudentCounts.get(achievement.id) || 0
+          
+          return (
+            <div key={achievement.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between space-x-3">
+                <div className="flex items-start space-x-3 flex-1 min-w-0">
+                  <div className="flex-shrink-0">
+                    <IconRenderer 
+                      name={achievement.icon_config.name}
+                      library={achievement.icon_config.library}
+                      size={achievement.icon_config.size}
+                      color={achievement.icon_config.color}
+                      animationClass={achievement.icon_config.animationClass}
+                      className="w-8 h-8"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-medium text-gray-900 truncate">
+                      {achievement.name}
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {achievement.description}
+                    </p>
+                    <div className="flex items-center space-x-2 mt-2">
+                      <span className={`px-2 py-1 text-xs rounded-full ${getRarityClasses(achievement.rarity)}`}>
+                        {achievement.rarity}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {achievement.points} pts
+                      </span>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        achievement.trigger_type === 'manual' 
+                          ? 'bg-orange-100 text-orange-700'
+                          : 'bg-green-100 text-green-700'
+                      }`}>
+                        {achievement.trigger_type}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Student Count */}
+                <div className="flex-shrink-0 text-right">
+                  <div className="text-3xl font-semibold text-gray-700">
+                    {studentCount}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    student{studentCount !== 1 ? 's' : ''}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {filteredAchievements.length === 0 && (

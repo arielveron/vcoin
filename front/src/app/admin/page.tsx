@@ -30,10 +30,12 @@ export default async function AdminDashboard({ searchParams }: AdminDashboardPro
   const adminService = new AdminService()
   
   try {
-    const [stats, classes, students] = await Promise.all([
+    const [stats, classes, students, achievements, achievementStudentCounts] = await Promise.all([
       adminService.getAdminStats(classId, studentId),
       adminService.getAllClasses(),
-      adminService.getAllStudents()
+      adminService.getAllStudents(),
+      adminService.getAllAchievements(),
+      adminService.getStudentCountsByAchievements(classId)
     ])
     
     return (
@@ -43,6 +45,8 @@ export default async function AdminDashboard({ searchParams }: AdminDashboardPro
           user={session.user ? { name: session.user.name || undefined } : null}
           classes={classes}
           students={students}
+          achievements={achievements}
+          achievementStudentCounts={achievementStudentCounts}
         />
       </Suspense>
     )
@@ -58,10 +62,14 @@ export default async function AdminDashboard({ searchParams }: AdminDashboardPro
       totalInvestmentAmountFormatted: '$0,00'
     }
     
-    const [classes, students] = await Promise.all([
+    const [classes, students, achievements] = await Promise.all([
       adminService.getAllClasses().catch(() => []),
-      adminService.getAllStudents().catch(() => [])
+      adminService.getAllStudents().catch(() => []),
+      adminService.getAllAchievements().catch(() => [])
     ])
+
+    // Create empty achievement student counts map for error case
+    const achievementStudentCounts = new Map<number, number>()
     
     return (
       <Suspense fallback={<div>Loading admin dashboard...</div>}>
@@ -70,6 +78,8 @@ export default async function AdminDashboard({ searchParams }: AdminDashboardPro
           user={session.user ? { name: session.user.name || undefined } : null}
           classes={classes}
           students={students}
+          achievements={achievements}
+          achievementStudentCounts={achievementStudentCounts}
         />
       </Suspense>
     )

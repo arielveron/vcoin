@@ -7,13 +7,9 @@
 
 import { useState } from 'react'
 import { useAdminFilters } from '../hooks/useAdminFilters'
-import FilterBadges from '@/app/admin/components/filter-badges'
-import MobileFilters from '@/components/admin/mobile-filters'
 import {
   BackgroundJobsStatus,
-  AchievementsOverview,
-  ManualAwardInterface,
-  AchievementFilters
+  ManualAwardInterface
 } from './components'
 import type { Student, AchievementWithProgress } from '@/types/database'
 import {
@@ -61,7 +57,6 @@ export default function AchievementsPage({
   getStudentAchievements
 }: AchievementsPageProps) {
   const achievements: AchievementForClient[] = initialAchievements.map(formatAchievementForClient)
-  const { filters, updateFilters } = useAdminFilters()
   
   // State for manual award interface
   const [selectedStudent, setSelectedStudent] = useState<number | null>(null)
@@ -74,7 +69,7 @@ export default function AchievementsPage({
   // Ensure TypeScript recognizes Student type usage
   const studentsData: Student[] = students
 
-  // Server actions - no need for useServerAction wrapper for simple cases
+  // Server actions
   
   // Handle manual award with success callback
   const handleManualAward = async (formData: FormData) => {
@@ -128,45 +123,15 @@ export default function AchievementsPage({
     }
   }
 
-  // Process achievements handler
-  const handleProcessAchievements = async () => {
-    const result = await processAchievements()
-    if (!result.success) {
-      alert('error' in result ? result.error : 'Failed to process achievements')
-    } else {
-      alert(`Successfully processed ${result.data?.processed || 0} achievements`)
-    }
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
-          <h2 className="text-xl lg:text-2xl font-semibold text-gray-900">Achievement Management</h2>
+          <h2 className="text-xl lg:text-2xl font-semibold text-gray-900">Student Achievement Management</h2>
           <p className="text-gray-600">
-            {achievements.length} achievements • Monitor student progress and background jobs
+            Award manual achievements and manage student progress
           </p>
-        </div>
-      </div>
-
-      {/* Admin Filters */}
-      <div className="space-y-4">
-        <FilterBadges classes={classes} />
-        
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Desktop Filters */}
-          <AchievementFilters
-            classes={classes}
-            filters={filters}
-            onFiltersChange={updateFilters}
-            className="hidden lg:block"
-          />
-          
-          {/* Mobile Filters */}
-          <div className="block lg:hidden">
-            <MobileFilters classes={classes} showStudentFilter={true} />
-          </div>
         </div>
       </div>
 
@@ -174,12 +139,6 @@ export default function AchievementsPage({
       {backgroundJobStatus && (
         <BackgroundJobsStatus status={backgroundJobStatus} />
       )}
-
-      {/* Achievements Overview */}
-      <AchievementsOverview 
-        achievements={achievements}
-        onProcess={handleProcessAchievements}
-      />
 
       {/* Student Achievement Management Interface */}
       <ManualAwardInterface

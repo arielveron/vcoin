@@ -288,6 +288,39 @@ export class AdminService {
     return achievementCounts;
   }
 
+  // Get count of students who have unlocked each achievement (filtered by class if provided)
+  async getStudentCountsByAchievements(classId?: number): Promise<Map<number, number>> {
+    const studentCounts = new Map<number, number>();
+    
+    // Get students based on class filter
+    const students = classId 
+      ? await this.getStudentsByClass(classId)
+      : await this.getAllStudents();
+    
+    // Get all achievements to initialize counts
+    const achievements = await this.getAllAchievements();
+    achievements.forEach(achievement => studentCounts.set(achievement.id, 0));
+    
+    // Count students for each achievement
+    for (const student of students) {
+      try {
+        const studentAchievements = await this.achievementRepo.getStudentAchievements(student.id);
+        
+        studentAchievements.forEach(achievement => {
+          if (achievement.unlocked) {
+            const currentCount = studentCounts.get(achievement.id) || 0;
+            studentCounts.set(achievement.id, currentCount + 1);
+          }
+        });
+      } catch (error) {
+        console.error(`Error getting achievements for student ${student.id}:`, error);
+        // Continue with other students
+      }
+    }
+    
+    return studentCounts;
+  }
+
   // Investment management
   async getAllInvestments(): Promise<InvestmentWithStudent[]> {
     return await this.investmentRepo.findWithStudentInfo();

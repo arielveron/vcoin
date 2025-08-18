@@ -52,13 +52,6 @@ export default async function AchievementsAdminPage({ searchParams }: Achievemen
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Achievement Management</h1>
-        <p className="text-gray-600">
-          Manage achievements, award manual achievements, and view student progress • {studentsWithAchievements} of {students.length} students have achievements
-          {classId && ` (filtered by class)`}
-        </p>
-      </div>
       
       <AchievementsPage 
         initialAchievements={achievements}
