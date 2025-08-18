@@ -43,13 +43,6 @@ export default async function AchievementsAdminPage({ searchParams }: Achievemen
     adminService.getAllCategories()
   ]);
 
-  // Get achievement counts for students (restricted by class filter)
-  const studentIds = students.map(student => student.id)
-  const achievementCounts = await adminService.getAchievementCountsByStudents(studentIds)
-  
-  // Calculate how many students have at least one achievement
-  const studentsWithAchievements = Array.from(achievementCounts.values()).filter(count => count > 0).length
-
   return (
     <div className="container mx-auto px-4 py-8">
       

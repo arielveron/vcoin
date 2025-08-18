@@ -6,7 +6,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useAdminFilters } from '../hooks/useAdminFilters'
 import {
   BackgroundJobsStatus,
   ManualAwardInterface
@@ -49,9 +48,7 @@ interface BackgroundJobStatus {
 export default function AchievementsPage({
   initialAchievements,
   classes,
-  categories, // eslint-disable-line @typescript-eslint/no-unused-vars
   students,
-  processAchievements,
   manualAward,
   manualRevoke,
   getStudentAchievements
