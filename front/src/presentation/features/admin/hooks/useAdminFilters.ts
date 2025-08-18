@@ -9,6 +9,10 @@ export interface AdminFilters {
   categoryId: number | null
   date: string | null
   searchText: string | null
+  // Achievement filters
+  achievementCategory: string | null
+  achievementRarity: string | null
+  achievementId: number | null // Add specific achievement filter
 }
 
 export function useAdminFilters() {
@@ -21,7 +25,10 @@ export function useAdminFilters() {
     studentId: searchParams.get('qs') ? parseInt(searchParams.get('qs')!) : null,
     categoryId: searchParams.get('qcat') ? parseInt(searchParams.get('qcat')!) : null,
     date: searchParams.get('qd') || null,
-    searchText: searchParams.get('qt') || null
+    searchText: searchParams.get('qt') || null,
+    achievementCategory: searchParams.get('qacategory') || null,
+    achievementRarity: searchParams.get('qararity') || null,
+    achievementId: searchParams.get('qachievement') ? parseInt(searchParams.get('qachievement')!) : null
   }
 
   const updateFilters = useCallback((newFilters: Partial<AdminFilters>) => {
@@ -73,6 +80,33 @@ export function useAdminFilters() {
         params.delete('qt')
       } else {
         params.set('qt', newFilters.searchText)
+      }
+    }
+
+    // Update achievement category filter
+    if (newFilters.achievementCategory !== undefined) {
+      if (newFilters.achievementCategory === null || newFilters.achievementCategory === '') {
+        params.delete('qacategory')
+      } else {
+        params.set('qacategory', newFilters.achievementCategory)
+      }
+    }
+
+    // Update achievement rarity filter
+    if (newFilters.achievementRarity !== undefined) {
+      if (newFilters.achievementRarity === null || newFilters.achievementRarity === '') {
+        params.delete('qararity')
+      } else {
+        params.set('qararity', newFilters.achievementRarity)
+      }
+    }
+
+    // Update achievement ID filter
+    if (newFilters.achievementId !== undefined) {
+      if (newFilters.achievementId === null) {
+        params.delete('qachievement')
+      } else {
+        params.set('qachievement', newFilters.achievementId.toString())
       }
     }
 

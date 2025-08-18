@@ -16,7 +16,7 @@ import {
   StudentForm,
   PasswordDialog,
   StudentFilters,
-  StudentInvestmentFilters
+  StudentFiltersPanel
 } from './components'
 import type { Student } from '@/types/database'
 import { 
@@ -32,6 +32,7 @@ export default function StudentsPage({
   initialStudents,
   classes,
   categories,
+  achievements,
   createStudent,
   updateStudent,
   deleteStudent,
@@ -164,17 +165,24 @@ export default function StudentsPage({
             <MobileFilters 
               classes={classes}
               students={students}
+              categories={categories}
+              achievements={achievements}
               showStudentFilter={false}
+              showCategoryFilter={true}
+              showDateFilter={true}
+              showSearchFilter={true}
+              showAchievementFilters={true}
             />
           </div>
         </div>
         
-        {/* Investment Filters */}
-        <StudentInvestmentFilters
+        {/* Investment and Achievement Filters */}
+        <StudentFiltersPanel
           categories={categories}
+          achievements={achievements}
           filters={filters}
           onFiltersChange={updateFilters}
-          className="lg:max-w-md"
+          className="lg:max-w-2xl"
         />
       </div>
 

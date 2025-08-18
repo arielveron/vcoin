@@ -5,6 +5,7 @@ import { AchievementWithProgress, Achievement } from '@/types/database';
 import AchievementBadge from '@/components/achievement-badge';
 import { cn } from '@/lib/utils';
 import { sortAchievements } from '@/utils/achievement-sorting';
+import { CATEGORY_FILTERS, CategoryKey } from '@/shared/constants'
 
 interface AchievementDashboardProps {
   achievements: AchievementWithProgress[];
@@ -16,16 +17,6 @@ interface AchievementDashboardProps {
   };
   onAchievementClick?: (achievement: Achievement) => void;
 }
-
-const CATEGORY_FILTERS = [
-  { key: 'all', label: 'Todos', icon: '🏆' },
-  { key: 'academic', label: 'Académicos', icon: '📚' },
-  { key: 'consistency', label: 'Constancia', icon: '🎯' },
-  { key: 'milestone', label: 'Hitos', icon: '🚀' },
-  { key: 'special', label: 'Especiales', icon: '⭐' }
-] as const;
-
-type CategoryKey = typeof CATEGORY_FILTERS[number]['key'];
 
 export function AchievementDashboard({ 
   achievements, 

@@ -34,6 +34,7 @@ import type {
  */
 export type StudentForClient = WithFormattedDates<Student, 'created_at' | 'updated_at'> & {
   investment_count: number
+  achievement_count: number
 }
 
 /**
@@ -93,21 +94,23 @@ export type BatchInvestmentRowForClient = BatchInvestmentRow & {
 // ============================================================================
 
 /**
- * Transform raw students array to client-ready format with formatted dates and investment counts
+ * Transform raw students array to client-ready format with formatted dates and counts
  */
 export function formatStudentsForClient(
   students: Student[], 
-  investmentCounts: Map<number, number> = new Map()
+  investmentCounts: Map<number, number> = new Map(),
+  achievementCounts: Map<number, number> = new Map()
 ): StudentForClient[] {
   const formattedStudents = withFormattedDates(
     students as unknown as Record<string, unknown>[], 
     [...DateFieldSets.AUDIT_FIELDS]
   ) as unknown as StudentForClient[]
 
-  // Add investment counts
+  // Add investment and achievement counts
   return formattedStudents.map(student => ({
     ...student,
-    investment_count: investmentCounts.get(student.id) || 0
+    investment_count: investmentCounts.get(student.id) || 0,
+    achievement_count: achievementCounts.get(student.id) || 0
   }))
 }
 

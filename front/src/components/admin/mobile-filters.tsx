@@ -3,36 +3,55 @@
 import { useState } from 'react'
 import { Filter, X, Search } from 'lucide-react'
 import { useAdminFilters } from '@/presentation/features/admin/hooks/useAdminFilters'
-import { Class, Student, InvestmentCategory } from '@/types/database'
+import { Class, Student, InvestmentCategory, Achievement } from '@/types/database'
+import { ACHIEVEMENT_CATEGORIES, ACHIEVEMENT_RARITIES } from '@/shared/constants/achievements'
 
 interface MobileFiltersProps {
   classes: Class[]
   students?: Student[]
   categories?: InvestmentCategory[]
+  achievements?: Achievement[]
   showStudentFilter?: boolean
   showCategoryFilter?: boolean
   showDateFilter?: boolean
   showSearchFilter?: boolean
+  showAchievementFilters?: boolean
 }
 
 export default function MobileFilters({
   classes,
   students = [],
   categories = [],
+  achievements = [],
   showStudentFilter = false,
   showCategoryFilter = false,
   showDateFilter = false,
-  showSearchFilter = false
+  showSearchFilter = false,
+  showAchievementFilters = false
 }: MobileFiltersProps) {
   const { filters, updateFilters } = useAdminFilters()
   const [isOpen, setIsOpen] = useState(false)
+
+  // Filter achievements based on selected category and rarity
+  const filteredAchievements = achievements.filter(achievement => {
+    if (filters.achievementCategory && achievement.category !== filters.achievementCategory) {
+      return false
+    }
+    if (filters.achievementRarity && achievement.rarity !== filters.achievementRarity) {
+      return false
+    }
+    return true
+  })
 
   const activeFiltersCount = 
     (filters.classId ? 1 : 0) + 
     (filters.studentId ? 1 : 0) +
     (filters.categoryId ? 1 : 0) +
     (filters.date ? 1 : 0) +
-    (filters.searchText ? 1 : 0)
+    (filters.searchText ? 1 : 0) +
+    (filters.achievementCategory ? 1 : 0) +
+    (filters.achievementRarity ? 1 : 0) +
+    (filters.achievementId ? 1 : 0)
 
   const handleClassChange = (value: string) => {
     const classId = value ? parseInt(value) : null
@@ -45,7 +64,7 @@ export default function MobileFilters({
   }
 
   const clearFilters = () => {
-    updateFilters({ classId: null, studentId: null, categoryId: null, date: null, searchText: null })
+    updateFilters({ classId: null, studentId: null, categoryId: null, date: null, searchText: null, achievementCategory: null, achievementRarity: null, achievementId: null })
     setIsOpen(false)
   }
 
@@ -195,6 +214,92 @@ export default function MobileFilters({
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </div>
+              )}
+
+              {/* Achievement Filters */}
+              {showAchievementFilters && (
+                <>
+                  <div>
+                    <label htmlFor="mobile-achievement-category" className="block text-sm font-medium text-gray-700 mb-2">
+                      Achievement Category
+                    </label>
+                    <select
+                      id="mobile-achievement-category"
+                      value={filters.achievementCategory || ''}
+                      onChange={(e) => {
+                        const category = e.target.value || null
+                        updateFilters({ 
+                          achievementCategory: category,
+                          // Clear achievement ID when category changes
+                          achievementId: null
+                        })
+                      }}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+                      <option value="">All Categories</option>
+                      {ACHIEVEMENT_CATEGORIES.map((category) => (
+                        <option key={category.value} value={category.value}>
+                          {category.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="mobile-achievement-rarity" className="block text-sm font-medium text-gray-700 mb-2">
+                      Achievement Rarity
+                    </label>
+                    <select
+                      id="mobile-achievement-rarity"
+                      value={filters.achievementRarity || ''}
+                      onChange={(e) => {
+                        const rarity = e.target.value || null
+                        updateFilters({ 
+                          achievementRarity: rarity,
+                          // Clear achievement ID when rarity changes
+                          achievementId: null
+                        })
+                      }}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+                      <option value="">All Rarities</option>
+                      {ACHIEVEMENT_RARITIES.map((rarity) => (
+                        <option key={rarity.value} value={rarity.value}>
+                          {rarity.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  {/* Specific Achievement Filter */}
+                  <div>
+                    <label htmlFor="mobile-achievement-specific" className="block text-sm font-medium text-gray-700 mb-2">
+                      Specific Achievement
+                    </label>
+                    <select
+                      id="mobile-achievement-specific"
+                      value={filters.achievementId || ''}
+                      onChange={(e) => {
+                        const achievementId = e.target.value ? parseInt(e.target.value) : null
+                        updateFilters({ achievementId })
+                      }}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      disabled={filteredAchievements.length === 0}
+                    >
+                      <option value="">All Achievements</option>
+                      {filteredAchievements.map((achievement) => (
+                        <option key={achievement.id} value={achievement.id}>
+                          {achievement.name}
+                        </option>
+                      ))}
+                    </select>
+                    {filteredAchievements.length === 0 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Select category/rarity to filter specific achievements
+                      </p>
+                    )}
+                  </div>
+                </>
               )}
 
               {/* Clear Filters Button */}

@@ -236,6 +236,14 @@ export interface Achievement {
   updated_at: Date;
 }
 
+// Achievement type aliases for better reusability
+export type AchievementCategory = Achievement['category'];
+export type AchievementRarity = Achievement['rarity'];
+export type AchievementTriggerType = Achievement['trigger_type'];
+export type AchievementMetric = NonNullable<Achievement['trigger_config']>['metric'];
+export type AchievementOperator = NonNullable<Achievement['trigger_config']>['operator'];
+export type IconLibrary = Achievement['icon_config']['library'];
+
 export interface StudentAchievement {
   student_id: number;
   achievement_id: number;

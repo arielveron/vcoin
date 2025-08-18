@@ -116,6 +116,7 @@ export interface StudentsPageProps {
   initialStudents: StudentForClient[]
   classes: Class[]
   categories: InvestmentCategory[]
+  achievements: Achievement[]
   createStudent: (formData: FormData) => Promise<ActionResult<Student>>
   updateStudent: (formData: FormData) => Promise<ActionResult<Student>>
   deleteStudent: (formData: FormData) => Promise<ActionResult<DeleteResult>>

@@ -16,7 +16,10 @@ interface StudentsPageProps {
     qs?: string, 
     qcat?: string, 
     qd?: string, 
-    qt?: string 
+    qt?: string,
+    qacategory?: string,
+    qararity?: string,
+    qachievement?: string
   }>
 }
 
@@ -38,6 +41,7 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
   
   const classes = await adminService.getAllClasses()
   const categories = await adminService.getAllCategories(true) // Only active categories
+  const achievements = await adminService.getAllAchievements()
 
   // Check if investment filters are active
   const investmentFilters = {
@@ -48,17 +52,31 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
   
   const hasInvestmentFilters = investmentFilters.categoryId || investmentFilters.date || investmentFilters.searchText
 
+  // Check if achievement filters are active
+  const achievementFilters = {
+    category: params.qacategory || null,
+    rarity: params.qararity || null,
+    achievementId: params.qachievement ? parseInt(params.qachievement) : null
+  }
+  
+  const hasAchievementFilters = achievementFilters.category || achievementFilters.rarity || achievementFilters.achievementId
+
   // Get investment counts for all students (filtered or unfiltered)
   const studentIds = students.map(student => student.id)
   const investmentCounts = hasInvestmentFilters
     ? await adminService.getFilteredInvestmentCountsByStudents(studentIds, investmentFilters)
     : await adminService.getInvestmentCountsByStudents(studentIds)
 
-  // Format data for client components with investment counts
-  const studentsForClient = formatStudentsForClient(students, investmentCounts)
+  // Get achievement counts for all students (filtered or unfiltered)
+  const achievementCounts = hasAchievementFilters
+    ? await adminService.getFilteredAchievementCountsByStudents(studentIds, achievementFilters)
+    : await adminService.getAchievementCountsByStudents(studentIds)
 
-  // Create a filter key to force re-render when investment filters change
-  const filterKey = `${classId || 'all'}-${investmentFilters.categoryId || 'all'}-${investmentFilters.date || 'all'}-${investmentFilters.searchText || 'all'}`
+  // Format data for client components with investment and achievement counts
+  const studentsForClient = formatStudentsForClient(students, investmentCounts, achievementCounts)
+
+  // Create a filter key to force re-render when filters change
+  const filterKey = `${classId || 'all'}-${investmentFilters.categoryId || 'all'}-${investmentFilters.date || 'all'}-${investmentFilters.searchText || 'all'}-${achievementFilters.category || 'all'}-${achievementFilters.rarity || 'all'}-${achievementFilters.achievementId || 'all'}`
 
   return (
     <div className="space-y-6">
@@ -75,6 +93,7 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
           initialStudents={studentsForClient} 
           classes={classes}
           categories={categories}
+          achievements={achievements}
           createStudent={createStudent}
           updateStudent={updateStudent}
           deleteStudent={deleteStudent}

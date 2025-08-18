@@ -7,7 +7,22 @@
 
 import { useState } from 'react'
 import { Trophy, Play } from 'lucide-react'
+import { ACHIEVEMENT_RARITIES } from '@/shared/constants'
 import IconRenderer from '@/components/icon-renderer'
+
+// Helper function to get rarity styling based on centralized constants
+const getRarityClasses = (rarity: string) => {
+  const rarityConfig = ACHIEVEMENT_RARITIES.find(r => r.value === rarity)
+  if (!rarityConfig) return 'bg-gray-100 text-gray-800'
+  
+  switch (rarityConfig.color) {
+    case 'green': return 'bg-green-100 text-green-800'
+    case 'blue': return 'bg-blue-100 text-blue-800'
+    case 'purple': return 'bg-purple-100 text-purple-800'
+    case 'orange': return 'bg-yellow-100 text-yellow-800'
+    default: return 'bg-gray-100 text-gray-800'
+  }
+}
 import { sortAchievementsForClient } from '@/utils/achievement-sorting'
 import type { AchievementForClient } from '@/utils/admin-data-types'
 
@@ -97,12 +112,7 @@ export default function AchievementsOverview({ achievements, onProcess }: Achiev
                   {achievement.description}
                 </p>
                 <div className="flex items-center space-x-2 mt-2">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    achievement.rarity === 'legendary' ? 'bg-yellow-100 text-yellow-800' :
-                    achievement.rarity === 'epic' ? 'bg-purple-100 text-purple-800' :
-                    achievement.rarity === 'rare' ? 'bg-blue-100 text-blue-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
+                  <span className={`px-2 py-1 text-xs rounded-full ${getRarityClasses(achievement.rarity)}`}>
                     {achievement.rarity}
                   </span>
                   <span className="text-xs text-gray-500">

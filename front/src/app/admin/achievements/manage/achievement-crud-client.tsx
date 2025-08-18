@@ -1,7 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { Achievement, InvestmentCategory } from '@/types/database';
+import { 
+  Achievement, 
+  InvestmentCategory, 
+  AchievementCategory, 
+  AchievementRarity, 
+  AchievementTriggerType, 
+  AchievementMetric,
+  AchievementOperator,
+  IconLibrary 
+} from '@/types/database';
+import { ACHIEVEMENT_CATEGORIES, ACHIEVEMENT_RARITIES } from '@/shared/constants';
 import IconRenderer from '@/components/icon-renderer';
 import ResponsiveTable from '@/components/admin/responsive-table';
 import { createAchievement, updateAchievement, deleteAchievement } from './actions';
@@ -17,16 +27,16 @@ interface AchievementFormData {
   name_a?: string; // Optional feminine variant name
   name_o?: string; // Optional masculine variant name
   description: string;
-  category: 'academic' | 'consistency' | 'milestone' | 'special';
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  category: AchievementCategory;
+  rarity: AchievementRarity;
   icon_name: string;
-  icon_library: 'lucide' | 'heroicons-solid' | 'tabler' | 'heroicons-outline' | 'phosphor';
+  icon_library: IconLibrary;
   icon_size: number;
   icon_color: string;
   animation_class?: string;
-  trigger_type: 'automatic' | 'manual';
-  metric?: 'investment_count' | 'total_invested' | 'streak_days' | 'category_count';
-  operator?: '>=' | '>' | '=' | '<' | '<=';
+  trigger_type: AchievementTriggerType;
+  metric?: AchievementMetric;
+  operator?: AchievementOperator;
   value?: number;
   category_id?: number; // Changed from category_name to category_id
   points: number;
@@ -224,10 +234,11 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
-            <option value="academic">Academic</option>
-            <option value="consistency">Consistency</option>
-            <option value="milestone">Milestone</option>
-            <option value="special">Special</option>
+            {ACHIEVEMENT_CATEGORIES.map((category) => (
+              <option key={category.value} value={category.value}>
+                {category.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -260,10 +271,11 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
-            <option value="common">Common</option>
-            <option value="rare">Rare</option>
-            <option value="epic">Epic</option>
-            <option value="legendary">Legendary</option>
+            {ACHIEVEMENT_RARITIES.map((rarity) => (
+              <option key={rarity.value} value={rarity.value}>
+                {rarity.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -578,17 +590,24 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
   );
 
   const getRarityBadgeColor = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return 'bg-gray-100 text-gray-800';
-      case 'rare': return 'bg-blue-100 text-blue-800';
-      case 'epic': return 'bg-purple-100 text-purple-800';
-      case 'legendary': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+    const rarityConfig = ACHIEVEMENT_RARITIES.find(r => r.value === rarity)
+    if (!rarityConfig) return 'bg-gray-100 text-gray-800'
+    
+    switch (rarityConfig.color) {
+      case 'green': return 'bg-green-100 text-green-800'
+      case 'blue': return 'bg-blue-100 text-blue-800'
+      case 'purple': return 'bg-purple-100 text-purple-800'
+      case 'orange': return 'bg-yellow-100 text-yellow-800'
+      default: return 'bg-gray-100 text-gray-800'
     }
   };
 
   const getCategoryBadgeColor = (category: string) => {
-    switch (category) {
+    const categoryConfig = ACHIEVEMENT_CATEGORIES.find(c => c.value === category)
+    if (!categoryConfig) return 'bg-gray-100 text-gray-800'
+    
+    // Map categories to colors (you can extend this to be more dynamic if needed)
+    switch (categoryConfig.value) {
       case 'academic': return 'bg-green-100 text-green-800';
       case 'consistency': return 'bg-blue-100 text-blue-800';
       case 'milestone': return 'bg-purple-100 text-purple-800';

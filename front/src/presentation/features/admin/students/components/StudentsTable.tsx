@@ -73,6 +73,18 @@ export default function StudentsTable({
       )
     },
     {
+      key: 'achievement_count',
+      header: 'Logros',
+      hideOnMobile: true,
+      render: (student: StudentForClient) => (
+        <div className="text-center">
+          <span className="inline-flex px-2 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800">
+            {student.achievement_count}
+          </span>
+        </div>
+      )
+    },
+    {
       key: 'password_status',
       header: 'Password Status',
       hideOnMobile: true,
@@ -166,9 +178,14 @@ export default function StudentsTable({
           <span className="text-sm text-gray-600">
             Clase: {studentClass?.name || 'Sin clase asignada'}
           </span>
-          <span className="inline-flex px-2 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800">
-            {student.investment_count} inversiones
-          </span>
+          <div className="flex space-x-2">
+            <span className="inline-flex px-2 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800">
+              {student.investment_count} inversiones
+            </span>
+            <span className="inline-flex px-2 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800">
+              {student.achievement_count} logros
+            </span>
+          </div>
         </div>
         
         <div className="flex justify-end">

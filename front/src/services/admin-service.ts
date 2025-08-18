@@ -217,6 +217,77 @@ export class AdminService {
     return investmentCounts;
   }
 
+  async getAchievementCountsByStudents(studentIds: number[]): Promise<Map<number, number>> {
+    const achievementCounts = new Map<number, number>();
+    
+    // Initialize all students with 0 counts
+    studentIds.forEach(id => achievementCounts.set(id, 0));
+    
+    // Get all student achievements from the achievement repository
+    for (const studentId of studentIds) {
+      try {
+        const achievements = await this.achievementRepo.getStudentAchievements(studentId);
+        const unlockedCount = achievements.filter(achievement => achievement.unlocked).length;
+        achievementCounts.set(studentId, unlockedCount);
+      } catch (error) {
+        console.error(`Error getting achievements for student ${studentId}:`, error);
+        // Keep the 0 count on error
+      }
+    }
+    
+    return achievementCounts;
+  }
+
+  async getFilteredAchievementCountsByStudents(
+    studentIds: number[],
+    filters: {
+      category?: string | null
+      rarity?: string | null
+      achievementId?: number | null
+    }
+  ): Promise<Map<number, number>> {
+    const achievementCounts = new Map<number, number>();
+    
+    // Initialize all students with 0 counts
+    studentIds.forEach(id => achievementCounts.set(id, 0));
+    
+    // Get all student achievements and apply filters
+    for (const studentId of studentIds) {
+      try {
+        const achievements = await this.achievementRepo.getStudentAchievements(studentId);
+        
+        const filteredAchievements = achievements.filter(achievement => {
+          // Only count unlocked achievements
+          if (!achievement.unlocked) return false;
+          
+          // Filter by category
+          if (filters.category && achievement.category !== filters.category) {
+            return false;
+          }
+          
+          // Filter by rarity
+          if (filters.rarity && achievement.rarity !== filters.rarity) {
+            return false;
+          }
+          
+          // Filter by specific achievement ID
+          if (filters.achievementId && achievement.id !== filters.achievementId) {
+            return false;
+          }
+          
+          return true;
+        });
+        
+        achievementCounts.set(studentId, filteredAchievements.length);
+      } catch (error) {
+        console.error(`Error getting filtered achievements for student ${studentId}:`, error);
+        // Keep the 0 count on error
+      }
+    }
+    
+    return achievementCounts;
+  }
+
   // Investment management
   async getAllInvestments(): Promise<InvestmentWithStudent[]> {
     return await this.investmentRepo.findWithStudentInfo();
