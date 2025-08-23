@@ -7,6 +7,9 @@
 import { Calendar, DollarSign, User, Tag, Edit, Trash2 } from 'lucide-react'
 import ResponsiveTable from '@/components/admin/responsive-table'
 import IconRenderer from '@/components/icon-renderer'
+import Pagination from '@/components/admin/pagination'
+import PageSizeSelector from '@/components/admin/page-size-selector'
+import { usePagination } from '@/presentation/hooks/usePagination'
 import type { InvestmentCategory } from '@/types/database'
 
 interface InvestmentWithFormatting {
@@ -23,15 +26,51 @@ interface InvestmentWithFormatting {
 
 interface InvestmentsTableProps {
   investments: InvestmentWithFormatting[]
+  totalInvestments?: number
+  totalPages?: number
+  currentPage?: number
+  pageSize?: number
   onEdit: (investment: InvestmentWithFormatting) => void
   onDelete: (id: number) => void
 }
 
 export default function InvestmentsTable({
   investments,
+  totalInvestments,
+  totalPages,
+  currentPage,
+  pageSize,
   onEdit,
   onDelete
 }: InvestmentsTableProps) {
+  const { currentPage: urlPage, itemsPerPage: urlPageSize, goToPage, changeItemsPerPage } = usePagination({
+    autoRefresh: true  // Enable auto-refresh for server-side pagination
+  })
+  
+  // Use URL state if pagination props are provided, otherwise fall back to props
+  const effectivePage = totalPages ? urlPage : (currentPage || 1)
+  const effectivePageSize = totalPages ? urlPageSize : (pageSize || 10)
+  const effectiveTotal = totalInvestments || 0
+  const effectiveTotalPages = totalPages || 1
+
+  // Handle page size change with smart page reset
+  const handlePageSizeChange = (newSize: number) => {
+    // Calculate if current page would be out of bounds with new page size
+    const newTotalPages = Math.ceil(effectiveTotal / newSize)
+    const shouldResetPage = effectivePage > newTotalPages
+
+    changeItemsPerPage(newSize)
+    
+    // Reset to page 1 if current page would be invalid
+    if (shouldResetPage) {
+      goToPage(1)
+    }
+  }
+
+  // Handle page change with refresh
+  const handlePageChange = (page: number) => {
+    goToPage(page)
+  }
   const columns = [
     { 
       key: 'student_name', 
@@ -137,9 +176,38 @@ export default function InvestmentsTable({
   ]
 
   return (
-    <ResponsiveTable
-      data={investments}
-      columns={columns}
-    />
+    <div className="space-y-4">
+      <ResponsiveTable
+        data={investments}
+        columns={columns}
+      />
+      
+      {/* Pagination Controls */}
+      {totalInvestments !== undefined && effectiveTotal > 0 && (
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mt-6">
+          <div className="text-sm text-gray-700">
+            Showing {((effectivePage - 1) * effectivePageSize) + 1} to{' '}
+            {Math.min(effectivePage * effectivePageSize, effectiveTotal)} of{' '}
+            {effectiveTotal} investments
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <PageSizeSelector
+              currentPageSize={effectivePageSize}
+              onPageSizeChange={handlePageSizeChange}
+              options={[5, 10, 25, 50]}
+            />
+            
+            {effectiveTotalPages > 1 && (
+              <Pagination
+                currentPage={effectivePage}
+                totalPages={effectiveTotalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

@@ -7,6 +7,10 @@ import type { InvestmentAdminActions } from '@/utils/admin-server-action-types'
 
 interface InvestmentsAdminClientProps {
   initialInvestments: InvestmentForClient[]
+  totalInvestments?: number
+  totalPages?: number
+  currentPage?: number
+  pageSize?: number
   students: StudentForClient[]
   classes: ClassForClient[]
   categories: InvestmentCategory[]

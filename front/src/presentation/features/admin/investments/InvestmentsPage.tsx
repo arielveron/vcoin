@@ -11,7 +11,6 @@ import { useAdminFilters } from '../hooks/useAdminFilters'
 import { useAutoRefresh } from '@/presentation/hooks/useAutoRefresh'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import MobileFilters from '@/components/admin/mobile-filters'
-import { isSameDate } from '@/shared/utils/formatting/date'
 import {
   InvestmentsSummaryStats,
   InvestmentForm,
@@ -29,6 +28,10 @@ import type { InvestmentAdminActions } from '@/utils/admin-server-action-types'
 
 interface InvestmentsPageProps {
   initialInvestments: InvestmentForClient[]
+  totalInvestments?: number
+  totalPages?: number
+  currentPage?: number
+  pageSize?: number
   students: StudentForClient[]
   classes: ClassForClient[]
   categories: InvestmentCategory[]
@@ -41,6 +44,10 @@ interface InvestmentsPageProps {
 
 export default function InvestmentsPage({
   initialInvestments,
+  totalInvestments,
+  totalPages,
+  currentPage,
+  pageSize,
   students,
   classes,
   categories,
@@ -58,24 +65,6 @@ export default function InvestmentsPage({
   // Auto-refresh functionality
   const { refreshAfterFormAction, isPending } = useAutoRefresh({
     showAlerts: true
-  })
-  
-  // Filter investments based on current filters
-  const filteredInvestments = initialInvestments.filter(investment => {
-    if (filters.classId) {
-      const student = students.find(s => s.id === investment.student_id)
-      if (!student || student.class_id !== filters.classId) return false
-    }
-    if (filters.studentId && investment.student_id !== filters.studentId) return false
-    if (filters.categoryId && investment.category_id !== filters.categoryId) return false
-    if (filters.date) {
-      if (!isSameDate(investment.fecha, filters.date)) return false
-    }
-    if (filters.searchText) {
-      const searchTerm = filters.searchText.toLowerCase()
-      if (!investment.concepto.toLowerCase().includes(searchTerm)) return false
-    }
-    return true
   })
 
   // Handlers
@@ -114,14 +103,14 @@ export default function InvestmentsPage({
     category_id?: number
     category?: InvestmentCategory
   }) => {
-    const fullInvestment = filteredInvestments.find(inv => inv.id === tableInvestment.id)
+    const fullInvestment = initialInvestments.find(inv => inv.id === tableInvestment.id)
     if (fullInvestment) {
       handleEditInvestment(fullInvestment)
     }
   }
 
   // Transform data for table component  
-  const tableInvestments = filteredInvestments.map(inv => {
+  const tableInvestments = initialInvestments.map(inv => {
     const student = students.find(s => s.id === inv.student_id)
     return {
       id: inv.id,
@@ -150,13 +139,13 @@ export default function InvestmentsPage({
       <FilterBadges classes={classes} students={students} />
       
       {/* Summary Stats */}
-      <InvestmentsSummaryStats investments={filteredInvestments} />
+      <InvestmentsSummaryStats investments={initialInvestments} />
 
       {/* Header with Controls */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
           <h2 className="text-xl lg:text-2xl font-semibold text-gray-900">All Investments</h2>
-          <p className="text-gray-600">Total: {filteredInvestments.length} investments</p>
+          <p className="text-gray-600">Total: {totalInvestments || initialInvestments.length} investments</p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2">
@@ -205,6 +194,10 @@ export default function InvestmentsPage({
       {/* Investments Table */}
       <InvestmentsTable
         investments={tableInvestments}
+        totalInvestments={totalInvestments}
+        totalPages={totalPages}
+        currentPage={currentPage}
+        pageSize={pageSize}
         onEdit={handleEditInvestmentWrapper}
         onDelete={handleDeleteInvestment}
       />

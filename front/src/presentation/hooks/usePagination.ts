@@ -6,21 +6,24 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback } from 'react'
+import { useCallback, useTransition } from 'react'
 
 interface UsePaginationOptions {
   defaultItemsPerPage?: number
   pageParam?: string
   pageSizeParam?: string
+  autoRefresh?: boolean
 }
 
 export function usePagination({
   defaultItemsPerPage = 10,
   pageParam = 'page',
-  pageSizeParam = 'size'
+  pageSizeParam = 'size',
+  autoRefresh = false
 }: UsePaginationOptions = {}) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [isPending, startTransition] = useTransition()
 
   // Get current pagination state from URL
   const currentPage = parseInt(searchParams.get(pageParam) || '1', 10)
@@ -38,15 +41,26 @@ export function usePagination({
       }
     }
     
-    if (newItemsPerPage !== undefined && newItemsPerPage !== defaultItemsPerPage) {
+    if (newItemsPerPage !== undefined) {
+      // Always set the parameter when explicitly changing page size
+      // This ensures the server component gets the correct value
       params.set(pageSizeParam, newItemsPerPage.toString())
       // Reset to page 1 when changing page size
       params.delete(pageParam)
     }
 
     const newUrl = params.toString() ? `?${params.toString()}` : ''
-    router.push(newUrl, { scroll: false })
-  }, [router, searchParams, pageParam, pageSizeParam, defaultItemsPerPage])
+    
+    if (autoRefresh) {
+      // Use startTransition + router.refresh() for smooth updates like in useAutoRefresh
+      startTransition(() => {
+        router.replace(newUrl, { scroll: false })
+        router.refresh()
+      })
+    } else {
+      router.replace(newUrl, { scroll: false })
+    }
+  }, [router, searchParams, pageParam, pageSizeParam, startTransition, autoRefresh])
 
   const goToPage = useCallback((page: number) => {
     updatePaginationParams(page, undefined)
@@ -65,6 +79,7 @@ export function usePagination({
     itemsPerPage,
     goToPage,
     changeItemsPerPage,
-    resetPagination
+    resetPagination,
+    isPending
   }
 }

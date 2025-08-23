@@ -433,6 +433,36 @@ export class AdminService {
     return allStudents.filter(student => !studentIdsWithInvestment.has(student.id));
   }
 
+  /**
+   * Get paginated investments with optional filters
+   */
+  async getInvestmentsPaginated(
+    page: number, 
+    limit: number, 
+    filters?: { 
+      studentId?: number, 
+      categoryId?: number,
+      classId?: number 
+    }
+  ): Promise<{ investments: InvestmentWithStudent[]; total: number; totalPages: number }> {
+    const result = await this.investmentRepo.findPaginated(page, limit, filters);
+    return {
+      ...result,
+      totalPages: Math.ceil(result.total / limit)
+    };
+  }
+
+  /**
+   * Get total count of investments with optional filters
+   */
+  async getInvestmentsCount(filters?: { 
+    studentId?: number, 
+    categoryId?: number,
+    classId?: number 
+  }): Promise<number> {
+    return await this.investmentRepo.getCount(filters);
+  }
+
   // Interest rate management
   async getAllInterestRates() {
     const rates = await this.interestRateRepo.findAll();

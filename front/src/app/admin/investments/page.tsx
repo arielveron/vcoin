@@ -7,7 +7,12 @@ import { formatInvestmentsForClient, formatStudentsForClient, formatClassesForCl
 import { createInvestment, updateInvestment, deleteInvestment, createBatchInvestments, getStudentsForBatch } from './actions'
 
 interface InvestmentsPageProps {
-  searchParams: Promise<{ qc?: string, qs?: string }>
+  searchParams: Promise<{ 
+    qc?: string, 
+    qs?: string,
+    page?: string,
+    size?: string
+  }>
 }
 
 export default async function InvestmentsAdminPage({ searchParams }: InvestmentsPageProps) {
@@ -20,9 +25,20 @@ export default async function InvestmentsAdminPage({ searchParams }: Investments
   const adminService = new AdminService()
   const params = await searchParams
   const classId = params.qc ? parseInt(params.qc) : null
+  const studentId = params.qs ? parseInt(params.qs) : null
   
-  // Get data based on filters
-  const investments = await adminService.getAllInvestments()
+  // Parse pagination parameters
+  const page = params.page ? parseInt(params.page) : 1
+  const size = params.size ? parseInt(params.size) : 10
+  
+  // Get paginated investments based on filters
+  const filters = {
+    ...(classId && { classId }),
+    ...(studentId && { studentId })
+  }
+  
+  const investmentsResult = await adminService.getInvestmentsPaginated(page, size, filters)
+  const { investments, total: totalInvestments, totalPages } = investmentsResult
   const students = classId 
     ? await adminService.getStudentsByClass(classId)
     : await adminService.getAllStudents()
@@ -38,6 +54,9 @@ export default async function InvestmentsAdminPage({ searchParams }: Investments
   const studentsForClient = formatStudentsForClient(students, investmentCounts)
   const classesForClient = formatClassesForClient(classes)
 
+  // Create a filter key to force re-render when filters change
+  const filterKey = `${classId || 'all'}-${studentId || 'all'}-${page}-${size}`
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -49,7 +68,12 @@ export default async function InvestmentsAdminPage({ searchParams }: Investments
       
       <Suspense fallback={<div>Loading investments...</div>}>
         <InvestmentsAdminClient 
-          initialInvestments={investmentsForClient} 
+          key={filterKey}
+          initialInvestments={investmentsForClient}
+          totalInvestments={totalInvestments}
+          totalPages={totalPages}
+          currentPage={page}
+          pageSize={size}
           students={studentsForClient} 
           classes={classesForClient}
           categories={categories}

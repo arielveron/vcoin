@@ -10,8 +10,8 @@ import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
 interface PaginationProps {
   currentPage: number
   totalPages: number
-  totalItems: number
-  itemsPerPage: number
+  totalItems?: number
+  itemsPerPage?: number
   onPageChange: (page: number) => void
   className?: string
 }
@@ -19,15 +19,10 @@ interface PaginationProps {
 export default function Pagination({
   currentPage,
   totalPages,
-  totalItems,
-  itemsPerPage,
   onPageChange,
   className = ''
 }: PaginationProps) {
   if (totalPages <= 1) return null
-
-  const startItem = (currentPage - 1) * itemsPerPage + 1
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems)
 
   // Generate page numbers to display
   const getPageNumbers = () => {
@@ -91,14 +86,7 @@ export default function Pagination({
       </div>
 
       {/* Desktop pagination */}
-      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm text-gray-700">
-            Mostrando <span className="font-medium">{startItem}</span> a{' '}
-            <span className="font-medium">{endItem}</span> de{' '}
-            <span className="font-medium">{totalItems}</span> resultados
-          </p>
-        </div>
+      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-center">
         <div>
           <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
             {/* Previous button */}
