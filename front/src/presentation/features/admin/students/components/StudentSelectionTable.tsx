@@ -1,7 +1,7 @@
 /**
  * Student Selection Table Component
  * Enhanced table with multi-select capabilities for batch operations
- * Extends the existing StudentsTable component
+ * Includes mobile card layout and responsive design
  */
 'use client'
 
@@ -93,7 +93,7 @@ export default function StudentSelectionTable({
     },
     {
       key: 'created_at',
-      header: 'Fecha de Registro',
+      header: 'Alta',
       render: (student: StudentForClient) => (
         <span className="text-sm text-gray-500">
           {student.created_at_formatted}
@@ -102,45 +102,67 @@ export default function StudentSelectionTable({
     },
     {
       key: 'investment_count',
-      header: 'Inversiones',
+      header: 'Inv',
+      hideOnMobile: true,
       render: (student: StudentForClient) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-          {student.investment_count}
-        </span>
+        <div className="text-center">
+          <span className="inline-flex px-2 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800">
+            {student.investment_count}
+          </span>
+        </div>
       )
     },
     {
       key: 'achievement_count', 
-      header: 'Logros',
+      header: 'Logr',
+      hideOnMobile: true,
       render: (student: StudentForClient) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-          {student.achievement_count}
-        </span>
+        <div className="text-center">
+          <span className="inline-flex px-2 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800">
+            {student.achievement_count}
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'password_status',
+      header: 'Pass',
+      hideOnMobile: false,
+      render: (student: StudentForClient) => (
+        <div className="text-center">
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            student.password_hash 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {student.password_hash ? 'Set' : 'No Set'}
+          </span>
+        </div>
       )
     },
     {
       key: 'actions',
-      header: 'Acciones',
+      header: 'Actions',
       render: (student: StudentForClient) => (
-        <div className="flex items-center space-x-2">
+        <div className="flex space-x-2">
           <button
             onClick={() => onEdit(student)}
-            className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-colors"
-            title="Editar estudiante"
+            className="text-indigo-600 hover:text-indigo-900 p-1"
+            aria-label="Edit student"
           >
             <Edit className="h-4 w-4" />
           </button>
           <button
             onClick={() => onSetPassword(student)}
-            className="text-green-600 hover:text-green-900 p-1 hover:bg-green-50 rounded transition-colors"
-            title="Establecer contraseña"
+            className="text-green-600 hover:text-green-900 p-1"
+            aria-label="Set password"
           >
             <Key className="h-4 w-4" />
           </button>
           <button
             onClick={() => onDelete(student.id)}
-            className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-colors"
-            title="Eliminar estudiante"
+            className="text-red-600 hover:text-red-900 p-1"
+            aria-label="Delete student"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -148,6 +170,87 @@ export default function StudentSelectionTable({
       )
     }
   ]
+
+  // Custom mobile card with selection functionality
+  const mobileCard = (student: StudentForClient) => {
+    const studentClass = classes.find(c => c.id === student.class_id)
+    
+    return (
+      <div>
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => onStudentToggle(student.id)}
+              className="p-1 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
+            >
+              {selectedStudentIds.includes(student.id) ? (
+                <CheckSquare className="h-5 w-5 text-blue-600" />
+              ) : (
+                <Square className="h-5 w-5 text-gray-400" />
+              )}
+            </button>
+            <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+              <User className="h-5 w-5 text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">{student.name}</h3>
+              <p className="text-sm text-gray-500">Registro: {student.registro}</p>
+            </div>
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => onEdit(student)}
+              className="text-indigo-600 p-1"
+            >
+              <Edit className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => onSetPassword(student)}
+              className="text-green-600 p-1"
+            >
+              <Key className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => onDelete(student.id)}
+              className="text-red-600 p-1"
+            >
+              <Trash2 className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+        
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm text-gray-600">
+            Clase: {studentClass?.name || 'Sin clase asignada'}
+          </span>
+          <span className="text-sm text-gray-600">
+            Registro: {student.created_at_formatted}
+          </span>
+        </div>
+        
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex space-x-2">
+            <span className="inline-flex px-2 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800">
+              {student.investment_count} inversiones
+            </span>
+            <span className="inline-flex px-2 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800">
+              {student.achievement_count} logros
+            </span>
+          </div>
+        </div>
+        
+        <div className="flex justify-end">
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            student.password_hash 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {student.password_hash ? 'Set' : 'No Set'}
+          </span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -181,7 +284,8 @@ export default function StudentSelectionTable({
       <ResponsiveTable
         data={students}
         columns={columns}
-        emptyMessage="No se encontraron estudiantes"
+        mobileCard={mobileCard}
+        emptyMessage="No se encontraron estudiantes. Crea tu primer estudiante arriba."
       />
     </div>
   )
