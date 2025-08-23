@@ -5,7 +5,7 @@
 'use client'
 
 import type { Class } from '@/types/database'
-import DebouncedSearchInput from './DebouncedSearchInput'
+import { DebouncedSearchInput } from '@/shared/components'
 
 interface AdminFilters {
   classId: number | null

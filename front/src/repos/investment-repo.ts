@@ -422,7 +422,9 @@ export class InvestmentRepository {
     filters?: { 
       studentId?: number, 
       categoryId?: number,
-      classId?: number 
+      classId?: number,
+      searchText?: string,
+      date?: string
     }
   ): Promise<{ investments: InvestmentWithStudent[]; total: number }> {
     const client = await pool.connect();
@@ -453,6 +455,21 @@ export class InvestmentRepository {
         whereConditions.push(`s.class_id = $${paramIndex}`);
         countParams.push(filters.classId);
         dataParams.push(filters.classId);
+        paramIndex++;
+      }
+
+      if (filters?.searchText) {
+        whereConditions.push(`LOWER(i.concepto) LIKE $${paramIndex}`);
+        const searchPattern = `%${filters.searchText.toLowerCase()}%`;
+        countParams.push(searchPattern);
+        dataParams.push(searchPattern);
+        paramIndex++;
+      }
+
+      if (filters?.date) {
+        whereConditions.push(`i.fecha = $${paramIndex}`);
+        countParams.push(filters.date);
+        dataParams.push(filters.date);
         paramIndex++;
       }
       
@@ -549,7 +566,9 @@ export class InvestmentRepository {
   async getCount(filters?: { 
     studentId?: number, 
     categoryId?: number,
-    classId?: number 
+    classId?: number,
+    searchText?: string,
+    date?: string
   }): Promise<number> {
     const client = await pool.connect();
     try {
@@ -571,10 +590,20 @@ export class InvestmentRepository {
         whereConditions.push(`s.class_id = $${paramIndex++}`);
         params.push(filters.classId);
       }
+
+      if (filters?.searchText) {
+        whereConditions.push(`LOWER(i.concepto) LIKE $${paramIndex++}`);
+        params.push(`%${filters.searchText.toLowerCase()}%`);
+      }
+
+      if (filters?.date) {
+        whereConditions.push(`i.fecha = $${paramIndex++}`);
+        params.push(filters.date);
+      }
       
       const whereClause = whereConditions.length > 0 ? 
         `WHERE ${whereConditions.join(' AND ')}` : '';
-      
+
       const result = await client.query(`
         SELECT COUNT(*) as total
         FROM investments i

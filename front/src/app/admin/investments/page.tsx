@@ -8,8 +8,11 @@ import { createInvestment, updateInvestment, deleteInvestment, createBatchInvest
 
 interface InvestmentsPageProps {
   searchParams: Promise<{ 
-    qc?: string, 
-    qs?: string,
+    qc?: string,      // class filter
+    qs?: string,      // student filter
+    qcat?: string,    // category filter
+    qd?: string,      // date filter
+    qt?: string,      // search text filter
     page?: string,
     size?: string
   }>
@@ -26,6 +29,9 @@ export default async function InvestmentsAdminPage({ searchParams }: Investments
   const params = await searchParams
   const classId = params.qc ? parseInt(params.qc) : null
   const studentId = params.qs ? parseInt(params.qs) : null
+  const categoryId = params.qcat ? parseInt(params.qcat) : null
+  const date = params.qd || null
+  const searchText = params.qt || null
   
   // Parse pagination parameters
   const page = params.page ? parseInt(params.page) : 1
@@ -34,7 +40,10 @@ export default async function InvestmentsAdminPage({ searchParams }: Investments
   // Get paginated investments based on filters
   const filters = {
     ...(classId && { classId }),
-    ...(studentId && { studentId })
+    ...(studentId && { studentId }),
+    ...(categoryId && { categoryId }),
+    ...(date && { date }),
+    ...(searchText && { searchText })
   }
   
   const investmentsResult = await adminService.getInvestmentsPaginated(page, size, filters)
@@ -55,7 +64,7 @@ export default async function InvestmentsAdminPage({ searchParams }: Investments
   const classesForClient = formatClassesForClient(classes)
 
   // Create a filter key to force re-render when filters change
-  const filterKey = `${classId || 'all'}-${studentId || 'all'}-${page}-${size}`
+  const filterKey = `${classId || 'all'}-${studentId || 'all'}-${categoryId || 'all'}-${date || 'all'}-${searchText || 'all'}-${page}-${size}`
 
   return (
     <div className="p-6">

@@ -465,7 +465,9 @@ export class AdminService {
     filters?: { 
       studentId?: number, 
       categoryId?: number,
-      classId?: number 
+      classId?: number,
+      searchText?: string,
+      date?: string
     }
   ): Promise<{ investments: InvestmentWithStudent[]; total: number; totalPages: number }> {
     const result = await this.investmentRepo.findPaginated(page, limit, filters);
@@ -481,7 +483,9 @@ export class AdminService {
   async getInvestmentsCount(filters?: { 
     studentId?: number, 
     categoryId?: number,
-    classId?: number 
+    classId?: number,
+    searchText?: string,
+    date?: string
   }): Promise<number> {
     return await this.investmentRepo.getCount(filters);
   }

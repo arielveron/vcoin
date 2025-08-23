@@ -4,7 +4,7 @@
  */
 'use client'
 
-import { Search } from 'lucide-react'
+import { DebouncedSearchInput } from '@/shared/components'
 import type { Class, Student, InvestmentCategory } from '@/types/database'
 
 interface AdminFilters {
@@ -40,18 +40,13 @@ export default function InvestmentFilters({
   return (
     <div className={`space-y-3 ${className}`}>
       {/* Search Text Filter - Separate line */}
-      <div className="w-full relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-4 w-4 text-gray-400" />
-        </div>
-        <input
-          type="text"
-          value={filters.searchText || ''}
-          onChange={(e) => onFiltersChange({ 
-            searchText: e.target.value || null 
-          })}
+      <div className="w-full">
+        <DebouncedSearchInput
+          value={filters.searchText}
+          onChange={(value) => onFiltersChange({ searchText: value })}
           placeholder="Search by concept..."
-          className="w-full pl-10 pr-3 py-2 rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+          debounceMs={300}
+          autoFocus={false}
         />
       </div>
       
