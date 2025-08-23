@@ -121,3 +121,25 @@ export const fromDBDateValue = (dateString: string): Date => {
 export const isSameDate = (date1: Date | string, date2: Date | string): boolean => {
   return toDBDateValue(date1) === toDBDateValue(date2);
 };
+
+/**
+ * Format month and year for grouping (e.g., "agosto 2025")
+ * Used for organizing investments by month in lists
+ */
+export const formatMonth = (date: Date | string, locale = 'es-AR'): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString(locale, { year: "numeric", month: "long" });
+};
+
+/**
+ * Format date with weekday for user-friendly display (e.g., "mié 15 ago")
+ * Used for showing dates in a compact, readable format
+ */
+export const formatDayWithWeekday = (date: Date | string, locale = 'es-AR'): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString(locale, {
+    weekday: "short",
+    day: "numeric", 
+    month: "short",
+  });
+};

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import IconRenderer from "@/components/icon-renderer";
 import { InvestmentCategory } from "@/types/database";
 import { ChevronDown, ChevronRight, Wallet, Calendar, DollarSign } from "lucide-react";
-import { formatCurrency } from "@/shared/utils/formatting";
+import { formatCurrency, formatDate, formatMonth, formatDayWithWeekday } from "@/shared/utils/formatting";
 
 interface InvestmentItem {
   id: number;
@@ -37,7 +37,7 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
   // Group investments by month for better organization
   const investmentsByMonth = listInvertidos.reduce((acc, item) => {
     const date = new Date(item.fecha);
-    const monthKey = date.toLocaleDateString("es-AR", { year: "numeric", month: "long" });
+    const monthKey = formatMonth(date);
     if (!acc[monthKey]) {
       acc[monthKey] = [];
     }
@@ -185,13 +185,15 @@ export default function ListInvertidos({ totalInvertido, listInvertidos, classNa
                                     </div>
                                   )}
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  {new Date(item.fecha).toLocaleDateString("es-AR", {
-                                    weekday: "short",
-                                    day: "numeric",
-                                    month: "short",
-                                  })}
-                                </p>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 mt-1">
+                                  <p className="text-xs text-gray-500">
+                                    {formatDayWithWeekday(new Date(item.fecha))}
+                                  </p>
+                                  <span className="hidden sm:inline text-xs text-gray-300">•</span>
+                                  <p className="text-xs text-gray-400 font-mono">
+                                    {formatDate(item.fecha)}
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           </div>

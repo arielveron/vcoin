@@ -9,6 +9,8 @@ export {
   formatDateTime,
   formatTimeAgo,
   formatDateForDisplay,
+  formatMonth,
+  formatDayWithWeekday,
   toDateInputValue,
   fromDateInputValue,
   getTodayInputValue,
