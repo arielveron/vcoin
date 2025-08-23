@@ -23,6 +23,13 @@ export default function ClassesTable({
   // Define columns for ResponsiveTable
   const columns = [
     {
+      key: 'id',
+      header: 'ID',
+      render: (item: ClassForClient) => (
+        <div className="text-sm text-gray-600 font-mono">{item.id}</div>
+      )
+    },
+    {
       key: 'name',
       header: 'Name',
       render: (item: ClassForClient) => (
@@ -78,7 +85,10 @@ export default function ClassesTable({
   const mobileCard = (item: ClassForClient) => (
     <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-sm">
       <div className="flex justify-between items-start mb-2">
-        <h3 className="font-medium text-gray-900">{item.name}</h3>
+        <div>
+          <div className="text-xs text-gray-500 font-mono mb-1">ID: {item.id}</div>
+          <h3 className="font-medium text-gray-900">{item.name}</h3>
+        </div>
         <div className="flex space-x-2">
           <button
             onClick={() => onEdit(item)}
