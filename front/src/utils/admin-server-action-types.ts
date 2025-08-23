@@ -114,6 +114,10 @@ export interface AdminActions extends
  */
 export interface StudentsPageProps {
   initialStudents: StudentForClient[]
+  totalStudents?: number
+  totalPages?: number
+  currentPage?: number
+  pageSize?: number
   classes: Class[]
   categories: InvestmentCategory[]
   achievements: Achievement[]

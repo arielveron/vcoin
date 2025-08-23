@@ -19,7 +19,9 @@ interface StudentsPageProps {
     qt?: string,
     qacategory?: string,
     qararity?: string,
-    qachievement?: string
+    qachievement?: string,
+    page?: string,
+    size?: string
   }>
 }
 
@@ -34,10 +36,16 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
   const params = await searchParams
   const classId = params.qc ? parseInt(params.qc) : null
   
-  // Get students based on class filter
-  const students = classId 
-    ? await adminService.getStudentsByClass(classId)
-    : await adminService.getAllStudents()
+  // Parse pagination parameters
+  const page = params.page ? parseInt(params.page) : 1
+  const size = params.size ? parseInt(params.size) : 10
+  
+  // Get paginated students based on class filter
+  const studentsResult = classId 
+    ? await adminService.getStudentsPaginated(page, size, classId)
+    : await adminService.getStudentsPaginated(page, size)
+  
+  const { students, total: totalStudents, totalPages } = studentsResult
   
   const classes = await adminService.getAllClasses()
   const categories = await adminService.getAllCategories(true) // Only active categories
@@ -76,7 +84,7 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
   const studentsForClient = formatStudentsForClient(students, investmentCounts, achievementCounts)
 
   // Create a filter key to force re-render when filters change
-  const filterKey = `${classId || 'all'}-${investmentFilters.categoryId || 'all'}-${investmentFilters.date || 'all'}-${investmentFilters.searchText || 'all'}-${achievementFilters.category || 'all'}-${achievementFilters.rarity || 'all'}-${achievementFilters.achievementId || 'all'}`
+  const filterKey = `${classId || 'all'}-${page}-${size}-${investmentFilters.categoryId || 'all'}-${investmentFilters.date || 'all'}-${investmentFilters.searchText || 'all'}-${achievementFilters.category || 'all'}-${achievementFilters.rarity || 'all'}-${achievementFilters.achievementId || 'all'}`
 
   return (
     <div className="space-y-6">
@@ -90,7 +98,11 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
       <Suspense fallback={<div>Loading students...</div>}>
         <StudentsPage 
           key={filterKey}
-          initialStudents={studentsForClient} 
+          initialStudents={studentsForClient}
+          totalStudents={totalStudents}
+          totalPages={totalPages}
+          currentPage={page}
+          pageSize={size}
           classes={classes}
           categories={categories}
           achievements={achievements}

@@ -3,7 +3,7 @@
  * Displays students in a responsive table format
  * Extracted from students-admin-client.tsx
  */
-import { User, Mail, Edit, Key, Trash2 } from 'lucide-react'
+import { User, Edit, Key, Trash2 } from 'lucide-react'
 import ResponsiveTable from '@/components/admin/responsive-table'
 import type { Class } from '@/types/database'
 import { StudentForClient } from '@/utils/admin-data-types'
@@ -38,17 +38,6 @@ export default function StudentsTable({
             <div className="text-sm font-medium text-gray-900">{student.name}</div>
             <div className="text-sm text-gray-500">Registro: {student.registro}</div>
           </div>
-        </div>
-      )
-    },
-    {
-      key: 'email',
-      header: 'Email',
-      hideOnMobile: true,
-      render: (student: StudentForClient) => (
-        <div className="flex items-center space-x-2">
-          <Mail className="h-4 w-4 text-gray-400" />
-          <span>{student.email || 'Sin email'}</span>
         </div>
       )
     },
@@ -166,13 +155,6 @@ export default function StudentsTable({
             </button>
           </div>
         </div>
-        
-        {student.email && (
-          <div className="flex items-center space-x-2 mb-2">
-            <Mail className="h-4 w-4 text-gray-400" />
-            <span className="text-sm text-gray-600">{student.email}</span>
-          </div>
-        )}
         
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm text-gray-600">

@@ -2,15 +2,18 @@
  * Students Page Component
  * Main orchestrator component for the students admin
  * Refactored from 546-line students-admin-client.tsx
+ * Enhanced with pagination support
  */
 'use client'
 
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { useAdminFilters } from '../hooks/useAdminFilters'
-import { useServerAction } from '@/presentation/hooks'
+import { useServerAction, usePagination } from '@/presentation/hooks'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import MobileFilters from '@/components/admin/mobile-filters'
+import Pagination from '@/components/admin/pagination'
+import PageSizeSelector from '@/components/admin/page-size-selector'
 import {
   StudentsTable,
   StudentForm,
@@ -30,6 +33,10 @@ import {
 
 export default function StudentsPage({
   initialStudents,
+  totalStudents,
+  totalPages: serverTotalPages,
+  currentPage: serverCurrentPage,
+  pageSize: serverPageSize,
   classes,
   categories,
   achievements,
@@ -47,10 +54,25 @@ export default function StudentsPage({
   // Server actions
   const { execute: executeDelete } = useServerAction(deleteStudent)
 
-  // Filter students based on selected class
-  const filteredStudents = filters.classId 
-    ? students.filter(student => student.class_id === filters.classId)
-    : students
+  // Use URL-based pagination hook for navigation
+  const { currentPage, itemsPerPage, goToPage, changeItemsPerPage } = usePagination({
+    defaultItemsPerPage: serverPageSize || 10
+  })
+
+  // Use server-provided pagination data when available, fallback to URL params
+  const effectiveCurrentPage = serverCurrentPage || currentPage
+  const effectiveItemsPerPage = serverPageSize || itemsPerPage
+  const effectiveTotalPages = serverTotalPages || Math.ceil((totalStudents || students.length) / effectiveItemsPerPage)
+  const effectiveTotalItems = totalStudents || students.length
+
+  // Calculate pagination display info
+  const startIndex = (effectiveCurrentPage - 1) * effectiveItemsPerPage + 1
+  const endIndex = Math.min(effectiveCurrentPage * effectiveItemsPerPage, effectiveTotalItems)
+  const isEmpty = students.length === 0
+
+  // For server-side pagination, we display all students from the current page
+  // Client-side filtering is minimal since server handles the main pagination
+  const displayStudents = students
 
   const handleFormSubmit = async (formData: FormData): Promise<ActionResult<Student>> => {
     if (editingStudent) {
@@ -208,14 +230,56 @@ export default function StudentsPage({
         />
       )}
 
+      {/* Results summary and page size selector */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white px-4 py-3 border-t border-gray-200">
+        <div className="text-sm text-gray-700">
+          {effectiveTotalItems === 0 ? (
+            'No se encontraron estudiantes'
+          ) : (
+            <>
+              Mostrando <span className="font-medium">{startIndex}</span> a{' '}
+              <span className="font-medium">{endIndex}</span> de{' '}
+              <span className="font-medium">{effectiveTotalItems}</span> estudiantes
+              {filters.classId && (
+                <span className="text-gray-500"> (filtrados)</span>
+              )}
+            </>
+          )}
+        </div>
+        <PageSizeSelector
+          currentPageSize={effectiveItemsPerPage}
+          onPageSizeChange={changeItemsPerPage}
+          options={[5, 10, 25, 50]}
+        />
+      </div>
+
       {/* Students Table */}
-      <StudentsTable
-        students={filteredStudents}
-        classes={classes}
-        onEdit={handleEditStudent}
-        onDelete={handleDeleteStudent}
-        onSetPassword={handleSetPasswordClick}
-      />
+      {isEmpty ? (
+        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+          <div className="text-gray-500">
+            {filters.classId ? 'No hay estudiantes en la clase seleccionada' : 'No hay estudiantes registrados'}
+          </div>
+        </div>
+      ) : (
+        <>
+          <StudentsTable
+            students={displayStudents}
+            classes={classes}
+            onEdit={handleEditStudent}
+            onDelete={handleDeleteStudent}
+            onSetPassword={handleSetPasswordClick}
+          />
+          
+          {/* Pagination */}
+          <Pagination
+            currentPage={effectiveCurrentPage}
+            totalPages={effectiveTotalPages}
+            totalItems={effectiveTotalItems}
+            itemsPerPage={effectiveItemsPerPage}
+            onPageChange={goToPage}
+          />
+        </>
+      )}
     </div>
   )
 }

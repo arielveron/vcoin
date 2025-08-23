@@ -6,6 +6,8 @@
 export { useServerAction } from './useServerAction';
 export { useFormModal } from './useFormModal';  
 export { useDataTable } from './useDataTable';
+export { useDataTableWithPagination } from './useDataTableWithPagination';
+export { usePagination } from './usePagination';
 export { useMediaQuery } from './useMediaQuery';
 export { useCollapsibleStore } from './useCollapsibleStore';
 export { useAutoRefresh } from './useAutoRefresh';

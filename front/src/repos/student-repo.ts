@@ -151,4 +151,89 @@ export class StudentRepository {
       client.release();
     }
   }
+
+  /**
+   * Get paginated students with optional class filter
+   */
+  async findPaginated(page: number, limit: number, classId?: number): Promise<{ students: Student[]; total: number }> {
+    const client = await pool.connect();
+    try {
+      const offset = (page - 1) * limit;
+      
+      // Get total count first
+      let countQuery: string;
+      let countParams: (string | number)[];
+      
+      if (classId) {
+        countQuery = `
+          SELECT COUNT(*) as total
+          FROM students s
+          WHERE s.class_id = $1
+        `;
+        countParams = [classId];
+      } else {
+        countQuery = `
+          SELECT COUNT(*) as total
+          FROM students s
+        `;
+        countParams = [];
+      }
+      
+      const countResult = await client.query(countQuery, countParams);
+      const total = parseInt(countResult.rows[0].total, 10);
+
+      // Get paginated results
+      let dataQuery: string;
+      let dataParams: (string | number)[];
+      
+      if (classId) {
+        dataQuery = `
+          SELECT s.id, s.registro, s.name, s.email, s.class_id, s.password_hash, s.created_at, s.updated_at
+          FROM students s
+          WHERE s.class_id = $1
+          ORDER BY s.name
+          LIMIT $2 OFFSET $3
+        `;
+        dataParams = [classId, limit, offset];
+      } else {
+        dataQuery = `
+          SELECT s.id, s.registro, s.name, s.email, s.class_id, s.password_hash, s.created_at, s.updated_at
+          FROM students s
+          ORDER BY s.name
+          LIMIT $1 OFFSET $2
+        `;
+        dataParams = [limit, offset];
+      }
+      
+      const dataResult = await client.query(dataQuery, dataParams);
+
+      return {
+        students: dataResult.rows,
+        total
+      };
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Get total count of students with optional class filter
+   */
+  async getCount(classId?: number): Promise<number> {
+    const client = await pool.connect();
+    try {
+      const whereClause = classId ? 'WHERE class_id = $1' : '';
+      const params = classId ? [classId] : [];
+      
+      const result = await client.query(`
+        SELECT COUNT(*) as total
+        FROM students
+        ${whereClause}
+      `, params);
+      
+      return parseInt(result.rows[0].total, 10);
+    } finally {
+      client.release();
+    }
+  }
 }

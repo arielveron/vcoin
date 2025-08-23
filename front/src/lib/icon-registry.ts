@@ -1,10 +1,45 @@
 // Central registry for all available icons across libraries
-import * as LucideIcons from 'lucide-react';
+import {
+  Trophy,
+  Medal,
+  Crown,
+  Star,
+  Award,
+  Target,
+  Zap,
+  Flame,
+  Shield,
+  ShieldCheck,
+  GraduationCap,
+  BookOpen,
+  Book,
+  Bookmark,
+  Lightbulb,
+  Brain,
+  Calculator,
+  PenTool,
+  DollarSign,
+  Coins,
+  Wallet,
+  CreditCard,
+  PiggyBank,
+  TrendingUp,
+  BarChart3,
+  Gem,
+  Gift,
+  Sparkles,
+  Heart,
+  ThumbsUp,
+  Snowflake,
+  Sun,
+  TreePine,
+  Candy,
+  type LucideIcon
+} from 'lucide-react';
 import * as HeroiconsSolid from '@heroicons/react/24/solid';
 import * as HeroiconsOutline from '@heroicons/react/24/outline';
 import * as TablerIcons from '@tabler/icons-react';
 import * as PhosphorIcons from '@phosphor-icons/react';
-import { LucideIcon } from 'lucide-react';
 import { ComponentType } from 'react';
 
 export type IconComponent = LucideIcon | ComponentType<{ className?: string; size?: number | string }>;
@@ -22,210 +57,210 @@ const ICON_REGISTRY: IconDefinition[] = [
   // Lucide Icons - Solid variants preferred
   { 
     name: 'Trophy', 
-    component: LucideIcons.Trophy,
+    component: Trophy,
     library: 'lucide',
     category: 'achievement',
     tags: ['award', 'winner', 'champion', 'prize', 'trofeo']
   },
   { 
     name: 'Medal', 
-    component: LucideIcons.Medal,
+    component: Medal,
     library: 'lucide',
     category: 'achievement',
     tags: ['award', 'honor', 'medallion', 'medalla']
   },
   { 
     name: 'Crown', 
-    component: LucideIcons.Crown,
+    component: Crown,
     library: 'lucide',
     category: 'achievement',
     tags: ['king', 'queen', 'royal', 'corona']
   },
   { 
     name: 'Star', 
-    component: LucideIcons.Star,
+    component: Star,
     library: 'lucide',
     category: 'achievement',
     tags: ['favorite', 'rating', 'estrella']
   },
   { 
     name: 'Award', 
-    component: LucideIcons.Award,
+    component: Award,
     library: 'lucide',
     category: 'achievement',
     tags: ['prize', 'ribbon', 'premio']
   },
   { 
     name: 'Target', 
-    component: LucideIcons.Target,
+    component: Target,
     library: 'lucide',
     category: 'general',
     tags: ['goal', 'aim', 'objective', 'objetivo']
   },
   { 
     name: 'Zap', 
-    component: LucideIcons.Zap,
+    component: Zap,
     library: 'lucide',
     category: 'general',
     tags: ['lightning', 'energy', 'power', 'rayo']
   },
   { 
     name: 'Flame', 
-    component: LucideIcons.Flame,
+    component: Flame,
     library: 'lucide',
     category: 'general',
     tags: ['fire', 'hot', 'streak', 'fuego']
   },
   { 
     name: 'Shield', 
-    component: LucideIcons.Shield,
+    component: Shield,
     library: 'lucide',
     category: 'general',
     tags: ['protection', 'defense', 'escudo']
   },
   { 
     name: 'ShieldCheck', 
-    component: LucideIcons.ShieldCheck,
+    component: ShieldCheck,
     library: 'lucide',
     category: 'general',
     tags: ['protection', 'verified', 'defense', 'escudo']
   },
   { 
     name: 'GraduationCap', 
-    component: LucideIcons.GraduationCap,
+    component: GraduationCap,
     library: 'lucide',
     category: 'academic',
     tags: ['education', 'school', 'university', 'graduacion']
   },
   { 
     name: 'BookOpen', 
-    component: LucideIcons.BookOpen,
+    component: BookOpen,
     library: 'lucide',
     category: 'academic',
     tags: ['study', 'read', 'education', 'libro']
   },
   { 
     name: 'Book', 
-    component: LucideIcons.Book,
+    component: Book,
     library: 'lucide',
     category: 'academic',
     tags: ['study', 'read', 'education', 'libro']
   },
   { 
     name: 'Bookmark', 
-    component: LucideIcons.Bookmark,
+    component: Bookmark,
     library: 'lucide',
     category: 'academic',
     tags: ['save', 'favorite', 'marcador']
   },
   { 
     name: 'Lightbulb', 
-    component: LucideIcons.Lightbulb,
+    component: Lightbulb,
     library: 'lucide',
     category: 'academic',
     tags: ['idea', 'innovation', 'creativity', 'bombilla']
   },
   { 
     name: 'Brain', 
-    component: LucideIcons.Brain,
+    component: Brain,
     library: 'lucide',
     category: 'academic',
     tags: ['mind', 'intelligence', 'cerebro']
   },
   { 
     name: 'Calculator', 
-    component: LucideIcons.Calculator,
+    component: Calculator,
     library: 'lucide',
     category: 'academic',
     tags: ['math', 'calculation', 'calculadora']
   },
   { 
     name: 'PenTool', 
-    component: LucideIcons.PenTool,
+    component: PenTool,
     library: 'lucide',
     category: 'academic',
     tags: ['write', 'draw', 'design', 'lapiz']
   },
   { 
     name: 'DollarSign', 
-    component: LucideIcons.DollarSign,
+    component: DollarSign,
     library: 'lucide',
     category: 'finance',
     tags: ['money', 'cash', 'currency', 'dinero']
   },
   { 
     name: 'Coins', 
-    component: LucideIcons.Coins,
+    component: Coins,
     library: 'lucide',
     category: 'finance',
     tags: ['money', 'currency', 'monedas']
   },
   { 
     name: 'Wallet', 
-    component: LucideIcons.Wallet,
+    component: Wallet,
     library: 'lucide',
     category: 'finance',
     tags: ['money', 'billfold', 'billetera']
   },
   { 
     name: 'CreditCard', 
-    component: LucideIcons.CreditCard,
+    component: CreditCard,
     library: 'lucide',
     category: 'finance',
     tags: ['payment', 'card', 'tarjeta']
   },
   { 
     name: 'PiggyBank', 
-    component: LucideIcons.PiggyBank,
+    component: PiggyBank,
     library: 'lucide',
     category: 'finance',
     tags: ['savings', 'money', 'alcancia']
   },
   { 
     name: 'TrendingUp', 
-    component: LucideIcons.TrendingUp,
+    component: TrendingUp,
     library: 'lucide',
     category: 'finance',
     tags: ['growth', 'profit', 'increase', 'crecimiento']
   },
   { 
     name: 'BarChart3', 
-    component: LucideIcons.BarChart3,
+    component: BarChart3,
     library: 'lucide',
     category: 'finance',
     tags: ['analytics', 'stats', 'data', 'grafico']
   },
   { 
     name: 'Gem', 
-    component: LucideIcons.Gem,
+    component: Gem,
     library: 'lucide',
     category: 'reward',
     tags: ['diamond', 'jewel', 'precious', 'gema']
   },
   { 
     name: 'Gift', 
-    component: LucideIcons.Gift,
+    component: Gift,
     library: 'lucide',
     category: 'reward',
     tags: ['present', 'birthday', 'regalo', 'cumpleaños']
   },
   { 
     name: 'Sparkles', 
-    component: LucideIcons.Sparkles,
+    component: Sparkles,
     library: 'lucide',
     category: 'reward',
     tags: ['magic', 'shine', 'destellos']
   },
   { 
     name: 'Heart', 
-    component: LucideIcons.Heart,
+    component: Heart,
     library: 'lucide',
     category: 'reward',
     tags: ['love', 'valentine', 'amor', 'corazon']
   },
   { 
     name: 'ThumbsUp', 
-    component: LucideIcons.ThumbsUp,
+    component: ThumbsUp,
     library: 'lucide',
     category: 'reward',
     tags: ['like', 'approve', 'good', 'pulgar']
@@ -452,28 +487,28 @@ const ICON_REGISTRY: IconDefinition[] = [
   // Seasonal Icons
   { 
     name: 'Snowflake', 
-    component: LucideIcons.Snowflake,
+    component: Snowflake,
     library: 'lucide',
     category: 'seasonal',
     tags: ['winter', 'christmas', 'snow', 'navidad', 'nieve']
   },
   { 
     name: 'Sun', 
-    component: LucideIcons.Sun,
+    component: Sun,
     library: 'lucide',
     category: 'seasonal',
     tags: ['summer', 'hot', 'verano', 'sol']
   },
   { 
     name: 'TreePine', 
-    component: LucideIcons.TreePine,
+    component: TreePine,
     library: 'lucide',
     category: 'seasonal',
     tags: ['christmas', 'winter', 'tree', 'arbol']
   },
   { 
     name: 'Candy', 
-    component: LucideIcons.Candy,
+    component: Candy,
     library: 'lucide',
     category: 'seasonal',
     tags: ['sweet', 'treat', 'dulce']

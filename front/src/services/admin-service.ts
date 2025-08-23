@@ -128,6 +128,24 @@ export class AdminService {
     return await this.studentRepo.findByClassId(classId);
   }
 
+  /**
+   * Get paginated students with optional class filter
+   */
+  async getStudentsPaginated(page: number, limit: number, classId?: number): Promise<{ students: Student[]; total: number; totalPages: number }> {
+    const result = await this.studentRepo.findPaginated(page, limit, classId);
+    return {
+      ...result,
+      totalPages: Math.ceil(result.total / limit)
+    };
+  }
+
+  /**
+   * Get total count of students with optional class filter
+   */
+  async getStudentsCount(classId?: number): Promise<number> {
+    return await this.studentRepo.getCount(classId);
+  }
+
   async getStudentById(id: number): Promise<Student | null> {
     return await this.studentRepo.findById(id);
   }
