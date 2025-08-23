@@ -1,10 +1,11 @@
 /**
  * Student Filters Component
- * Handles filtering of students by class
+ * Handles filtering of students by class and text search
  */
 'use client'
 
 import type { Class } from '@/types/database'
+import DebouncedSearchInput from './DebouncedSearchInput'
 
 interface AdminFilters {
   classId: number | null
@@ -29,6 +30,15 @@ export default function StudentFilters({
 }: StudentFiltersProps) {
   return (
     <div className={`space-y-3 ${className}`}>
+      {/* Text Search Filter */}
+      <DebouncedSearchInput
+        value={filters.searchText}
+        onChange={(value) => onFiltersChange({ searchText: value })}
+        placeholder="Search by name or registro number..."
+        debounceMs={300}
+        autoFocus={true}
+      />
+      
       {/* Class Filter */}
       <div className="w-full">
         <select

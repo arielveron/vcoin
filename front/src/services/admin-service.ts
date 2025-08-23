@@ -131,8 +131,17 @@ export class AdminService {
   /**
    * Get paginated students with optional class filter
    */
-  async getStudentsPaginated(page: number, limit: number, classId?: number): Promise<{ students: Student[]; total: number; totalPages: number }> {
-    const result = await this.studentRepo.findPaginated(page, limit, classId);
+  async getStudentsPaginated(
+    page: number, 
+    limit: number, 
+    filters?: { classId?: number; searchText?: string }
+  ): Promise<{ students: Student[]; total: number; totalPages: number }> {
+    // Support legacy classId parameter for backward compatibility
+    const normalizedFilters = typeof filters === 'number' 
+      ? { classId: filters } 
+      : filters;
+    
+    const result = await this.studentRepo.findPaginated(page, limit, normalizedFilters);
     return {
       ...result,
       totalPages: Math.ceil(result.total / limit)
@@ -148,6 +157,20 @@ export class AdminService {
 
   async getStudentById(id: number): Promise<Student | null> {
     return await this.studentRepo.findById(id);
+  }
+
+  /**
+   * Get students by an array of IDs
+   */
+  async getStudentsByIds(ids: number[]): Promise<Student[]> {
+    return await this.studentRepo.findByIds(ids);
+  }
+
+  /**
+   * Get investments by date and category (for checking duplicates)
+   */
+  async getInvestmentsByDateAndCategory(fecha: Date, categoryId: number): Promise<Investment[]> {
+    return await this.investmentRepo.findByDateAndCategory(fecha, categoryId);
   }
 
   async createStudent(data: CreateStudentRequest): Promise<Student> {

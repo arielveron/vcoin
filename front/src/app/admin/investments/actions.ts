@@ -1,7 +1,7 @@
 'use server'
 
 import { AdminService } from '@/services/admin-service'
-import { CreateInvestmentRequest, CreateBatchInvestmentRequest, BatchInvestmentRow } from '@/types/database'
+import { CreateInvestmentRequest, CreateBatchInvestmentRequest, BatchInvestmentRow, Student } from '@/types/database'
 import { withAdminAuth, validateRequired, parseFormNumber, parseFormFloat, parseFormDate } from '@/utils/server-actions'
 import type { DeleteResult } from '@/utils/admin-server-action-types'
 import { AchievementEngine } from '@/services/achievement-engine'
@@ -153,15 +153,48 @@ export const createBatchInvestments = withAdminAuth(async (formData: FormData) =
 }, 'create batch investments')
 
 export const getStudentsForBatch = withAdminAuth(async (formData: FormData) => {
-  const missing = validateRequired(formData, ['class_id', 'fecha', 'concepto', 'category_id'])
-  if (missing.length > 0) {
-    throw new Error(`Missing required fields: ${missing.join(', ')}`)
-  }
-
-  const classId = parseFormNumber(formData, 'class_id')
   const fecha = parseFormDate(formData, 'fecha')
   const concepto = formData.get('concepto') as string
   const categoryId = parseFormNumber(formData, 'category_id')
+  
+  // Check if we have pre-selected students (from students page)
+  const selectedStudentIds = formData.get('selected_student_ids')
+  
+  if (selectedStudentIds) {
+    // Selection-based mode: Use pre-selected students from students page
+    let studentIds: number[]
+    try {
+      studentIds = JSON.parse(selectedStudentIds as string)
+    } catch {
+      throw new Error('Invalid selected_student_ids format')
+    }
 
-  return await adminService.getStudentsAvailableForBatchInvestment(classId, fecha, concepto, categoryId)
+    if (!Array.isArray(studentIds) || studentIds.length === 0) {
+      throw new Error('No students selected')
+    }
+
+    // Get the selected students
+    const students = await adminService.getStudentsByIds(studentIds)
+    
+    // Filter out students who already have an investment with the same date and category
+    const existingInvestments = await adminService.getInvestmentsByDateAndCategory(fecha, categoryId)
+    const studentIdsWithInvestment = new Set(existingInvestments.map(inv => inv.student_id))
+    
+    const availableStudents = students.filter((student: Student) => !studentIdsWithInvestment.has(student.id))
+    
+    if (availableStudents.length === 0) {
+      throw new Error('All selected students already have investments for this date and category')
+    }
+    
+    return availableStudents
+  } else {
+    // Class-based mode: Original functionality for investments page
+    const missing = validateRequired(formData, ['class_id'])
+    if (missing.length > 0) {
+      throw new Error(`Missing required fields: ${missing.join(', ')}`)
+    }
+
+    const classId = parseFormNumber(formData, 'class_id')
+    return await adminService.getStudentsAvailableForBatchInvestment(classId, fecha, concepto, categoryId)
+  }
 }, 'get students for batch investment')

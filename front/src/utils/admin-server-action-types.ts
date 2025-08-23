@@ -118,13 +118,16 @@ export interface StudentsPageProps {
   totalPages?: number
   currentPage?: number
   pageSize?: number
-  classes: Class[]
+  classes: ClassForClient[]
   categories: InvestmentCategory[]
   achievements: Achievement[]
   createStudent: (formData: FormData) => Promise<ActionResult<Student>>
   updateStudent: (formData: FormData) => Promise<ActionResult<Student>>
   deleteStudent: (formData: FormData) => Promise<ActionResult<DeleteResult>>
   setStudentPassword: (formData: FormData) => Promise<ActionResult<PasswordResult>>
+  // Batch investment functionality
+  createBatchInvestment?: (formData: FormData) => Promise<ActionResult<BatchInvestmentResult>>
+  getStudentsForBatch?: (formData: FormData) => Promise<ActionResult<Student[]>>
 }
 
 /**

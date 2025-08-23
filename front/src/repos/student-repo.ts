@@ -45,6 +45,24 @@ export class StudentRepository {
     }
   }
 
+  async findByIds(ids: number[]): Promise<Student[]> {
+    if (ids.length === 0) return [];
+    
+    const client = await pool.connect();
+    try {
+      const placeholders = ids.map((_, index) => `$${index + 1}`).join(',');
+      const result = await client.query(`
+        SELECT id, registro, name, email, class_id, password_hash, created_at, updated_at 
+        FROM students 
+        WHERE id IN (${placeholders})
+        ORDER BY name
+      `, ids);
+      return result.rows;
+    } finally {
+      client.release();
+    }
+  }
+
   async findWithInvestments(id: number): Promise<StudentWithInvestments | null> {
     const client = await pool.connect();
     try {
@@ -155,56 +173,56 @@ export class StudentRepository {
   /**
    * Get paginated students with optional class filter
    */
-  async findPaginated(page: number, limit: number, classId?: number): Promise<{ students: Student[]; total: number }> {
+  async findPaginated(
+    page: number, 
+    limit: number, 
+    filters?: { classId?: number; searchText?: string }
+  ): Promise<{ students: Student[]; total: number }> {
     const client = await pool.connect();
     try {
       const offset = (page - 1) * limit;
+      const whereConditions: string[] = [];
+      const params: (string | number)[] = [];
+      let paramIndex = 1;
+
+      // Build WHERE conditions
+      if (filters?.classId) {
+        whereConditions.push(`s.class_id = $${paramIndex++}`);
+        params.push(filters.classId);
+      }
+
+      if (filters?.searchText && filters.searchText.trim()) {
+        whereConditions.push(`(
+          s.name ILIKE $${paramIndex} OR 
+          s.registro::text ILIKE $${paramIndex}
+        )`);
+        params.push(`%${filters.searchText.trim()}%`);
+        paramIndex++;
+      }
+
+      const whereClause = whereConditions.length > 0 ? 
+        `WHERE ${whereConditions.join(' AND ')}` : '';
       
       // Get total count first
-      let countQuery: string;
-      let countParams: (string | number)[];
+      const countQuery = `
+        SELECT COUNT(*) as total
+        FROM students s
+        ${whereClause}
+      `;
       
-      if (classId) {
-        countQuery = `
-          SELECT COUNT(*) as total
-          FROM students s
-          WHERE s.class_id = $1
-        `;
-        countParams = [classId];
-      } else {
-        countQuery = `
-          SELECT COUNT(*) as total
-          FROM students s
-        `;
-        countParams = [];
-      }
-      
-      const countResult = await client.query(countQuery, countParams);
+      const countResult = await client.query(countQuery, params);
       const total = parseInt(countResult.rows[0].total, 10);
 
       // Get paginated results
-      let dataQuery: string;
-      let dataParams: (string | number)[];
+      const dataQuery = `
+        SELECT s.id, s.registro, s.name, s.email, s.class_id, s.password_hash, s.created_at, s.updated_at
+        FROM students s
+        ${whereClause}
+        ORDER BY s.name
+        LIMIT $${paramIndex++} OFFSET $${paramIndex}
+      `;
       
-      if (classId) {
-        dataQuery = `
-          SELECT s.id, s.registro, s.name, s.email, s.class_id, s.password_hash, s.created_at, s.updated_at
-          FROM students s
-          WHERE s.class_id = $1
-          ORDER BY s.name
-          LIMIT $2 OFFSET $3
-        `;
-        dataParams = [classId, limit, offset];
-      } else {
-        dataQuery = `
-          SELECT s.id, s.registro, s.name, s.email, s.class_id, s.password_hash, s.created_at, s.updated_at
-          FROM students s
-          ORDER BY s.name
-          LIMIT $1 OFFSET $2
-        `;
-        dataParams = [limit, offset];
-      }
-      
+      const dataParams = [...params, limit, offset];
       const dataResult = await client.query(dataQuery, dataParams);
 
       return {

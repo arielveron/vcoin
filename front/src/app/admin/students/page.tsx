@@ -4,7 +4,9 @@ import { AdminService } from '@/services/admin-service'
 import { Suspense } from 'react'
 import StudentsPage from '@/presentation/features/admin/students/StudentsPage'
 import { createStudent, updateStudent, deleteStudent, setStudentPassword } from './actions'
-import { formatStudentsForClient } from '@/utils/admin-data-types'
+import { formatStudentsForClient, formatClassesForClient } from '@/utils/admin-data-types'
+// Import batch investment actions
+import { createBatchInvestments, getStudentsForBatch } from '../investments/actions'
 
 // Force dynamic rendering to ensure searchParams changes trigger re-rendering
 export const dynamic = 'force-dynamic'
@@ -35,15 +37,15 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
   const adminService = new AdminService()
   const params = await searchParams
   const classId = params.qc ? parseInt(params.qc) : null
+  const searchText = params.qt || null // Use 'qt' for text search, 'qs' is for student ID
   
   // Parse pagination parameters
   const page = params.page ? parseInt(params.page) : 1
   const size = params.size ? parseInt(params.size) : 10
   
-  // Get paginated students based on class filter
-  const studentsResult = classId 
-    ? await adminService.getStudentsPaginated(page, size, classId)
-    : await adminService.getStudentsPaginated(page, size)
+  // Get paginated students with filters
+  const studentFilters = { classId: classId || undefined, searchText: searchText || undefined }
+  const studentsResult = await adminService.getStudentsPaginated(page, size, studentFilters)
   
   const { students, total: totalStudents, totalPages } = studentsResult
   
@@ -82,9 +84,10 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
 
   // Format data for client components with investment and achievement counts
   const studentsForClient = formatStudentsForClient(students, investmentCounts, achievementCounts)
+  const classesForClient = formatClassesForClient(classes)
 
   // Create a filter key to force re-render when filters change
-  const filterKey = `${classId || 'all'}-${page}-${size}-${investmentFilters.categoryId || 'all'}-${investmentFilters.date || 'all'}-${investmentFilters.searchText || 'all'}-${achievementFilters.category || 'all'}-${achievementFilters.rarity || 'all'}-${achievementFilters.achievementId || 'all'}`
+  const filterKey = `${classId || 'all'}-${searchText || 'all'}-${page}-${size}-${investmentFilters.categoryId || 'all'}-${investmentFilters.date || 'all'}-${investmentFilters.searchText || 'all'}-${achievementFilters.category || 'all'}-${achievementFilters.rarity || 'all'}-${achievementFilters.achievementId || 'all'}`
 
   return (
     <div className="space-y-6">
@@ -103,13 +106,15 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
           totalPages={totalPages}
           currentPage={page}
           pageSize={size}
-          classes={classes}
+          classes={classesForClient}
           categories={categories}
           achievements={achievements}
           createStudent={createStudent}
           updateStudent={updateStudent}
           deleteStudent={deleteStudent}
           setStudentPassword={setStudentPassword}
+          createBatchInvestment={createBatchInvestments}
+          getStudentsForBatch={getStudentsForBatch}
         />
       </Suspense>
     </div>

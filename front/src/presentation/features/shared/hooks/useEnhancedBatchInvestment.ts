@@ -1,11 +1,12 @@
 /**
- * Batch Investment Hook
- * Business logic for batch investment modal
+ * Enhanced Batch Investment Hook
+ * Business logic for batch investment modal with pre-selected students support
  */
 import { useState } from 'react'
 import { useServerAction } from '@/presentation/hooks'
 import type { Student, BatchInvestmentResult } from '@/types/database'
 import type { ActionResult } from '@/utils/admin-server-action-types'
+import type { StudentForClient } from '@/utils/admin-data-types'
 
 interface BatchInvestmentData {
   fecha: string
@@ -22,21 +23,19 @@ interface StudentRow {
   excluded: boolean // Track if student is temporarily excluded
 }
 
-interface UseBatchInvestmentProps {
+interface UseEnhancedBatchInvestmentProps {
   onSubmit: (formData: FormData) => Promise<ActionResult<BatchInvestmentResult>>
   getStudentsForBatch: (formData: FormData) => Promise<ActionResult<Student[]>>
   onClose: () => void
-  selectionMode?: boolean // New prop to indicate selection-based mode
-  selectedStudentIds?: number[] // Pre-selected student IDs from students page
+  preSelectedStudents?: StudentForClient[]
 }
 
-export function useBatchInvestment({
+export function useEnhancedBatchInvestment({
   onSubmit,
   getStudentsForBatch,
   onClose,
-  selectionMode = false,
-  selectedStudentIds = []
-}: UseBatchInvestmentProps) {
+  preSelectedStudents = []
+}: UseEnhancedBatchInvestmentProps) {
   const [step, setStep] = useState(1) // 1: Form, 2: Table
   const [batchData, setBatchData] = useState<BatchInvestmentData | null>(null)
   const [availableStudents, setAvailableStudents] = useState<Student[]>([])
@@ -44,6 +43,8 @@ export function useBatchInvestment({
   
   const { execute: executeGetStudents, loading: loadingStudents } = useServerAction(getStudentsForBatch)
   const { execute: executeSubmit, loading: submitting } = useServerAction(onSubmit)
+
+  const hasPreSelectedStudents = preSelectedStudents.length > 0
 
   // Reset modal state
   const handleClose = () => {
@@ -54,31 +55,31 @@ export function useBatchInvestment({
     onClose()
   }
 
+  // Convert StudentForClient to Student for compatibility
+  const convertToStudents = (studentsForClient: StudentForClient[]): Student[] => {
+    return studentsForClient.map(student => ({
+      id: student.id,
+      name: student.name,
+      registro: student.registro,
+      email: '', // Email not needed for batch investment
+      class_id: student.class_id,
+      password_hash: '', // Not needed for batch investment
+      personalizacion: null, // Not needed for batch investment
+      created_at: new Date(student.created_at), // Convert back to Date
+      updated_at: new Date() // Default to current time
+    }))
+  }
+
   // Handle form submission for step 1
   const handleFormSubmit = async (formData: BatchInvestmentData) => {
     setBatchData(formData)
     
-    // Get available students
-    const studentsFormData = new FormData()
-    
-    if (selectionMode && selectedStudentIds.length > 0) {
-      // Selection-based mode: Send pre-selected student IDs
-      studentsFormData.append('selected_student_ids', JSON.stringify(selectedStudentIds))
-    } else {
-      // Class-based mode: Send class ID
-      studentsFormData.append('class_id', formData.class_id.toString())
-    }
-    
-    studentsFormData.append('fecha', formData.fecha)
-    studentsFormData.append('concepto', formData.concepto)
-    studentsFormData.append('category_id', formData.category_id.toString())
-    
-    const result = await executeGetStudents(studentsFormData)
-    
-    if (result?.success && result.data) {
-      setAvailableStudents(result.data)
+    if (hasPreSelectedStudents) {
+      // Use pre-selected students directly
+      const students = convertToStudents(preSelectedStudents)
+      setAvailableStudents(students)
       // Initialize student rows with 0 amounts and not excluded
-      setStudentRows(result.data.map(student => ({
+      setStudentRows(students.map(student => ({
         student_id: student.id,
         student_name: student.name,
         student_registro: student.registro,
@@ -87,7 +88,29 @@ export function useBatchInvestment({
       })))
       setStep(2)
     } else {
-      alert(result?.error || 'Failed to load students')
+      // Get available students from class
+      const studentsFormData = new FormData()
+      studentsFormData.append('class_id', formData.class_id.toString())
+      studentsFormData.append('fecha', formData.fecha)
+      studentsFormData.append('concepto', formData.concepto)
+      studentsFormData.append('category_id', formData.category_id.toString())
+      
+      const result = await executeGetStudents(studentsFormData)
+      
+      if (result?.success && result.data) {
+        setAvailableStudents(result.data)
+        // Initialize student rows with 0 amounts and not excluded
+        setStudentRows(result.data.map(student => ({
+          student_id: student.id,
+          student_name: student.name,
+          student_registro: student.registro,
+          monto: 0,
+          excluded: false
+        })))
+        setStep(2)
+      } else {
+        alert(result?.error || 'Failed to load students')
+      }
     }
   }
 
@@ -164,6 +187,7 @@ export function useBatchInvestment({
     setStudentRows,
     loadingStudents,
     submitting,
+    hasPreSelectedStudents,
     handleClose,
     handleFormSubmit,
     handleTableSubmit,

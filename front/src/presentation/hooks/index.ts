@@ -11,6 +11,7 @@ export { usePagination } from './usePagination';
 export { useMediaQuery } from './useMediaQuery';
 export { useCollapsibleStore } from './useCollapsibleStore';
 export { useAutoRefresh } from './useAutoRefresh';
+export { useStudentSelectionStore } from './useStudentSelectionStore';
 
 export type { ActionResult } from './useServerAction';
 export type { TableColumn } from './useDataTable';

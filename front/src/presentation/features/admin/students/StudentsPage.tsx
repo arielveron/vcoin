@@ -6,21 +6,22 @@
  */
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 import { useAdminFilters } from '../hooks/useAdminFilters'
-import { useServerAction, usePagination } from '@/presentation/hooks'
+import { useServerAction, usePagination, useStudentSelectionStore } from '@/presentation/hooks'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import MobileFilters from '@/components/admin/mobile-filters'
 import Pagination from '@/components/admin/pagination'
 import PageSizeSelector from '@/components/admin/page-size-selector'
 import {
-  StudentsTable,
   StudentForm,
   PasswordDialog,
   StudentFilters,
-  StudentFiltersPanel
+  StudentFiltersPanel,
+  StudentSelectionTable
 } from './components'
+import { BatchInvestmentModal } from '../investments/components'
 import type { Student } from '@/types/database'
 import { 
   StudentsPageProps, 
@@ -43,13 +44,26 @@ export default function StudentsPage({
   createStudent,
   updateStudent,
   deleteStudent,
-  setStudentPassword
+  setStudentPassword,
+  createBatchInvestment,
+  getStudentsForBatch
 }: StudentsPageProps) {
   const [students, setStudents] = useState<StudentForClient[]>(initialStudents)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingStudent, setEditingStudent] = useState<StudentForClient | null>(null)
   const [passwordDialogStudent, setPasswordDialogStudent] = useState<StudentForClient | null>(null)
+  
+  // Persistent student selection store - survives filter changes and page refreshes
+  const studentSelection = useStudentSelectionStore()
+  const [isBatchInvestmentModalOpen, setIsBatchInvestmentModalOpen] = useState(false)
+  
   const { filters, updateFilters } = useAdminFilters()
+
+  // Update students when initialStudents changes (due to filtering/pagination)
+  // but preserve selection state
+  useEffect(() => {
+    setStudents(initialStudents)
+  }, [initialStudents])
 
   // Server actions
   const { execute: executeDelete } = useServerAction(deleteStudent)
@@ -103,6 +117,24 @@ export default function StudentsPage({
   const handleFormCancel = () => {
     setIsFormOpen(false)
     setEditingStudent(null)
+  }
+
+  // Student selection handlers for batch investments
+  const handleStudentToggle = (studentId: number) => {
+    studentSelection.toggleStudent(studentId)
+  }
+
+  const handleOpenBatchInvestmentModal = () => {
+    if (studentSelection.getSelectedCount() === 0) {
+      alert('Please select at least one student for batch investment')
+      return
+    }
+    setIsBatchInvestmentModalOpen(true)
+  }
+
+  const handleCloseBatchInvestmentModal = () => {
+    setIsBatchInvestmentModalOpen(false)
+    studentSelection.clearAll() // Clear selection after modal closes
   }
 
   const handleCreateClick = () => {
@@ -160,13 +192,26 @@ export default function StudentsPage({
             Administrar estudiantes de VCoin
           </p>
         </div>
-        <button
-          onClick={handleCreateClick}
-          className="w-full sm:w-auto inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-        >
-          <Plus className="h-4 w-4" />
-          Crear Estudiante
-        </button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <button
+            onClick={handleCreateClick}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            <Plus className="h-4 w-4" />
+            Crear Estudiante
+          </button>
+          {createBatchInvestment && (
+            <button
+              onClick={handleOpenBatchInvestmentModal}
+              disabled={studentSelection.getSelectedCount() === 0}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              title={studentSelection.getSelectedCount() === 0 ? 'Select students first' : `Create batch investment for ${studentSelection.getSelectedCount()} students`}
+            >
+              <Plus className="h-4 w-4" />
+              Inversión en Lote ({studentSelection.getSelectedCount()})
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
@@ -230,29 +275,6 @@ export default function StudentsPage({
         />
       )}
 
-      {/* Results summary and page size selector */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white px-4 py-3 border-t border-gray-200">
-        <div className="text-sm text-gray-700">
-          {effectiveTotalItems === 0 ? (
-            'No se encontraron estudiantes'
-          ) : (
-            <>
-              Mostrando <span className="font-medium">{startIndex}</span> a{' '}
-              <span className="font-medium">{endIndex}</span> de{' '}
-              <span className="font-medium">{effectiveTotalItems}</span> estudiantes
-              {filters.classId && (
-                <span className="text-gray-500"> (filtrados)</span>
-              )}
-            </>
-          )}
-        </div>
-        <PageSizeSelector
-          currentPageSize={effectiveItemsPerPage}
-          onPageSizeChange={changeItemsPerPage}
-          options={[5, 10, 25, 50]}
-        />
-      </div>
-
       {/* Students Table */}
       {isEmpty ? (
         <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
@@ -261,24 +283,68 @@ export default function StudentsPage({
           </div>
         </div>
       ) : (
-        <>
-          <StudentsTable
+        <div className="space-y-4">
+          <StudentSelectionTable
             students={displayStudents}
             classes={classes}
+            selectedStudentIds={studentSelection.getSelectedIds()}
+            onStudentToggle={handleStudentToggle}
             onEdit={handleEditStudent}
             onDelete={handleDeleteStudent}
             onSetPassword={handleSetPasswordClick}
           />
           
-          {/* Pagination */}
-          <Pagination
-            currentPage={effectiveCurrentPage}
-            totalPages={effectiveTotalPages}
-            totalItems={effectiveTotalItems}
-            itemsPerPage={effectiveItemsPerPage}
-            onPageChange={goToPage}
-          />
-        </>
+          {/* Pagination Controls */}
+          {effectiveTotalItems > 0 && (
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mt-6">
+              <div className="text-sm text-gray-700">
+                {effectiveTotalItems === 0 ? (
+                  'No students found'
+                ) : (
+                  <>
+                    Showing <span className="font-medium">{startIndex}</span> to{' '}
+                    <span className="font-medium">{endIndex}</span> of{' '}
+                    <span className="font-medium">{effectiveTotalItems}</span> students
+                    {filters.classId && (
+                      <span className="text-gray-500"> (filtered)</span>
+                    )}
+                  </>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <PageSizeSelector
+                  currentPageSize={effectiveItemsPerPage}
+                  onPageSizeChange={changeItemsPerPage}
+                  options={[5, 10, 25, 50]}
+                />
+                
+                {effectiveTotalPages > 1 && (
+                  <Pagination
+                    currentPage={effectiveCurrentPage}
+                    totalPages={effectiveTotalPages}
+                    onPageChange={goToPage}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Batch Investment Modal */}
+      {createBatchInvestment && getStudentsForBatch && (
+        <BatchInvestmentModal
+          isOpen={isBatchInvestmentModalOpen}
+          onClose={handleCloseBatchInvestmentModal}
+          classes={classes}
+          categories={categories}
+          onSubmit={createBatchInvestment}
+          getStudentsForBatch={getStudentsForBatch}
+          selectionMode={true}
+          selectedStudentIds={studentSelection.getSelectedIds()}
+          selectedStudentsCount={studentSelection.getSelectedCount()}
+        />
       )}
     </div>
   )

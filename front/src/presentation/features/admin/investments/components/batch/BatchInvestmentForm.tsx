@@ -23,6 +23,8 @@ interface BatchInvestmentFormProps {
   defaultClassId?: number | null
   defaultCategoryId?: number | null
   defaultDate?: string | null
+  selectionMode?: boolean // New prop to indicate selection-based mode
+  selectedStudentsCount?: number // Show how many students are selected
 }
 
 export function BatchInvestmentForm({
@@ -32,7 +34,9 @@ export function BatchInvestmentForm({
   loading,
   defaultClassId,
   defaultCategoryId,
-  defaultDate
+  defaultDate,
+  selectionMode = false,
+  selectedStudentsCount = 0
 }: BatchInvestmentFormProps) {
   const [formData, setFormData] = useState({
     fecha: defaultDate || getTodayInputValue(), // Use date utility instead of raw ISO string
@@ -44,7 +48,17 @@ export function BatchInvestmentForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.fecha || !formData.concepto || !formData.class_id || !formData.category_id) {
+    // In selection mode, class_id is not required (we use pre-selected students)
+    const requiredFields = selectionMode 
+      ? ['fecha', 'concepto', 'category_id']
+      : ['fecha', 'concepto', 'class_id', 'category_id']
+    
+    const missingFields = requiredFields.filter(field => {
+      const value = formData[field as keyof typeof formData]
+      return !value
+    })
+    
+    if (missingFields.length > 0) {
       alert('Please fill in all required fields')
       return
     }
@@ -65,9 +79,20 @@ export function BatchInvestmentForm({
   return (
     <div className="p-6">
       <div className="mb-6">
-        <p className="text-gray-600">
-          First, set up the basic information for your batch investment. We&apos;ll then show you all available students from the selected class.
-        </p>
+        {selectionMode ? (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-blue-800 font-medium">
+              Creating batch investment for {selectedStudentsCount} selected students
+            </p>
+            <p className="text-blue-600 text-sm mt-1">
+              Set up the investment details below. We&apos;ll filter out any students who already have investments for this date and category.
+            </p>
+          </div>
+        ) : (
+          <p className="text-gray-600">
+            First, set up the basic information for your batch investment. We&apos;ll then show you all available students from the selected class.
+          </p>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -88,28 +113,30 @@ export function BatchInvestmentForm({
           />
         </div>
 
-        {/* Class Selection */}
-        <div>
-          <label htmlFor="class_id" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <GraduationCap className="h-4 w-4" />
-            Class <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="class_id"
-            name="class_id"
-            value={formData.class_id}
-            onChange={handleInputChange}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Select a class</option>
-            {classes.map(cls => (
+        {/* Class Selection - Only show in class-based mode */}
+        {!selectionMode && (
+          <div>
+            <label htmlFor="class_id" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+              <GraduationCap className="h-4 w-4" />
+              Class <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="class_id"
+              name="class_id"
+              value={formData.class_id}
+              onChange={handleInputChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select a class</option>
+              {classes.map(cls => (
               <option key={cls.id} value={cls.id}>
                 {cls.name}
               </option>
             ))}
           </select>
         </div>
+        )}
 
         {/* Concepto Field */}
         <div>
