@@ -12,6 +12,9 @@ services:
       # Application Configuration
       - NODE_ENV=production
       
+      # Timezone Configuration
+      - TZ=America/Argentina/Buenos_Aires
+      
       # Database Configuration - Use Docker secrets or external secret management in production
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}

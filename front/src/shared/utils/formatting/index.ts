@@ -5,6 +5,7 @@
 
 // Date formatting
 export {
+  normalizeDate,
   formatDate,
   formatDateTime,
   formatTimeAgo,

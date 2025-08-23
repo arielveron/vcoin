@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Filter, X, Search } from 'lucide-react'
-import { useAdminFilters } from '@/presentation/features/admin/hooks/useAdminFilters'
+import { useAdminFilters, type AdminFilters } from '@/presentation/features/admin/hooks/useAdminFilters'
 import { Class, Student, InvestmentCategory, Achievement } from '@/types/database'
 import { ACHIEVEMENT_CATEGORIES, ACHIEVEMENT_RARITIES } from '@/shared/constants/achievements'
 
@@ -16,6 +16,7 @@ interface MobileFiltersProps {
   showDateFilter?: boolean
   showSearchFilter?: boolean
   showAchievementFilters?: boolean
+  searchContext?: 'student' | 'investment' | 'general'  // New prop to determine search context
 }
 
 export default function MobileFilters({
@@ -27,7 +28,8 @@ export default function MobileFilters({
   showCategoryFilter = false,
   showDateFilter = false,
   showSearchFilter = false,
-  showAchievementFilters = false
+  showAchievementFilters = false,
+  searchContext = 'general'
 }: MobileFiltersProps) {
   const { filters, updateFilters } = useAdminFilters()
   const [isOpen, setIsOpen] = useState(false)
@@ -48,7 +50,9 @@ export default function MobileFilters({
     (filters.studentId ? 1 : 0) +
     (filters.categoryId ? 1 : 0) +
     (filters.date ? 1 : 0) +
-    (filters.searchText ? 1 : 0) +
+    ((searchContext === 'student' ? filters.studentSearchText : 
+      searchContext === 'investment' ? filters.investmentSearchText : 
+      filters.searchText) ? 1 : 0) +
     (filters.achievementCategory ? 1 : 0) +
     (filters.achievementRarity ? 1 : 0) +
     (filters.achievementId ? 1 : 0)
@@ -64,7 +68,26 @@ export default function MobileFilters({
   }
 
   const clearFilters = () => {
-    updateFilters({ classId: null, studentId: null, categoryId: null, date: null, searchText: null, achievementCategory: null, achievementRarity: null, achievementId: null })
+    const clearUpdate: Partial<AdminFilters> = { 
+      classId: null, 
+      studentId: null, 
+      categoryId: null, 
+      date: null, 
+      achievementCategory: null, 
+      achievementRarity: null, 
+      achievementId: null 
+    }
+    
+    // Clear context-specific search fields
+    if (searchContext === 'student') {
+      clearUpdate.studentSearchText = null
+    } else if (searchContext === 'investment') {
+      clearUpdate.investmentSearchText = null
+    } else {
+      clearUpdate.searchText = null
+    }
+    
+    updateFilters(clearUpdate)
     setIsOpen(false)
   }
 
@@ -118,12 +141,26 @@ export default function MobileFilters({
                     <input
                       type="text"
                       id="mobile-search"
-                      value={filters.searchText || ''}
+                      value={
+                        searchContext === 'student' ? (filters.studentSearchText || '') :
+                        searchContext === 'investment' ? (filters.investmentSearchText || '') :
+                        (filters.searchText || '')
+                      }
                       onChange={(e) => {
-                        const searchText = e.target.value || null
-                        updateFilters({ searchText })
+                        const searchValue = e.target.value || null
+                        if (searchContext === 'student') {
+                          updateFilters({ studentSearchText: searchValue })
+                        } else if (searchContext === 'investment') {
+                          updateFilters({ investmentSearchText: searchValue })
+                        } else {
+                          updateFilters({ searchText: searchValue })
+                        }
                       }}
-                      placeholder="Search by concept..."
+                      placeholder={
+                        searchContext === 'student' ? "Search by name or registro..." :
+                        searchContext === 'investment' ? "Search by concept..." :
+                        "Search..."
+                      }
                       className="block w-full pl-10 pr-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     />
                   </div>

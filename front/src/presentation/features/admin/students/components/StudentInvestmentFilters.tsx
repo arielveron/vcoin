@@ -13,6 +13,7 @@ interface AdminFilters {
   categoryId: number | null
   date: string | null
   searchText: string | null
+  investmentSearchText: string | null
 }
 
 interface StudentInvestmentFiltersProps {
@@ -30,7 +31,7 @@ export default function StudentInvestmentFilters({
 }: StudentInvestmentFiltersProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
-  const hasActiveFilters = filters.categoryId || filters.date || filters.searchText
+  const hasActiveFilters = filters.categoryId || filters.date || filters.investmentSearchText
 
   const toggle = () => setIsExpanded(!isExpanded)
 
@@ -67,9 +68,9 @@ export default function StudentInvestmentFilters({
             </div>
             <input
               type="text"
-              value={filters.searchText || ''}
+              value={filters.investmentSearchText || ''}
               onChange={(e) => onFiltersChange({ 
-                searchText: e.target.value || null 
+                investmentSearchText: e.target.value || null 
               })}
               placeholder="Filter by investment concept..."
               className="w-full pl-10 pr-3 py-2 rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -111,7 +112,7 @@ export default function StudentInvestmentFilters({
                 onClick={() => onFiltersChange({ 
                   categoryId: null, 
                   date: null, 
-                  searchText: null 
+                  investmentSearchText: null 
                 })}
                 className="text-sm text-gray-600 hover:text-gray-800 underline"
               >

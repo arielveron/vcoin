@@ -3,13 +3,16 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
-    image: vcoin:2.1.0
+    image: vcoin:2.2.0
     container_name: vcoin
     ports:
       - "3000:3000"
     environment:
       # Application Configuration
       - NODE_ENV=production
+      
+      # Timezone Configuration
+      - TZ=America/Argentina/Buenos_Aires
       
       # Database Configuration - Use Docker secrets or external secret management in production
       - DB_HOST=${DB_HOST}

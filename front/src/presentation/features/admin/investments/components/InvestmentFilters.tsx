@@ -13,6 +13,8 @@ interface AdminFilters {
   categoryId: number | null
   date: string | null
   searchText: string | null
+  studentSearchText: string | null  // For student name/registro search
+  investmentSearchText: string | null  // For investment concept search
 }
 
 interface InvestmentFiltersProps {
@@ -42,8 +44,8 @@ export default function InvestmentFilters({
       {/* Search Text Filter - Separate line */}
       <div className="w-full">
         <DebouncedSearchInput
-          value={filters.searchText}
-          onChange={(value) => onFiltersChange({ searchText: value })}
+          value={filters.investmentSearchText || filters.searchText}
+          onChange={(value) => onFiltersChange({ investmentSearchText: value })}
           placeholder="Search by concept..."
           debounceMs={300}
           autoFocus={false}

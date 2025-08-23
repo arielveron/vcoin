@@ -13,6 +13,8 @@ interface AdminFilters {
   categoryId: number | null
   date: string | null
   searchText: string | null
+  studentSearchText: string | null  // For student name/registro search
+  investmentSearchText: string | null  // For investment concept search
 }
 
 interface StudentFiltersProps {
@@ -32,8 +34,8 @@ export default function StudentFilters({
     <div className={`space-y-3 ${className}`}>
       {/* Text Search Filter */}
       <DebouncedSearchInput
-        value={filters.searchText}
-        onChange={(value) => onFiltersChange({ searchText: value })}
+        value={filters.studentSearchText || filters.searchText}
+        onChange={(value) => onFiltersChange({ studentSearchText: value })}
         placeholder="Search by name or registro number..."
         debounceMs={300}
         autoFocus={true}

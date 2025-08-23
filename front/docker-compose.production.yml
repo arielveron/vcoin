@@ -16,6 +16,9 @@ services:
       # Application Configuration
       - NODE_ENV=production
       
+      # Timezone Configuration
+      - TZ=America/Argentina/Buenos_Aires
+      
       # Database Configuration - Using secrets
       - DB_HOST_FILE=/run/secrets/db_host
       - DB_PORT=${DB_PORT:-5432}

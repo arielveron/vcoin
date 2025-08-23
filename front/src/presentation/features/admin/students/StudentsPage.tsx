@@ -239,6 +239,7 @@ export default function StudentsPage({
               showDateFilter={true}
               showSearchFilter={true}
               showAchievementFilters={true}
+              searchContext="student"
             />
           </div>
         </div>

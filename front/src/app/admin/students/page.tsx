@@ -19,6 +19,8 @@ interface StudentsPageProps {
     qcat?: string, 
     qd?: string, 
     qt?: string,
+    qstext?: string,  // Student search text (name/registro)
+    qitext?: string,  // Investment search text (concept)
     qacategory?: string,
     qararity?: string,
     qachievement?: string,
@@ -37,14 +39,15 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
   const adminService = new AdminService()
   const params = await searchParams
   const classId = params.qc ? parseInt(params.qc) : null
-  const searchText = params.qt || null // Use 'qt' for text search, 'qs' is for student ID
+  // Use 'qstext' (student-specific search) if available, fallback to 'qt' for backward compatibility
+  const studentSearchText = params.qstext || params.qt || null
   
   // Parse pagination parameters
   const page = params.page ? parseInt(params.page) : 1
   const size = params.size ? parseInt(params.size) : 10
   
   // Get paginated students with filters
-  const studentFilters = { classId: classId || undefined, searchText: searchText || undefined }
+  const studentFilters = { classId: classId || undefined, searchText: studentSearchText || undefined }
   const studentsResult = await adminService.getStudentsPaginated(page, size, studentFilters)
   
   const { students, total: totalStudents, totalPages } = studentsResult
@@ -57,7 +60,7 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
   const investmentFilters = {
     categoryId: params.qcat ? parseInt(params.qcat) : null,
     date: params.qd || null,
-    searchText: params.qt || null
+    searchText: params.qitext || null  // Use 'qitext' for investment search text
   }
   
   const hasInvestmentFilters = investmentFilters.categoryId || investmentFilters.date || investmentFilters.searchText
@@ -87,7 +90,7 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
   const classesForClient = formatClassesForClient(classes)
 
   // Create a filter key to force re-render when filters change
-  const filterKey = `${classId || 'all'}-${searchText || 'all'}-${page}-${size}-${investmentFilters.categoryId || 'all'}-${investmentFilters.date || 'all'}-${investmentFilters.searchText || 'all'}-${achievementFilters.category || 'all'}-${achievementFilters.rarity || 'all'}-${achievementFilters.achievementId || 'all'}`
+  const filterKey = `${classId || 'all'}-${studentSearchText || 'all'}-${page}-${size}-${investmentFilters.categoryId || 'all'}-${investmentFilters.date || 'all'}-${investmentFilters.searchText || 'all'}-${achievementFilters.category || 'all'}-${achievementFilters.rarity || 'all'}-${achievementFilters.achievementId || 'all'}`
 
   return (
     <div className="space-y-6">

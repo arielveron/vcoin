@@ -106,38 +106,41 @@ export default function CategoryForm({
     // Add complex data that can't be sent via form fields
     formDataObj.append('text_style', JSON.stringify(liveFormData.text_style))
     formDataObj.append('icon_config', JSON.stringify(iconPreviewConfig))
-    if (editingCategory) {
-      formDataObj.append('id', editingCategory.id.toString())
-    }
 
     const result = await execute(formDataObj)
-    if (result?.success) {
-      // Construct the updated category object for optimistic update
-      const updatedCategory: InvestmentCategory = {
-        id: editingCategory?.id || Date.now(), // Temporary ID for new categories
-        name: formDataObj.get('name') as string,
-        level: formDataObj.get('level') as 'bronze' | 'silver' | 'gold' | 'platinum',
-        text_style: liveFormData.text_style || {
-          fontSize: "text-sm",
-          fontWeight: "font-normal",
-          textColor: "text-gray-900",
-        },
-        icon_config: (iconPreviewConfig.name && iconPreviewConfig.library) ? {
-          name: iconPreviewConfig.name,
-          library: iconPreviewConfig.library as "lucide" | "heroicons-solid" | "heroicons-outline" | "tabler" | "phosphor",
-          size: iconPreviewConfig.size,
-          color: iconPreviewConfig.color,
-          backgroundColor: iconPreviewConfig.backgroundColor,
-          padding: iconPreviewConfig.padding,
-          animationClass: iconPreviewConfig.animationClass,
-          effectClass: iconPreviewConfig.effectClass,
-        } : null,
-        is_active: formDataObj.get('is_active') === 'true',
-        sort_order: parseInt(formDataObj.get('sort_order') as string),
-        created_at: editingCategory?.created_at || new Date(),
-        updated_at: new Date(),
+    if (result?.success && result.data) {
+      // For updates, use the returned data from server; for creates, construct optimistic data
+      if (editingCategory) {
+        // Use the actual result from server for updates
+        onSuccess(result.data)
+      } else {
+        // For new categories, construct the optimistic update
+        const updatedCategory: InvestmentCategory = {
+          id: result.data.id, // Use the actual ID returned from server
+          name: formDataObj.get('name') as string,
+          level: formDataObj.get('level') as 'bronze' | 'silver' | 'gold' | 'platinum',
+          text_style: liveFormData.text_style || {
+            fontSize: "text-sm",
+            fontWeight: "font-normal",
+            textColor: "text-gray-900",
+          },
+          icon_config: (iconPreviewConfig.name && iconPreviewConfig.library) ? {
+            name: iconPreviewConfig.name,
+            library: iconPreviewConfig.library as "lucide" | "heroicons-solid" | "heroicons-outline" | "tabler" | "phosphor",
+            size: iconPreviewConfig.size,
+            color: iconPreviewConfig.color,
+            backgroundColor: iconPreviewConfig.backgroundColor,
+            padding: iconPreviewConfig.padding,
+            animationClass: iconPreviewConfig.animationClass,
+            effectClass: iconPreviewConfig.effectClass,
+          } : null,
+          is_active: formDataObj.get('is_active') === 'true',
+          sort_order: parseInt(formDataObj.get('sort_order') as string) || 0,
+          created_at: new Date(),
+          updated_at: new Date(),
+        }
+        onSuccess(updatedCategory)
       }
-      onSuccess(updatedCategory)
     } else {
       alert(result?.error || 'Failed to save category')
     }
@@ -157,6 +160,11 @@ export default function CategoryForm({
           </div>
 
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 lg:p-0 space-y-6">
+            {/* Hidden ID field for editing */}
+            {editingCategory && (
+              <input type="hidden" name="id" value={editingCategory.id} />
+            )}
+            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Name */}
               <div>

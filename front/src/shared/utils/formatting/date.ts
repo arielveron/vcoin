@@ -3,8 +3,27 @@
  * Centralized date formatting to ensure consistency across the application
  */
 
+/**
+ * Safely parse a date ensuring it's interpreted in local timezone
+ * Handles PostgreSQL DATE fields that might come as strings
+ */
+export const normalizeDate = (date: Date | string): Date => {
+  if (date instanceof Date) {
+    return date;
+  }
+  
+  // If it's a YYYY-MM-DD string (PostgreSQL DATE format), parse in local timezone
+  if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [year, month, day] = date.split('-').map(Number);
+    return new Date(year, month - 1, day); // month is 0-indexed
+  }
+  
+  // For other formats, use standard parsing
+  return new Date(date);
+};
+
 export const formatDate = (date: Date | string, locale = 'es-AR'): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = normalizeDate(date);
   return d.toLocaleDateString(locale, {
     year: 'numeric',
     month: '2-digit',
@@ -13,7 +32,7 @@ export const formatDate = (date: Date | string, locale = 'es-AR'): string => {
 };
 
 export const formatDateTime = (date: Date | string, locale = 'es-AR'): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = normalizeDate(date);
   return d.toLocaleString(locale, {
     year: 'numeric',
     month: '2-digit',
@@ -24,7 +43,7 @@ export const formatDateTime = (date: Date | string, locale = 'es-AR'): string =>
 };
 
 export const formatTimeAgo = (date: Date | string): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = normalizeDate(date);
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const diffMins = Math.floor(diffMs / (1000 * 60));
@@ -127,7 +146,7 @@ export const isSameDate = (date1: Date | string, date2: Date | string): boolean 
  * Used for organizing investments by month in lists
  */
 export const formatMonth = (date: Date | string, locale = 'es-AR'): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = normalizeDate(date);
   return d.toLocaleDateString(locale, { year: "numeric", month: "long" });
 };
 
@@ -136,7 +155,7 @@ export const formatMonth = (date: Date | string, locale = 'es-AR'): string => {
  * Used for showing dates in a compact, readable format
  */
 export const formatDayWithWeekday = (date: Date | string, locale = 'es-AR'): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = normalizeDate(date);
   return d.toLocaleDateString(locale, {
     weekday: "short",
     day: "numeric", 

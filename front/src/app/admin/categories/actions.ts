@@ -15,44 +15,45 @@ export const createCategory = withAdminAuth(async (formData: FormData) => {
 
   const name = formData.get('name') as string;
   const level = formData.get('level') as 'bronze' | 'silver' | 'gold' | 'platinum';
-  const fontSize = formData.get('fontSize') as string;
-  const fontWeight = formData.get('fontWeight') as string;
-  const textColor = formData.get('textColor') as string;
-  const effectClass = formData.get('effectClass') as string;
-  const customCSS = formData.get('customCSS') as string;
   const sortOrder = parseFormNumber(formData, 'sort_order') || 0;
-  const isActive = formData.get('is_active') === 'true'; // Read from select (true/false strings)
+  const isActive = formData.get('is_active') === 'true';
 
-  // Handle icon data
-  const iconName = formData.get('iconName') as string;
-  const iconLibrary = formData.get('iconLibrary') as string;
-  const iconSize = formData.get('iconSize') ? parseInt(formData.get('iconSize') as string) : 24;
-  const iconColor = formData.get('iconColor') as string;
-  const iconBackgroundColor = formData.get('iconBackgroundColor') as string;
-  const iconPadding = formData.get('iconPadding') ? parseInt(formData.get('iconPadding') as string) : 4;
-  const iconAnimation = formData.get('iconAnimation') as string;
-  const iconEffectClass = formData.get('iconEffectClass') as string;
+  // Parse JSON data for complex objects
+  const textStyleJson = formData.get('text_style') as string;
+  const iconConfigJson = formData.get('icon_config') as string;
+
+  let textStyle = {
+    fontSize: "text-sm",
+    fontWeight: "font-normal", 
+    textColor: "text-gray-900"
+  };
+  let iconConfig = null;
+
+  try {
+    if (textStyleJson) {
+      textStyle = JSON.parse(textStyleJson);
+    }
+  } catch (error) {
+    console.error('Error parsing text_style JSON:', error);
+  }
+
+  try {
+    if (iconConfigJson) {
+      const parsedIconConfig = JSON.parse(iconConfigJson);
+      // Only set icon config if it has valid data
+      if (parsedIconConfig.name && parsedIconConfig.library) {
+        iconConfig = parsedIconConfig;
+      }
+    }
+  } catch (error) {
+    console.error('Error parsing icon_config JSON:', error);
+  }
 
   const categoryData: CreateInvestmentCategoryRequest = {
     name,
     level,
-    text_style: {
-      fontSize,
-      fontWeight,
-      textColor,
-      effectClass: effectClass || undefined,
-      customCSS: customCSS || undefined
-    },
-    icon_config: iconName && iconLibrary ? {
-      name: iconName,
-      library: iconLibrary as 'lucide' | 'heroicons-solid' | 'heroicons-outline' | 'tabler' | 'phosphor',
-      size: iconSize,
-      color: iconColor || undefined,
-      backgroundColor: iconBackgroundColor || undefined,
-      padding: iconPadding,
-      animationClass: iconAnimation || undefined,
-      effectClass: iconEffectClass || undefined
-    } : null,
+    text_style: textStyle,
+    icon_config: iconConfig,
     is_active: isActive,
     sort_order: sortOrder
   };
@@ -73,56 +74,44 @@ export const updateCategory = withAdminAuth(async (formData: FormData) => {
 
   const name = formData.get('name') as string;
   const level = formData.get('level') as 'bronze' | 'silver' | 'gold' | 'platinum';
-  const fontSize = formData.get('fontSize') as string;
-  const fontWeight = formData.get('fontWeight') as string;
-  const textColor = formData.get('textColor') as string;
-  const effectClass = formData.get('effectClass') as string;
-  const customCSS = formData.get('customCSS') as string;
   const sortOrder = parseFormNumber(formData, 'sort_order') || 0;
-  const isActive = formData.get('is_active') === 'true'; // Read from select (true/false strings)
+  const isActive = formData.get('is_active') === 'true';
 
-  // Handle icon data
-  const iconName = formData.get('iconName') as string;
-  const iconLibrary = formData.get('iconLibrary') as string;
-  const iconSize = formData.get('iconSize') ? parseInt(formData.get('iconSize') as string) : 24;
-  const iconColor = formData.get('iconColor') as string;
-  const iconBackgroundColor = formData.get('iconBackgroundColor') as string;
-  const iconPadding = formData.get('iconPadding') ? parseInt(formData.get('iconPadding') as string) : 4;
-  const iconAnimation = formData.get('iconAnimation') as string;
-  const iconEffectClass = formData.get('iconEffectClass') as string;
+  // Parse JSON data for complex objects
+  const textStyleJson = formData.get('text_style') as string;
+  const iconConfigJson = formData.get('icon_config') as string;
 
-  const categoryData: Partial<CreateInvestmentCategoryRequest> = {};
-  
-  if (name) categoryData.name = name;
-  if (level) categoryData.level = level;
-  if (fontSize || fontWeight || textColor || effectClass || customCSS) {
-    categoryData.text_style = {
-      fontSize,
-      fontWeight,
-      textColor,
-      effectClass: effectClass || undefined,
-      customCSS: customCSS || undefined
-    };
+  let textStyle = null;
+  let iconConfig = null;
+
+  try {
+    if (textStyleJson) {
+      textStyle = JSON.parse(textStyleJson);
+    }
+  } catch (error) {
+    console.error('Error parsing text_style JSON:', error);
   }
-  
-  // Handle icon config
-  if (iconName && iconLibrary) {
-    categoryData.icon_config = {
-      name: iconName,
-      library: iconLibrary as 'lucide' | 'heroicons-solid' | 'heroicons-outline' | 'tabler' | 'phosphor',
-      size: iconSize,
-      color: iconColor || undefined,
-      backgroundColor: iconBackgroundColor || undefined,
-      padding: iconPadding,
-      animationClass: iconAnimation || undefined,
-      effectClass: iconEffectClass || undefined
-    };
-  } else {
-    categoryData.icon_config = null;
+
+  try {
+    if (iconConfigJson) {
+      const parsedIconConfig = JSON.parse(iconConfigJson);
+      // Only set icon config if it has valid data
+      if (parsedIconConfig.name && parsedIconConfig.library) {
+        iconConfig = parsedIconConfig;
+      }
+    }
+  } catch (error) {
+    console.error('Error parsing icon_config JSON:', error);
   }
-  
-  categoryData.is_active = isActive;
-  categoryData.sort_order = sortOrder;
+
+  const categoryData: Partial<CreateInvestmentCategoryRequest> = {
+    name,
+    level,
+    text_style: textStyle,
+    icon_config: iconConfig,
+    is_active: isActive,
+    sort_order: sortOrder
+  };
 
   const result = await adminService.updateCategory(id, categoryData);
   if (!result) {

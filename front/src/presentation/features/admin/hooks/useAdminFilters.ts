@@ -9,6 +9,9 @@ export interface AdminFilters {
   categoryId: number | null
   date: string | null
   searchText: string | null
+  // Specific search filters for different contexts
+  studentSearchText: string | null  // For student name/registro search
+  investmentSearchText: string | null  // For investment concept search
   // Achievement filters
   achievementCategory: string | null
   achievementRarity: string | null
@@ -25,7 +28,9 @@ export function useAdminFilters() {
     studentId: searchParams.get('qs') ? parseInt(searchParams.get('qs')!) : null,
     categoryId: searchParams.get('qcat') ? parseInt(searchParams.get('qcat')!) : null,
     date: searchParams.get('qd') || null,
-    searchText: searchParams.get('qt') || null,
+    searchText: searchParams.get('qt') || null, // Keep for backward compatibility
+    studentSearchText: searchParams.get('qstext') || null,
+    investmentSearchText: searchParams.get('qitext') || null,
     achievementCategory: searchParams.get('qacategory') || null,
     achievementRarity: searchParams.get('qararity') || null,
     achievementId: searchParams.get('qachievement') ? parseInt(searchParams.get('qachievement')!) : null
@@ -80,6 +85,24 @@ export function useAdminFilters() {
         params.delete('qt')
       } else {
         params.set('qt', newFilters.searchText)
+      }
+    }
+
+    // Update student search text filter
+    if (newFilters.studentSearchText !== undefined) {
+      if (newFilters.studentSearchText === null || newFilters.studentSearchText === '') {
+        params.delete('qstext')
+      } else {
+        params.set('qstext', newFilters.studentSearchText)
+      }
+    }
+
+    // Update investment search text filter
+    if (newFilters.investmentSearchText !== undefined) {
+      if (newFilters.investmentSearchText === null || newFilters.investmentSearchText === '') {
+        params.delete('qitext')
+      } else {
+        params.set('qitext', newFilters.investmentSearchText)
       }
     }
 

@@ -30,7 +30,7 @@ export default function StudentFiltersPanel({
   const [isAchievementExpanded, setIsAchievementExpanded] = useState(false)
 
   // Check for active filters
-  const hasActiveInvestmentFilters = filters.categoryId || filters.date || filters.searchText
+  const hasActiveInvestmentFilters = filters.categoryId || filters.date || filters.investmentSearchText
   const hasActiveAchievementFilters = filters.achievementCategory || filters.achievementRarity || filters.achievementId
 
   // Filter achievements based on selected category and rarity
@@ -107,9 +107,9 @@ export default function StudentFiltersPanel({
               </div>
               <input
                 type="text"
-                value={filters.searchText || ''}
+                value={filters.investmentSearchText || ''}
                 onChange={(e) => onFiltersChange({ 
-                  searchText: e.target.value || null 
+                  investmentSearchText: e.target.value || null 
                 })}
                 placeholder="Filter by investment concept..."
                 className="w-full pl-10 pr-3 py-2 rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -149,7 +149,7 @@ export default function StudentFiltersPanel({
                   onClick={() => onFiltersChange({ 
                     categoryId: null, 
                     date: null, 
-                    searchText: null 
+                    investmentSearchText: null 
                   })}
                   className="text-sm text-gray-600 hover:text-gray-800 underline"
                 >

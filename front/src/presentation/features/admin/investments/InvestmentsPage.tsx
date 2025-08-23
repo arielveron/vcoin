@@ -168,6 +168,7 @@ export default function InvestmentsPage({
             showCategoryFilter={true}
             showDateFilter={true}
             showSearchFilter={true}
+            searchContext="investment"
           />
           
           {/* Add Investment Buttons */}

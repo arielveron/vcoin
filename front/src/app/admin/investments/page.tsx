@@ -12,7 +12,9 @@ interface InvestmentsPageProps {
     qs?: string,      // student filter
     qcat?: string,    // category filter
     qd?: string,      // date filter
-    qt?: string,      // search text filter
+    qt?: string,      // search text filter (legacy)
+    qstext?: string,  // student search text filter
+    qitext?: string,  // investment search text filter
     page?: string,
     size?: string
   }>
@@ -31,7 +33,7 @@ export default async function InvestmentsAdminPage({ searchParams }: Investments
   const studentId = params.qs ? parseInt(params.qs) : null
   const categoryId = params.qcat ? parseInt(params.qcat) : null
   const date = params.qd || null
-  const searchText = params.qt || null
+  const searchText = params.qitext || params.qt || null  // Use 'qitext' primarily, fallback to 'qt' for backward compatibility
   
   // Parse pagination parameters
   const page = params.page ? parseInt(params.page) : 1
