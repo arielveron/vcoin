@@ -207,7 +207,7 @@ export default function InteresCollapsible({
                 ) : rateData.length === 1 ? (
                   <div className="h-32 flex items-center justify-center">
                     <div className="text-gray-600 text-sm text-center">
-                      <div>Tasa única: {rateData[0].formattedPercentage}%</div>
+                      <div>Tasa única: {rateData[0].formattedPercentage}</div>
                       <div className="text-gray-400 text-xs mt-1">Desde {rateData[0].date}</div>
                     </div>
                   </div>

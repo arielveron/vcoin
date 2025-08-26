@@ -2,6 +2,8 @@ import { AchievementRepository } from '@/repos/achievement-repo';
 import { InvestmentRepository } from '@/repos/investment-repo';
 import { Achievement, Investment } from '@/types/database';
 import { differenceInDays } from 'date-fns';
+import { ServerDataService } from '@/services/server-data-service';
+import { calculateMontoActual } from '@/logic/calculations';
 
 export class AchievementEngine {
   private achievementRepo: AchievementRepository;
@@ -67,7 +69,14 @@ export class AchievementEngine {
   private async calculateStudentMetrics(studentId: number): Promise<Record<string, number>> {
     const investments = await this.investmentRepo.findByStudentId(studentId);
     
-    // Calculate total invested
+    // Calculate current amount with interest (not just original investment sum)
+    let currentTotalAmount = 0;
+    if (investments.length > 0) {
+      const classSettings = await ServerDataService.getStudentClassSettings(studentId);
+      currentTotalAmount = calculateMontoActual(investments, classSettings);
+    }
+    
+    // Calculate original total invested (for backwards compatibility if needed)
     const totalInvested = investments.reduce((sum, inv) => sum + inv.monto, 0);
     
     // Calculate investment count
@@ -87,7 +96,9 @@ export class AchievementEngine {
     
     return {
       investment_count: investmentCount,
-      total_invested: totalInvested,
+      total_invested: currentTotalAmount, // Use current amount with interest for milestone achievements
+      current_amount: currentTotalAmount, // Also provide under explicit name
+      original_invested: totalInvested,   // Keep original sum for reference
       streak_days: streakDays,
       ...Object.fromEntries(
         Object.entries(categoryIdCounts).map(([id, count]) => [`category_${id}_count`, count])
