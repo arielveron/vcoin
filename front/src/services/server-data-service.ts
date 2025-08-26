@@ -603,14 +603,47 @@ export class ServerDataService {
             current_monthly_interest_rate: rateOnThisDate
           };
 
-          // Calculate what the total would have been on this date, using the rate that was current on this date
-          // This shows what the student would have seen as their "current total" if they checked on this date
-          const amount = calculateMontoAFecha(currentDate, investments, dateSpecificClassSettings);
-          
-          historicalAmounts.push({
-            date: new Date(currentDate),
-            amount: amount
+          // Check if there are any investments made on this specific date
+          const investmentsOnThisDate = investments.filter(inv => {
+            const invDate = new Date(inv.fecha);
+            return invDate.getFullYear() === currentDate.getFullYear() &&
+                   invDate.getMonth() === currentDate.getMonth() &&
+                   invDate.getDate() === currentDate.getDate();
           });
+
+          if (investmentsOnThisDate.length > 0) {
+            // For investment days, create two points: before and after the investment(s)
+            
+            // 1. Calculate amount just before the investment (using only previous investments)
+            const investmentsBeforeThisDate = investments.filter(inv => new Date(inv.fecha) < currentDate);
+            if (investmentsBeforeThisDate.length > 0) {
+              const amountBefore = calculateMontoAFecha(currentDate, investmentsBeforeThisDate, dateSpecificClassSettings);
+              historicalAmounts.push({
+                date: new Date(currentDate),
+                amount: amountBefore
+              });
+            }
+
+            // 2. Calculate amount after the investment (including all investments up to this date)
+            const amount = calculateMontoAFecha(currentDate, investments, dateSpecificClassSettings);
+            
+            // Create a slightly later time for the same date to show the jump
+            const dateAfterInvestment = new Date(currentDate);
+            dateAfterInvestment.setHours(dateAfterInvestment.getHours() + 1);
+            
+            historicalAmounts.push({
+              date: dateAfterInvestment,
+              amount: amount
+            });
+          } else {
+            // Regular day - just calculate the compound growth
+            const amount = calculateMontoAFecha(currentDate, investments, dateSpecificClassSettings);
+            
+            historicalAmounts.push({
+              date: new Date(currentDate),
+              amount: amount
+            });
+          }
         } catch (error) {
           console.error('Error calculating historical amount for date:', currentDate, error);
         }

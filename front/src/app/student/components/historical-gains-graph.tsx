@@ -95,8 +95,13 @@ export default function HistoricalGainsGraph({
     const maxAmount = Math.max(...amounts) * 1.02;
     const amountRange = maxAmount - minAmount || 1;
 
-    // Helper functions
-    const getX = (index: number) => padding + (index / (sortedData.length - 1)) * graphWidth;
+    // Time-based positioning for proper vertical jumps
+    const minTime = Math.min(...sortedData.map(d => d.sortKey));
+    const maxTime = Math.max(...sortedData.map(d => d.sortKey));
+    const timeRange = maxTime - minTime || 1;
+
+    // Helper functions - now using time-based positioning
+    const getX = (sortKey: number) => padding + ((sortKey - minTime) / timeRange) * graphWidth;
     const getY = (amount: number) => padding + ((maxAmount - amount) / amountRange) * graphHeight;
 
     // Draw grid lines (only when not collapsed)
@@ -125,16 +130,16 @@ export default function HistoricalGainsGraph({
     // Draw area fill
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.moveTo(getX(0), rect.height - padding);
-    ctx.lineTo(getX(0), getY(sortedData[0].amount));
+    ctx.moveTo(getX(sortedData[0].sortKey), rect.height - padding);
+    ctx.lineTo(getX(sortedData[0].sortKey), getY(sortedData[0].amount));
     
     sortedData.forEach((point, index) => {
       if (index > 0) {
-        ctx.lineTo(getX(index), getY(point.amount));
+        ctx.lineTo(getX(point.sortKey), getY(point.amount));
       }
     });
     
-    ctx.lineTo(getX(sortedData.length - 1), rect.height - padding);
+    ctx.lineTo(getX(sortedData[sortedData.length - 1].sortKey), rect.height - padding);
     ctx.closePath();
     ctx.fill();
 
@@ -146,7 +151,7 @@ export default function HistoricalGainsGraph({
     ctx.beginPath();
 
     sortedData.forEach((point, index) => {
-      const x = getX(index);
+      const x = getX(point.sortKey);
       const y = getY(point.amount);
 
       if (index === 0) {
@@ -162,18 +167,9 @@ export default function HistoricalGainsGraph({
     if (investmentMarkers.length > 0 && !isCollapsed) { // Only show detailed markers when expanded
       investmentMarkers.forEach(marker => {
         const markerTime = marker.date;
-        let closestIndex = 0;
-        let closestDistance = Math.abs(sortedData[0].sortKey - markerTime);
         
-        for (let i = 1; i < sortedData.length; i++) {
-          const distance = Math.abs(sortedData[i].sortKey - markerTime);
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closestIndex = i;
-          }
-        }
-        
-        const x = getX(closestIndex);
+        // Use time-based positioning for markers
+        const x = getX(markerTime);
         const y = getY(marker.amount);
         
         // Draw white circle with blue border
@@ -189,18 +185,9 @@ export default function HistoricalGainsGraph({
       // Draw small dots when collapsed
       investmentMarkers.forEach(marker => {
         const markerTime = marker.date;
-        let closestIndex = 0;
-        let closestDistance = Math.abs(sortedData[0].sortKey - markerTime);
         
-        for (let i = 1; i < sortedData.length; i++) {
-          const distance = Math.abs(sortedData[i].sortKey - markerTime);
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closestIndex = i;
-          }
-        }
-        
-        const x = getX(closestIndex);
+        // Use time-based positioning for markers
+        const x = getX(markerTime);
         const y = getY(marker.amount);
         
         // Draw small dot
@@ -219,18 +206,9 @@ export default function HistoricalGainsGraph({
       
       rateChangeMarkers.forEach(marker => {
         const markerTime = marker.date;
-        let closestIndex = 0;
-        let closestDistance = Math.abs(sortedData[0].sortKey - markerTime);
         
-        for (let i = 1; i < sortedData.length; i++) {
-          const distance = Math.abs(sortedData[i].sortKey - markerTime);
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closestIndex = i;
-          }
-        }
-        
-        const x = getX(closestIndex);
+        // Use time-based positioning for rate markers
+        const x = getX(markerTime);
         
         // Draw vertical dashed line
         ctx.beginPath();
