@@ -149,7 +149,7 @@ export function useAdminSorting(options: AdminSortingOptions = {}) {
 export function sortData<T>(
   data: T[],
   sortConfig: SortConfig,
-  fieldAccessor: (item: T, field: string) => any = (item, field) => (item as any)[field]
+  fieldAccessor: (item: T, field: string) => unknown = (item, field) => (item as Record<string, unknown>)[field]
 ): T[] {
   if (!sortConfig.field) return data
 
@@ -184,8 +184,8 @@ export function sortData<T>(
  * Type-safe field accessor for common admin entity types
  * Handles nested properties and formatted fields
  */
-export function createFieldAccessor<T>(customAccessors: Record<string, (item: T) => any> = {}) {
-  return (item: T, field: string): any => {
+export function createFieldAccessor<T>(customAccessors: Record<string, (item: T) => unknown> = {}) {
+  return (item: T, field: string): unknown => {
     // Use custom accessor if provided
     if (customAccessors[field]) {
       return customAccessors[field](item)
@@ -193,10 +193,14 @@ export function createFieldAccessor<T>(customAccessors: Record<string, (item: T)
     
     // Handle nested properties (e.g., 'class.name')
     if (field.includes('.')) {
-      return field.split('.').reduce((obj, key) => obj?.[key], item as any)
+      return field.split('.').reduce((obj: unknown, key: string) => {
+        return obj && typeof obj === 'object' && key in obj 
+          ? (obj as Record<string, unknown>)[key] 
+          : undefined
+      }, item)
     }
     
     // Direct property access
-    return (item as any)[field]
+    return (item as Record<string, unknown>)[field]
   }
 }

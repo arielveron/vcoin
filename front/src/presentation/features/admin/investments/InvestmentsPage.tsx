@@ -9,6 +9,7 @@ import { useState } from 'react'
 import { Plus, Users } from 'lucide-react'
 import { useAdminFilters } from '../hooks/useAdminFilters'
 import { useAutoRefresh } from '@/presentation/hooks/useAutoRefresh'
+import { useAdminSorting, sortData, createFieldAccessor } from '@/presentation/hooks/useAdminSorting'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import MobileFilters from '@/components/admin/mobile-filters'
 import {
@@ -67,6 +68,23 @@ export default function InvestmentsPage({
     showAlerts: true
   })
 
+  // Initialize sorting with default sort by date (newest first)
+  const { currentSort, updateSort } = useAdminSorting({
+    defaultSort: { field: 'fecha', direction: 'desc' },
+    preserveFilters: true
+  })
+
+  // Create custom field accessor for investment sorting
+  const investmentFieldAccessor = createFieldAccessor<InvestmentForClient>({
+    student_name: (investment) => investment.student_name || '',
+    category_name: (investment) => investment.category?.name || 'Sin categoría',
+    fecha: (investment) => investment.fecha, // Keep as Date object for proper sorting
+    monto: (investment) => investment.monto // Keep as number for proper sorting
+  })
+
+  // Apply sorting to investments
+  const sortedInvestments = sortData(initialInvestments, currentSort, investmentFieldAccessor)
+
   // Handlers
   const handleCreateInvestment = () => {
     setEditingInvestment(null)
@@ -110,8 +128,9 @@ export default function InvestmentsPage({
   }
 
   // Transform data for table component  
-  const tableInvestments = initialInvestments.map(inv => {
+  const tableInvestments = sortedInvestments.map(inv => {
     const student = students.find(s => s.id === inv.student_id)
+    const category = inv.category_id ? categories.find(c => c.id === inv.category_id) : undefined
     return {
       id: inv.id,
       student_id: inv.student_id,
@@ -121,7 +140,8 @@ export default function InvestmentsPage({
       monto_formatted: inv.monto_formatted,
       concepto: inv.concepto,
       category_id: inv.category_id,
-      category: inv.category_id ? categories.find(c => c.id === inv.category_id) : undefined
+      category: category,
+      category_name: category?.name || 'Standard' // Add category name for sorting
     }
   })
 
@@ -201,6 +221,9 @@ export default function InvestmentsPage({
         pageSize={pageSize}
         onEdit={handleEditInvestmentWrapper}
         onDelete={handleDeleteInvestment}
+        sortBy={currentSort.field || undefined}
+        sortDirection={currentSort.direction}
+        onSort={updateSort}
       />
 
       {/* Investment Form Modal */}

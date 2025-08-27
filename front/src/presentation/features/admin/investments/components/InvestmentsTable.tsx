@@ -11,6 +11,7 @@ import Pagination from '@/components/admin/pagination'
 import PageSizeSelector from '@/components/admin/page-size-selector'
 import { usePagination } from '@/presentation/hooks/usePagination'
 import type { InvestmentCategory } from '@/types/database'
+import type { SortDirection } from '@/presentation/hooks/useAdminSorting'
 
 interface InvestmentWithFormatting {
   id: number
@@ -22,6 +23,7 @@ interface InvestmentWithFormatting {
   concepto: string
   category_id?: number
   category?: InvestmentCategory
+  category_name?: string // Add category name for sorting
 }
 
 interface InvestmentsTableProps {
@@ -32,6 +34,9 @@ interface InvestmentsTableProps {
   pageSize?: number
   onEdit: (investment: InvestmentWithFormatting) => void
   onDelete: (id: number) => void
+  sortBy?: string
+  sortDirection?: SortDirection
+  onSort?: (field: string, direction?: SortDirection) => void
 }
 
 export default function InvestmentsTable({
@@ -41,7 +46,10 @@ export default function InvestmentsTable({
   currentPage,
   pageSize,
   onEdit,
-  onDelete
+  onDelete,
+  sortBy,
+  sortDirection,
+  onSort
 }: InvestmentsTableProps) {
   const { currentPage: urlPage, itemsPerPage: urlPageSize, goToPage, changeItemsPerPage } = usePagination({
     autoRefresh: true  // Enable auto-refresh for server-side pagination
@@ -74,7 +82,8 @@ export default function InvestmentsTable({
   const columns = [
     { 
       key: 'student_name', 
-      header: 'Student', 
+      header: 'Student',
+      sortable: true,
       render: (item: InvestmentWithFormatting) => (
         <div className="flex items-center space-x-2">
           <User className="h-4 w-4 text-gray-400" />
@@ -87,7 +96,8 @@ export default function InvestmentsTable({
     },
     { 
       key: 'fecha_formatted', 
-      header: 'Date', 
+      header: 'Date',
+      sortable: true,
       render: (item: InvestmentWithFormatting) => (
         <div className="flex items-center space-x-2">
           <Calendar className="h-4 w-4 text-gray-400" />
@@ -97,7 +107,8 @@ export default function InvestmentsTable({
     },
     { 
       key: 'monto_formatted', 
-      header: 'Amount', 
+      header: 'Amount',
+      sortable: true,
       render: (item: InvestmentWithFormatting) => (
         <div className="flex items-center justify-end space-x-2">
           <DollarSign className="h-4 w-4 text-gray-400" />
@@ -108,6 +119,7 @@ export default function InvestmentsTable({
     { 
       key: 'concepto', 
       header: 'Concept',
+      sortable: true,
       render: (item: InvestmentWithFormatting) => (
         <span className="max-w-xs truncate block">{item.concepto}</span>
       )
@@ -115,6 +127,8 @@ export default function InvestmentsTable({
     {
       key: 'category',
       header: 'Category',
+      sortable: true,
+      sortField: 'category_name', // Add custom sort field for category name
       render: (item: InvestmentWithFormatting) => {
         if (!item.category) {
           return (
@@ -150,6 +164,7 @@ export default function InvestmentsTable({
     {
       key: 'actions',
       header: 'Actions',
+      sortable: false, // Remove sorting from actions column
       render: (item: InvestmentWithFormatting) => (
         <div className="flex items-center space-x-2">
           <button
@@ -175,11 +190,20 @@ export default function InvestmentsTable({
     }
   ]
 
+  // Create sort config for ResponsiveTable
+  const sortConfig = sortBy && sortDirection ? { field: sortBy, direction: sortDirection } : undefined
+  
+  // Wrapper for onSort to match ResponsiveTable's signature
+  const handleSort = onSort ? (field: string) => onSort(field) : undefined
+
   return (
     <div className="space-y-4">
       <ResponsiveTable
         data={investments}
         columns={columns}
+        sortConfig={sortConfig}
+        onSort={handleSort}
+        enableSorting={!!onSort}
       />
       
       {/* Pagination Controls */}
