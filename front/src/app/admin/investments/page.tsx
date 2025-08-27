@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { AdminService } from '@/services/admin-service'
 import { Suspense } from 'react'
-import InvestmentsAdminClient from './investments-admin-client'
+import InvestmentsPage from '@/presentation/features/admin/investments/InvestmentsPage'
 import { formatInvestmentsForClient, formatStudentsForClient, formatClassesForClient } from '@/utils/admin-data-types'
 import { createInvestment, updateInvestment, deleteInvestment, createBatchInvestments, getStudentsForBatch } from './actions'
 
@@ -78,7 +78,7 @@ export default async function InvestmentsAdminPage({ searchParams }: Investments
       </div>
       
       <Suspense fallback={<div>Loading investments...</div>}>
-        <InvestmentsAdminClient 
+        <InvestmentsPage 
           key={filterKey}
           initialInvestments={investmentsForClient}
           totalInvestments={totalInvestments}

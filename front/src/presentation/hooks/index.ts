@@ -12,6 +12,8 @@ export { useMediaQuery } from './useMediaQuery';
 export { useCollapsibleStore } from './useCollapsibleStore';
 export { useAutoRefresh } from './useAutoRefresh';
 export { useStudentSelectionStore } from './useStudentSelectionStore';
+export { useAdminSorting, sortData, createFieldAccessor } from './useAdminSorting';
 
 export type { ActionResult } from './useServerAction';
 export type { TableColumn } from './useDataTable';
+export type { SortDirection, SortConfig, AdminSortingOptions } from './useAdminSorting';

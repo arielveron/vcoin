@@ -7,6 +7,7 @@
 
 import { User, Edit, Key, Trash2, CheckSquare, Square } from 'lucide-react'
 import ResponsiveTable from '@/components/admin/responsive-table'
+import { useAdminSorting, sortData, createFieldAccessor } from '@/presentation/hooks/useAdminSorting'
 import type { ClassForClient } from '@/utils/admin-data-types'
 import { StudentForClient } from '@/utils/admin-data-types'
 
@@ -30,10 +31,28 @@ export default function StudentSelectionTable({
   onSetPassword
 }: StudentSelectionTableProps) {
 
+  // Initialize sorting with default sort by name
+  const { currentSort, updateSort } = useAdminSorting({
+    defaultSort: { field: 'name', direction: 'asc' },
+    preserveFilters: true
+  })
+
+  // Create custom field accessor for student sorting
+  const studentFieldAccessor = createFieldAccessor<StudentForClient>({
+    class_name: (student) => {
+      const studentClass = classes.find(c => c.id === student.class_id)
+      return studentClass?.name || 'Sin clase asignada'
+    },
+    password_status: (student) => student.password_hash ? 'Set' : 'No Set'
+  })
+
+  // Apply sorting to students
+  const sortedStudents = sortData(students, currentSort, studentFieldAccessor)
+
   // Helper to toggle all students
   const handleToggleAll = () => {
-    const allSelected = students.every(s => selectedStudentIds.includes(s.id))
-    students.forEach(student => {
+    const allSelected = sortedStudents.every(s => selectedStudentIds.includes(s.id))
+    sortedStudents.forEach(student => {
       if (allSelected && selectedStudentIds.includes(student.id)) {
         onStudentToggle(student.id)
       } else if (!allSelected && !selectedStudentIds.includes(student.id)) {
@@ -47,6 +66,7 @@ export default function StudentSelectionTable({
     {
       key: 'selection',
       header: '', // Remove header text to allow column to shrink
+      sortable: false,
       render: (student: StudentForClient) => (
         <button
           onClick={() => onStudentToggle(student.id)}
@@ -63,6 +83,8 @@ export default function StudentSelectionTable({
     {
       key: 'student',
       header: 'Estudiante',
+      sortable: true,
+      sortField: 'name',
       render: (student: StudentForClient) => (
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -82,6 +104,8 @@ export default function StudentSelectionTable({
     {
       key: 'class',
       header: 'Clase',
+      sortable: true,
+      sortField: 'class_name',
       render: (student: StudentForClient) => {
         const studentClass = classes.find(c => c.id === student.class_id)
         return (
@@ -94,6 +118,8 @@ export default function StudentSelectionTable({
     {
       key: 'created_at',
       header: 'Alta',
+      sortable: true,
+      sortField: 'created_at',
       render: (student: StudentForClient) => (
         <span className="text-sm text-gray-500">
           {student.created_at_formatted}
@@ -104,6 +130,8 @@ export default function StudentSelectionTable({
       key: 'investment_count',
       header: 'Inv',
       hideOnMobile: true,
+      sortable: true,
+      sortField: 'investment_count',
       render: (student: StudentForClient) => (
         <div className="text-center">
           <span className="inline-flex px-2 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800">
@@ -116,6 +144,8 @@ export default function StudentSelectionTable({
       key: 'achievement_count', 
       header: 'Logr',
       hideOnMobile: true,
+      sortable: true,
+      sortField: 'achievement_count',
       render: (student: StudentForClient) => (
         <div className="text-center">
           <span className="inline-flex px-2 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800">
@@ -128,6 +158,8 @@ export default function StudentSelectionTable({
       key: 'password_status',
       header: 'Pass',
       hideOnMobile: false,
+      sortable: true,
+      sortField: 'password_status',
       render: (student: StudentForClient) => (
         <div className="text-center">
           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -143,6 +175,7 @@ export default function StudentSelectionTable({
     {
       key: 'actions',
       header: 'Actions',
+      sortable: false,
       render: (student: StudentForClient) => (
         <div className="flex space-x-2">
           <button
@@ -282,10 +315,13 @@ export default function StudentSelectionTable({
 
       {/* Table */}
       <ResponsiveTable
-        data={students}
+        data={sortedStudents}
         columns={columns}
         mobileCard={mobileCard}
         emptyMessage="No se encontraron estudiantes. Crea tu primer estudiante arriba."
+        enableSorting={true}
+        sortConfig={currentSort}
+        onSort={updateSort}
       />
     </div>
   )
