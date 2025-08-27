@@ -193,6 +193,17 @@ export interface AchievementsPageProps {
   getStudentAchievements: (studentId: number) => Promise<ActionResult<AchievementWithProgress[]>>
 }
 
+/**
+ * Achievement Management page props with proper ActionResult types
+ */
+export interface AchievementManagePageProps {
+  achievements: Achievement[]
+  categories: InvestmentCategory[]
+  createAchievement: (formData: FormData) => Promise<ActionResult<Achievement>>
+  updateAchievement: (formData: FormData) => Promise<ActionResult<Achievement | null>>
+  deleteAchievement: (formData: FormData) => Promise<ActionResult<{ success: boolean; message: string }>>
+}
+
 // ===== FORM COMPONENT TYPES =====
 
 /**
