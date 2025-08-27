@@ -9,6 +9,7 @@ import { useState } from 'react'
 import ClassForm from './components/ClassForm'
 import ClassesTable from './components/ClassesTable'
 import ClassActions from './components/ClassActions'
+import { useAdminSorting, sortData, createFieldAccessor } from '@/presentation/hooks/useAdminSorting'
 import type { ClassForClient } from '@/utils/admin-data-types'
 import type { ClassesPageProps } from '@/utils/admin-server-action-types'
 
@@ -21,6 +22,19 @@ export default function ClassesPage({
   const [classes] = useState<ClassForClient[]>(initialClasses)
   const [showForm, setShowForm] = useState(false)
   const [editingClass, setEditingClass] = useState<ClassForClient | null>(null)
+
+  // Sorting functionality
+  const { currentSort, updateSort } = useAdminSorting({ 
+    defaultSort: { field: 'name', direction: 'asc' }
+  })
+
+  // Create field accessor for custom sorting
+  const fieldAccessor = createFieldAccessor<ClassForClient>({
+    // Custom accessors for complex fields can be added here if needed
+  })
+
+  // Apply client-side sorting
+  const sortedClasses = sortData(classes, currentSort, fieldAccessor)
 
   const handleEdit = (classItem: ClassForClient) => {
     setEditingClass(classItem)
@@ -49,9 +63,12 @@ export default function ClassesPage({
 
       {/* Classes table */}
       <ClassesTable
-        classes={classes}
+        classes={sortedClasses}
         onEdit={handleEdit}
         onDelete={classActions.handleDelete}
+        sortBy={currentSort.field || undefined}
+        sortDirection={currentSort.direction}
+        onSort={updateSort}
       />
 
       {/* Form modal */}

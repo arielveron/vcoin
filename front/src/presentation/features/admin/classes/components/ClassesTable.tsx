@@ -8,23 +8,31 @@
 import { Calendar, Edit, Trash2 } from 'lucide-react'
 import ResponsiveTable from '@/components/admin/responsive-table'
 import type { ClassForClient } from '@/utils/admin-data-types'
+import type { SortDirection } from '@/presentation/hooks/useAdminSorting'
 
 interface ClassesTableProps {
   classes: ClassForClient[]
   onEdit: (classItem: ClassForClient) => void
   onDelete: (classId: number) => void
+  sortBy?: string
+  sortDirection?: SortDirection
+  onSort?: (field: string, direction?: SortDirection) => void
 }
 
 export default function ClassesTable({
   classes,
   onEdit,
-  onDelete
+  onDelete,
+  sortBy,
+  sortDirection,
+  onSort
 }: ClassesTableProps) {
   // Define columns for ResponsiveTable
   const columns = [
     {
       key: 'id',
       header: 'ID',
+      sortable: true,
       render: (item: ClassForClient) => (
         <div className="text-sm text-gray-600 font-mono">{item.id}</div>
       )
@@ -32,6 +40,7 @@ export default function ClassesTable({
     {
       key: 'name',
       header: 'Name',
+      sortable: true,
       render: (item: ClassForClient) => (
         <div className="font-medium text-gray-900">{item.name}</div>
       )
@@ -40,11 +49,13 @@ export default function ClassesTable({
       key: 'description',
       header: 'Description',
       hideOnMobile: true,
+      sortable: true,
       render: (item: ClassForClient) => item.description || '-'
     },
     {
-      key: 'end_date',
+      key: 'end_date_formatted',
       header: 'End Date',
+      sortable: true,
       render: (item: ClassForClient) => (
         <div className="flex items-center space-x-2">
           <Calendar className="h-4 w-4 text-gray-400" />
@@ -55,7 +66,8 @@ export default function ClassesTable({
     {
       key: 'timezone',
       header: 'Timezone',
-      hideOnMobile: true
+      hideOnMobile: true,
+      sortable: true
     },
     {
       key: 'actions',
@@ -122,12 +134,21 @@ export default function ClassesTable({
     </div>
   )
 
+  // Create sort config for ResponsiveTable
+  const sortConfig = sortBy && sortDirection ? { field: sortBy, direction: sortDirection } : undefined
+  
+  // Wrapper for onSort to match ResponsiveTable's signature
+  const handleSort = onSort ? (field: string) => onSort(field) : undefined
+
   return (
     <ResponsiveTable
       data={classes}
       columns={columns}
       mobileCard={mobileCard}
       emptyMessage="No classes found. Create your first class to get started."
+      sortConfig={sortConfig}
+      onSort={handleSort}
+      enableSorting={!!onSort}
     />
   )
 }

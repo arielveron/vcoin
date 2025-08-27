@@ -9,25 +9,34 @@ import { Edit, Trash2, Calendar, Percent } from 'lucide-react'
 import ResponsiveTable from '@/components/admin/responsive-table'
 import type { Class } from '@/types/database'
 import { InterestRateForClient } from '@/utils/admin-data-types'
+import type { SortDirection } from '@/presentation/hooks/useAdminSorting'
 
 interface InterestRatesTableProps {
   rates: InterestRateForClient[]
   classes: Class[]
   onEdit: (rate: InterestRateForClient) => void
   onDelete: (id: number) => void
+  sortBy?: string
+  sortDirection?: SortDirection
+  onSort?: (field: string, direction?: SortDirection) => void
 }
 
 export default function InterestRatesTable({
   rates,
   classes,
   onEdit,
-  onDelete
+  onDelete,
+  sortBy,
+  sortDirection,
+  onSort
 }: InterestRatesTableProps) {
   // Define columns for ResponsiveTable
   const columns = [
     {
       key: 'class',
       header: 'Class',
+      sortable: true,
+      sortField: 'class_id',
       render: (rate: InterestRateForClient) => {
         const rateClass = classes.find(c => c.id === rate.class_id)
         return (
@@ -40,6 +49,7 @@ export default function InterestRatesTable({
     {
       key: 'monthly_interest_rate',
       header: 'Rate',
+      sortable: true,
       render: (rate: InterestRateForClient) => (
         <div className="flex items-center space-x-2">
           <Percent className="h-4 w-4 text-green-500" />
@@ -50,8 +60,9 @@ export default function InterestRatesTable({
       )
     },
     {
-      key: 'effective_date',
+      key: 'effective_date_formatted',
       header: 'Effective Date',
+      sortable: true,
       render: (rate: InterestRateForClient) => (
         <div className="flex items-center space-x-2">
           <Calendar className="h-4 w-4 text-gray-400" />
@@ -60,9 +71,10 @@ export default function InterestRatesTable({
       )
     },
     {
-      key: 'created_at',
+      key: 'created_at_formatted',
       header: 'Created',
       hideOnMobile: true,
+      sortable: true,
       render: (rate: InterestRateForClient) => rate.created_at_formatted
     },
     {
@@ -137,12 +149,21 @@ export default function InterestRatesTable({
     )
   }
 
+  // Create sort config for ResponsiveTable
+  const sortConfig = sortBy && sortDirection ? { field: sortBy, direction: sortDirection } : undefined
+  
+  // Wrapper for onSort to match ResponsiveTable's signature
+  const handleSort = onSort ? (field: string) => onSort(field) : undefined
+
   return (
     <ResponsiveTable
       data={rates}
       columns={columns}
       mobileCard={mobileCard}
       emptyMessage="No interest rates found. Create your first rate to get started."
+      sortConfig={sortConfig}
+      onSort={handleSort}
+      enableSorting={!!onSort}
     />
   )
 }

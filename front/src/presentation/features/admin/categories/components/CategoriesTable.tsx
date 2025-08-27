@@ -8,17 +8,24 @@ import IconRenderer from '@/components/icon-renderer'
 import StylePreview from '@/components/admin/style-preview'
 import ResponsiveTable from '@/components/admin/responsive-table'
 import type { CategoryForClient } from '@/utils/admin-data-types'
+import type { SortDirection } from '@/presentation/hooks/useAdminSorting'
 
 interface CategoriesTableProps {
   categories: CategoryForClient[]
   onEdit: (category: CategoryForClient) => void
   onDelete: (id: number) => void
+  sortBy?: string
+  sortDirection?: SortDirection
+  onSort?: (field: string, direction?: SortDirection) => void
 }
 
 export default function CategoriesTable({
   categories,
   onEdit,
-  onDelete
+  onDelete,
+  sortBy,
+  sortDirection,
+  onSort
 }: CategoriesTableProps) {
   const getLevelBadgeColor = (level: string) => {
     switch (level) {
@@ -40,6 +47,7 @@ export default function CategoriesTable({
     {
       key: "name",
       header: "Name",
+      sortable: true,
       render: (category: CategoryForClient) => (
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -55,6 +63,7 @@ export default function CategoriesTable({
     {
       key: "level",
       header: "Level",
+      sortable: true,
       render: (category: CategoryForClient) => (
         <span
           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getLevelBadgeColor(category.level)}`}
@@ -96,6 +105,8 @@ export default function CategoriesTable({
     {
       key: "status",
       header: "Status",
+      sortable: true,
+      sortField: "is_active",
       render: (category: CategoryForClient) => (
         <div className="flex items-center space-x-2">
           {category.is_active ? (
@@ -213,12 +224,21 @@ export default function CategoriesTable({
     )
   }
 
+  // Create sort config for ResponsiveTable
+  const sortConfig = sortBy && sortDirection ? { field: sortBy, direction: sortDirection } : undefined
+  
+  // Wrapper for onSort to match ResponsiveTable's signature
+  const handleSort = onSort ? (field: string) => onSort(field) : undefined
+
   return (
     <ResponsiveTable
       data={categories}
       columns={columns}
       mobileCard={mobileCard}
       emptyMessage="No categories found. Create your first category above."
+      sortConfig={sortConfig}
+      onSort={handleSort}
+      enableSorting={!!onSort}
     />
   )
 }

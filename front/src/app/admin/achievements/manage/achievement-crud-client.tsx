@@ -14,6 +14,7 @@ import {
 import { ACHIEVEMENT_CATEGORIES, ACHIEVEMENT_RARITIES } from '@/shared/constants';
 import IconRenderer from '@/components/icon-renderer';
 import ResponsiveTable from '@/components/admin/responsive-table';
+import { useAdminSorting, sortData, createFieldAccessor } from '@/presentation/hooks/useAdminSorting';
 import { createAchievement, updateAchievement, deleteAchievement } from './actions';
 import { Trophy, Plus, Edit, Trash2, Star } from 'lucide-react';
 
@@ -107,6 +108,19 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
   const [formData, setFormData] = useState<AchievementFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Sorting functionality
+  const { currentSort, updateSort } = useAdminSorting({ 
+    defaultSort: { field: 'name', direction: 'asc' }
+  });
+
+  // Create field accessor for custom sorting
+  const fieldAccessor = createFieldAccessor<Achievement>({
+    // Custom accessors for complex fields can be added here if needed
+  });
+
+  // Apply client-side sorting
+  const sortedAchievements = sortData(achievementList, currentSort, fieldAccessor);
 
   const handleCreate = async (formData: FormData) => {
     setIsSubmitting(true);
@@ -621,6 +635,8 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
     {
       key: 'achievement',
       header: 'Achievement',
+      sortable: true,
+      sortField: 'name',
       render: (achievement: Achievement) => (
         <div className="flex items-center space-x-3">
           <div className="flex-shrink-0">
@@ -643,6 +659,7 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
       key: 'category',
       header: 'Category',
       hideOnMobile: true,
+      sortable: true,
       render: (achievement: Achievement) => (
         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCategoryBadgeColor(achievement.category)}`}>
           {achievement.category}
@@ -652,6 +669,7 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
     {
       key: 'rarity',
       header: 'Rarity',
+      sortable: true,
       render: (achievement: Achievement) => (
         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRarityBadgeColor(achievement.rarity)}`}>
           {achievement.rarity}
@@ -659,9 +677,10 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
       )
     },
     {
-      key: 'type',
+      key: 'trigger_type',
       header: 'Type',
       hideOnMobile: true,
+      sortable: true,
       render: (achievement: Achievement) => (
         <span className={`inline-flex px-2 py-1 text-xs rounded ${
           achievement.trigger_type === 'manual' 
@@ -675,6 +694,7 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
     {
       key: 'points',
       header: 'Points',
+      sortable: true,
       render: (achievement: Achievement) => (
         <div className="flex items-center space-x-1">
           <Star className="h-4 w-4 text-yellow-500" />
@@ -686,6 +706,8 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
       key: 'status',
       header: 'Status',
       hideOnMobile: true,
+      sortable: true,
+      sortField: 'is_active',
       render: (achievement: Achievement) => (
         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
           achievement.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -865,10 +887,13 @@ export default function AchievementCrudClient({ achievements, categories }: Prop
 
       {/* Achievements Table */}
       <ResponsiveTable
-        data={achievementList}
+        data={sortedAchievements}
         columns={columns}
         mobileCard={mobileCard}
         emptyMessage="No achievements found"
+        sortConfig={currentSort.field && currentSort.direction ? { field: currentSort.field, direction: currentSort.direction } : undefined}
+        onSort={updateSort}
+        enableSorting={true}
       />
 
       {/* Create Modal */}

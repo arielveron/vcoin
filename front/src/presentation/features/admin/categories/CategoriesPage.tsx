@@ -8,6 +8,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { useAdminFilters } from '../hooks/useAdminFilters'
+import { useAdminSorting, sortData, createFieldAccessor } from '@/presentation/hooks/useAdminSorting'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import MobileFilters from '@/components/admin/mobile-filters'
 import {
@@ -37,6 +38,19 @@ export default function CategoriesPage({
   const [showForm, setShowForm] = useState(false)
   const [editingCategory, setEditingCategory] = useState<CategoryForClient | null>(null)
   const { filters, updateFilters } = useAdminFilters()
+
+  // Sorting functionality
+  const { currentSort, updateSort } = useAdminSorting({ 
+    defaultSort: { field: 'name', direction: 'asc' }
+  })
+
+  // Create field accessor for custom sorting
+  const fieldAccessor = createFieldAccessor<CategoryForClient>({
+    // Custom accessors for complex fields can be added here if needed
+  })
+
+  // Apply client-side sorting
+  const sortedCategories = sortData(categories, currentSort, fieldAccessor)
 
   // Handlers
   const handleCreateCategory = () => {
@@ -135,9 +149,12 @@ export default function CategoriesPage({
 
       {/* Categories Table */}
       <CategoriesTable
-        categories={categories}
+        categories={sortedCategories}
         onEdit={handleEditCategory}
         onDelete={handleDeleteCategory}
+        sortBy={currentSort.field || undefined}
+        sortDirection={currentSort.direction}
+        onSort={updateSort}
       />
     </div>
   )

@@ -8,6 +8,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { useAdminFilters } from '../hooks/useAdminFilters'
+import { useAdminSorting, sortData, createFieldAccessor } from '@/presentation/hooks/useAdminSorting'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import MobileFilters from '@/components/admin/mobile-filters'
 import {
@@ -39,10 +40,23 @@ export default function InterestRatesPage({
   const [editingRate, setEditingRate] = useState<InterestRateForClient | null>(null)
   const { filters, updateFilters } = useAdminFilters()
 
+  // Sorting functionality
+  const { currentSort, updateSort } = useAdminSorting({ 
+    defaultSort: { field: 'effective_date_formatted', direction: 'desc' }
+  })
+
+  // Create field accessor for custom sorting
+  const fieldAccessor = createFieldAccessor<InterestRateForClient>({
+    // Custom accessors for complex fields can be added here if needed
+  })
+
   // Filter rates based on selected class
   const filteredRates = filters.classId 
     ? rates.filter(rate => rate.class_id === filters.classId)
     : rates
+
+  // Apply client-side sorting to filtered rates
+  const sortedRates = sortData(filteredRates, currentSort, fieldAccessor)
 
   // Filter current rates based on selected class
   const filteredCurrentRates = filters.classId
@@ -163,10 +177,13 @@ export default function InterestRatesPage({
 
       {/* Interest Rates Table */}
       <InterestRatesTable
-        rates={filteredRates}
+        rates={sortedRates}
         classes={classes}
         onEdit={handleEditRate}
         onDelete={handleDeleteRate}
+        sortBy={currentSort.field || undefined}
+        sortDirection={currentSort.direction}
+        onSort={updateSort}
       />
     </div>
   )
