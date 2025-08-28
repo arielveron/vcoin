@@ -52,7 +52,6 @@ export function useAchievementManagement({
     
     setIsSubmitting(true)
     try {
-      formData.append('id', editingAchievement.id.toString())
       const result = await updateAchievement(formData)
       if (result.success && result.data) {
         onUpdateSuccess?.(result.data)

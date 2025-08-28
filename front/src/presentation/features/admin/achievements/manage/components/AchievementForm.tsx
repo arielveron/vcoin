@@ -14,6 +14,7 @@ import IconRenderer from '@/components/icon-renderer'
 interface Props {
   achievement?: Achievement
   onSubmit: (formData: FormData) => void
+  onCancel?: () => void
   submitLabel: string
   isSubmitting: boolean
   categories: InvestmentCategory[]
@@ -98,7 +99,7 @@ const ANIMATION_OPTIONS = [
   { value: 'animate-float', label: 'Float (Custom)' }
 ]
 
-export default function AchievementForm({ achievement, onSubmit, submitLabel, isSubmitting, categories }: Props) {
+export default function AchievementForm({ achievement, onSubmit, onCancel, submitLabel, isSubmitting, categories }: Props) {
   const [formData, setFormData] = useState<AchievementFormData>(initialFormData)
 
   // Initialize form data with existing achievement when editing
@@ -139,6 +140,11 @@ export default function AchievementForm({ achievement, onSubmit, submitLabel, is
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Hidden ID field for editing */}
+      {achievement && (
+        <input type="hidden" name="id" value={achievement.id} />
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Name */}
         <div>
@@ -461,7 +467,7 @@ export default function AchievementForm({ achievement, onSubmit, submitLabel, is
                 <option value="">Select operator</option>
                 <option value=">">Greater than</option>
                 <option value=">=">Greater than or equal</option>
-                <option value="=">=Equal</option>
+                <option value="=">Equal</option>
                 <option value="<">Less than</option>
                 <option value="<=">Less than or equal</option>
               </select>
@@ -520,6 +526,15 @@ export default function AchievementForm({ achievement, onSubmit, submitLabel, is
 
       {/* Submit Button */}
       <div className="flex justify-end space-x-3 pt-4 border-t">
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+        )}
         <button
           type="submit"
           disabled={isSubmitting}
