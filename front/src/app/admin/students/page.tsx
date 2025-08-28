@@ -25,7 +25,9 @@ interface StudentsPageProps {
     qararity?: string,
     qachievement?: string,
     page?: string,
-    size?: string
+    size?: string,
+    sort?: string,   // Sorting field
+    order?: string   // Sorting direction
   }>
 }
 
@@ -46,8 +48,17 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
   const page = params.page ? parseInt(params.page) : 1
   const size = params.size ? parseInt(params.size) : 10
   
-  // Get paginated students with filters
-  const studentFilters = { classId: classId || undefined, searchText: studentSearchText || undefined }
+  // Parse sorting parameters
+  const sortField = params.sort || 'name'
+  const sortDirection = (params.order === 'desc') ? 'desc' : 'asc'
+  
+  // Get paginated students with filters and sorting
+  const studentFilters = { 
+    classId: classId || undefined, 
+    searchText: studentSearchText || undefined,
+    sortField,
+    sortDirection
+  }
   const studentsResult = await adminService.getStudentsPaginated(page, size, studentFilters)
   
   const { students, total: totalStudents, totalPages } = studentsResult
@@ -89,8 +100,8 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
   const studentsForClient = formatStudentsForClient(students, investmentCounts, achievementCounts)
   const classesForClient = formatClassesForClient(classes)
 
-  // Create a filter key to force re-render when filters change
-  const filterKey = `${classId || 'all'}-${studentSearchText || 'all'}-${page}-${size}-${investmentFilters.categoryId || 'all'}-${investmentFilters.date || 'all'}-${investmentFilters.searchText || 'all'}-${achievementFilters.category || 'all'}-${achievementFilters.rarity || 'all'}-${achievementFilters.achievementId || 'all'}`
+  // Create a filter key to force re-render when filters change (including sort)
+  const filterKey = `${classId || 'all'}-${studentSearchText || 'all'}-${page}-${size}-${sortField}-${sortDirection}-${investmentFilters.categoryId || 'all'}-${investmentFilters.date || 'all'}-${investmentFilters.searchText || 'all'}-${achievementFilters.category || 'all'}-${achievementFilters.rarity || 'all'}-${achievementFilters.achievementId || 'all'}`
 
   return (
     <div className="space-y-6">
@@ -109,6 +120,7 @@ export default async function StudentsAdminPage({ searchParams }: StudentsPagePr
           totalPages={totalPages}
           currentPage={page}
           pageSize={size}
+          currentSort={{ field: sortField, direction: sortDirection as 'asc' | 'desc' }}
           classes={classesForClient}
           categories={categories}
           achievements={achievements}

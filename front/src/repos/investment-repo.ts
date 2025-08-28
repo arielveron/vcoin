@@ -414,7 +414,7 @@ export class InvestmentRepository {
   }
 
   /**
-   * Get paginated investments with optional filters
+   * Get paginated investments with optional filters and sorting
    */
   async findPaginated(
     page: number, 
@@ -424,7 +424,9 @@ export class InvestmentRepository {
       categoryId?: number,
       classId?: number,
       searchText?: string,
-      date?: string
+      date?: string,
+      sortField?: string,
+      sortDirection?: string
     }
   ): Promise<{ investments: InvestmentWithStudent[]; total: number }> {
     const client = await pool.connect();
@@ -493,6 +495,42 @@ export class InvestmentRepository {
           condition.replace(`$${index + 1}`, `$${index + 3}`)
         ).join(' AND ')}` : '';
       
+      // Build ORDER BY clause with support for different sort fields
+      let orderByClause = 'ORDER BY i.fecha DESC'; // Default sort
+      
+      if (filters?.sortField && filters?.sortDirection) {
+        const direction = filters.sortDirection.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+        
+        switch (filters.sortField) {
+          case 'fecha':
+            orderByClause = `ORDER BY i.fecha ${direction}`;
+            break;
+          case 'monto':
+          case 'monto_formatted':
+            orderByClause = `ORDER BY i.monto ${direction}`;
+            break;
+          case 'concepto':
+            orderByClause = `ORDER BY i.concepto ${direction}`;
+            break;
+          case 'student_name':
+            orderByClause = `ORDER BY s.name ${direction}`;
+            break;
+          case 'class_name':
+            orderByClause = `ORDER BY c.name ${direction}`;
+            break;
+          case 'category_name':
+            orderByClause = `ORDER BY ic.name ${direction}`;
+            break;
+          case 'created_at':
+            orderByClause = `ORDER BY i.created_at ${direction}`;
+            break;
+          default:
+            // Fallback to fecha sorting for unknown fields
+            orderByClause = `ORDER BY i.fecha ${direction}`;
+            break;
+        }
+      }
+      
       const dataQuery = `
         SELECT 
           i.id, 
@@ -520,7 +558,7 @@ export class InvestmentRepository {
         JOIN classes c ON s.class_id = c.id
         LEFT JOIN investment_categories ic ON i.category_id = ic.id
         ${adjustedWhereClause}
-        ORDER BY i.fecha DESC
+        ${orderByClause}
         LIMIT $1 OFFSET $2
       `;
       const dataResult = await client.query(dataQuery, dataParams);

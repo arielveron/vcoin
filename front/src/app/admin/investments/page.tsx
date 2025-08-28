@@ -16,7 +16,9 @@ interface InvestmentsPageProps {
     qstext?: string,  // student search text filter
     qitext?: string,  // investment search text filter
     page?: string,
-    size?: string
+    size?: string,
+    sort?: string,    // sorting field
+    order?: string    // sorting direction
   }>
 }
 
@@ -39,13 +41,19 @@ export default async function InvestmentsAdminPage({ searchParams }: Investments
   const page = params.page ? parseInt(params.page) : 1
   const size = params.size ? parseInt(params.size) : 10
   
+  // Parse sorting parameters
+  const sortField = params.sort || 'fecha'
+  const sortDirection = (params.order === 'desc') ? 'desc' : 'asc'
+  
   // Get paginated investments based on filters
   const filters = {
     ...(classId && { classId }),
     ...(studentId && { studentId }),
     ...(categoryId && { categoryId }),
     ...(date && { date }),
-    ...(searchText && { searchText })
+    ...(searchText && { searchText }),
+    sortField,
+    sortDirection
   }
   
   const investmentsResult = await adminService.getInvestmentsPaginated(page, size, filters)
@@ -65,8 +73,8 @@ export default async function InvestmentsAdminPage({ searchParams }: Investments
   const studentsForClient = formatStudentsForClient(students, investmentCounts)
   const classesForClient = formatClassesForClient(classes)
 
-  // Create a filter key to force re-render when filters change
-  const filterKey = `${classId || 'all'}-${studentId || 'all'}-${categoryId || 'all'}-${date || 'all'}-${searchText || 'all'}-${page}-${size}`
+  // Create a filter key to force re-render when filters change (including sort)
+  const filterKey = `${classId || 'all'}-${studentId || 'all'}-${categoryId || 'all'}-${date || 'all'}-${searchText || 'all'}-${page}-${size}-${sortField}-${sortDirection}`
 
   return (
     <div className="p-6">
@@ -85,6 +93,7 @@ export default async function InvestmentsAdminPage({ searchParams }: Investments
           totalPages={totalPages}
           currentPage={page}
           pageSize={size}
+          currentSort={{ field: sortField, direction: sortDirection as 'asc' | 'desc' }}
           students={studentsForClient} 
           classes={classesForClient}
           categories={categories}

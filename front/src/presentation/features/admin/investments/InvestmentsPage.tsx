@@ -9,7 +9,7 @@ import { useState } from 'react'
 import { Plus, Users } from 'lucide-react'
 import { useAdminFilters } from '../hooks/useAdminFilters'
 import { useAutoRefresh } from '@/presentation/hooks/useAutoRefresh'
-import { useAdminSorting, sortData, createFieldAccessor } from '@/presentation/hooks/useAdminSorting'
+import { useAdminSorting } from '@/presentation/hooks/useAdminSorting'
 import FilterBadges from '@/app/admin/components/filter-badges'
 import MobileFilters from '@/components/admin/mobile-filters'
 import {
@@ -33,6 +33,7 @@ interface InvestmentsPageProps {
   totalPages?: number
   currentPage?: number
   pageSize?: number
+  currentSort?: { field: string; direction: 'asc' | 'desc' }
   students: StudentForClient[]
   classes: ClassForClient[]
   categories: InvestmentCategory[]
@@ -49,6 +50,7 @@ export default function InvestmentsPage({
   totalPages,
   currentPage,
   pageSize,
+  currentSort: serverCurrentSort,
   students,
   classes,
   categories,
@@ -68,22 +70,15 @@ export default function InvestmentsPage({
     showAlerts: true
   })
 
-  // Initialize sorting with default sort by date (newest first)
+  // Initialize sorting with server-provided sort state or default
   const { currentSort, updateSort } = useAdminSorting({
-    defaultSort: { field: 'fecha', direction: 'desc' },
+    defaultSort: serverCurrentSort || { field: 'fecha', direction: 'desc' },
     preserveFilters: true
   })
 
-  // Create custom field accessor for investment sorting
-  const investmentFieldAccessor = createFieldAccessor<InvestmentForClient>({
-    student_name: (investment) => investment.student_name || '',
-    category_name: (investment) => investment.category?.name || 'Sin categoría',
-    fecha: (investment) => investment.fecha, // Keep as Date object for proper sorting
-    monto: (investment) => investment.monto // Keep as number for proper sorting
-  })
-
-  // Apply sorting to investments
-  const sortedInvestments = sortData(initialInvestments, currentSort, investmentFieldAccessor)
+  // For server-side pagination with sorting, we don't apply client-side sorting
+  // The data is already sorted by the server, so we use it as-is
+  const sortedInvestments = initialInvestments
 
   // Handlers
   const handleCreateInvestment = () => {

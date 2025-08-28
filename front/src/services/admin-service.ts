@@ -134,7 +134,7 @@ export class AdminService {
   async getStudentsPaginated(
     page: number, 
     limit: number, 
-    filters?: { classId?: number; searchText?: string }
+    filters?: { classId?: number; searchText?: string; sortField?: string; sortDirection?: string }
   ): Promise<{ students: Student[]; total: number; totalPages: number }> {
     // Support legacy classId parameter for backward compatibility
     const normalizedFilters = typeof filters === 'number' 
@@ -467,7 +467,9 @@ export class AdminService {
       categoryId?: number,
       classId?: number,
       searchText?: string,
-      date?: string
+      date?: string,
+      sortField?: string,
+      sortDirection?: string
     }
   ): Promise<{ investments: InvestmentWithStudent[]; total: number; totalPages: number }> {
     const result = await this.investmentRepo.findPaginated(page, limit, filters);

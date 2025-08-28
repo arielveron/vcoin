@@ -118,6 +118,7 @@ export interface StudentsPageProps {
   totalPages?: number
   currentPage?: number
   pageSize?: number
+  currentSort?: { field: string; direction: 'asc' | 'desc' }
   classes: ClassForClient[]
   categories: InvestmentCategory[]
   achievements: Achievement[]
@@ -145,12 +146,20 @@ export interface ClassesPageProps {
  */
 export interface InvestmentsPageProps {
   initialInvestments: Investment[]
+  totalInvestments?: number
+  totalPages?: number
+  currentPage?: number
+  pageSize?: number
+  currentSort?: { field: string; direction: 'asc' | 'desc' }
   classes: Class[]
   students: Student[]
   categories: InvestmentCategory[]
   createInvestment: (formData: FormData) => Promise<ActionResult<Investment>>
   updateInvestment: (formData: FormData) => Promise<ActionResult<Investment>>
   deleteInvestment: (formData: FormData) => Promise<ActionResult<DeleteResult>>
+  // Batch investment functionality
+  createBatchInvestments?: (formData: FormData) => Promise<ActionResult<BatchInvestmentResult>>
+  getStudentsForBatch?: (formData: FormData) => Promise<ActionResult<Student[]>>
 }
 
 /**

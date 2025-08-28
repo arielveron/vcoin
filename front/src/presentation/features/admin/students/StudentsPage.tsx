@@ -38,6 +38,7 @@ export default function StudentsPage({
   totalPages: serverTotalPages,
   currentPage: serverCurrentPage,
   pageSize: serverPageSize,
+  currentSort: serverCurrentSort,
   classes,
   categories,
   achievements,
@@ -289,6 +290,7 @@ export default function StudentsPage({
             students={displayStudents}
             classes={classes}
             selectedStudentIds={studentSelection.getSelectedIds()}
+            currentSort={serverCurrentSort}
             onStudentToggle={handleStudentToggle}
             onEdit={handleEditStudent}
             onDelete={handleDeleteStudent}

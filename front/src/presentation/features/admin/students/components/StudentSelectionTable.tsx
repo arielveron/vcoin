@@ -7,7 +7,7 @@
 
 import { User, Edit, Key, Trash2, CheckSquare, Square } from 'lucide-react'
 import ResponsiveTable from '@/components/admin/responsive-table'
-import { useAdminSorting, sortData, createFieldAccessor } from '@/presentation/hooks/useAdminSorting'
+import { useAdminSorting } from '@/presentation/hooks/useAdminSorting'
 import type { ClassForClient } from '@/utils/admin-data-types'
 import { StudentForClient } from '@/utils/admin-data-types'
 
@@ -15,6 +15,7 @@ interface StudentSelectionTableProps {
   students: StudentForClient[]
   classes: ClassForClient[]
   selectedStudentIds: number[]
+  currentSort?: { field: string; direction: 'asc' | 'desc' }
   onStudentToggle: (studentId: number) => void
   onEdit: (student: StudentForClient) => void
   onDelete: (id: number) => void
@@ -25,29 +26,22 @@ export default function StudentSelectionTable({
   students,
   classes,
   selectedStudentIds,
+  currentSort: serverCurrentSort,
   onStudentToggle,
   onEdit,
   onDelete,
   onSetPassword
 }: StudentSelectionTableProps) {
 
-  // Initialize sorting with default sort by name
+  // Initialize sorting with server-provided sort state or default
   const { currentSort, updateSort } = useAdminSorting({
-    defaultSort: { field: 'name', direction: 'asc' },
+    defaultSort: serverCurrentSort || { field: 'name', direction: 'asc' },
     preserveFilters: true
   })
 
-  // Create custom field accessor for student sorting
-  const studentFieldAccessor = createFieldAccessor<StudentForClient>({
-    class_name: (student) => {
-      const studentClass = classes.find(c => c.id === student.class_id)
-      return studentClass?.name || 'Sin clase asignada'
-    },
-    password_status: (student) => student.password_hash ? 'Set' : 'No Set'
-  })
-
-  // Apply sorting to students
-  const sortedStudents = sortData(students, currentSort, studentFieldAccessor)
+  // For server-side pagination with sorting, we don't apply client-side sorting
+  // The data is already sorted by the server, so we use it as-is
+  const sortedStudents = students
 
   // Helper to toggle all students
   const handleToggleAll = () => {

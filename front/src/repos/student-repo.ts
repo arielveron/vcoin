@@ -171,12 +171,12 @@ export class StudentRepository {
   }
 
   /**
-   * Get paginated students with optional class filter
+   * Get paginated students with optional class filter and sorting
    */
   async findPaginated(
     page: number, 
     limit: number, 
-    filters?: { classId?: number; searchText?: string }
+    filters?: { classId?: number; searchText?: string; sortField?: string; sortDirection?: string }
   ): Promise<{ students: Student[]; total: number }> {
     const client = await pool.connect();
     try {
@@ -203,6 +203,44 @@ export class StudentRepository {
       const whereClause = whereConditions.length > 0 ? 
         `WHERE ${whereConditions.join(' AND ')}` : '';
       
+      // Build ORDER BY clause with support for different sort fields
+      let orderByClause = 'ORDER BY s.name'; // Default sort
+      
+      if (filters?.sortField && filters?.sortDirection) {
+        const direction = filters.sortDirection.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+        
+        switch (filters.sortField) {
+          case 'name':
+            orderByClause = `ORDER BY s.name ${direction}`;
+            break;
+          case 'email':
+            orderByClause = `ORDER BY s.email ${direction}`;
+            break;
+          case 'registro':
+            orderByClause = `ORDER BY s.registro ${direction}`;
+            break;
+          case 'class_name':
+            // For class name sorting, we need to join with classes table
+            orderByClause = `ORDER BY (SELECT c.name FROM classes c WHERE c.id = s.class_id) ${direction}`;
+            break;
+          case 'created_at':
+            orderByClause = `ORDER BY s.created_at ${direction}`;
+            break;
+          case 'investment_count':
+            // For investment count sorting, we need a subquery
+            orderByClause = `ORDER BY (
+              SELECT COUNT(*) 
+              FROM investments i 
+              WHERE i.student_id = s.id
+            ) ${direction}`;
+            break;
+          default:
+            // Fallback to name sorting for unknown fields
+            orderByClause = `ORDER BY s.name ${direction}`;
+            break;
+        }
+      }
+      
       // Get total count first
       const countQuery = `
         SELECT COUNT(*) as total
@@ -218,7 +256,7 @@ export class StudentRepository {
         SELECT s.id, s.registro, s.name, s.email, s.class_id, s.password_hash, s.created_at, s.updated_at
         FROM students s
         ${whereClause}
-        ORDER BY s.name
+        ${orderByClause}
         LIMIT $${paramIndex++} OFFSET $${paramIndex}
       `;
       
