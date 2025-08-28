@@ -629,6 +629,35 @@ export class AdminService {
     achievementCount: number;
     totalAchievementPoints: number;
     unlockedAchievements: AchievementWithProgress[];
+    investments: Array<{
+      id: number;
+      fecha: Date;
+      monto: number;
+      montoFormatted: string;
+      concepto: string;
+      category?: {
+        id: number;
+        name: string;
+        icon_config?: {
+          name: string;
+          library: 'lucide' | 'heroicons-solid' | 'heroicons-outline' | 'tabler' | 'phosphor';
+          size?: number;
+          animationClass?: string;
+          effectClass?: string;
+          color?: string;
+          backgroundColor?: string;
+          padding?: number;
+        } | null;
+        text_style?: {
+          fontSize?: string;
+          fontWeight?: string;
+          fontStyle?: string;
+          textColor?: string;
+          effectClass?: string;
+          customCSS?: string;
+        };
+      } | null;
+    }>;
     rank: number;
   }>> {
     const { ServerDataService } = await import('@/services/server-data-service');
@@ -670,6 +699,33 @@ export class AdminService {
           // Filter only unlocked achievements
           const unlockedOnly = unlockedAchievements.filter(a => a.unlocked);
           
+          // Format investments for client use
+          const formattedInvestments = await Promise.all(investments.map(async (investment) => {
+            // Get category details if the investment has a category
+            let category = null;
+            if (investment.category_id) {
+              try {
+                category = await this.categoryRepo.findById(investment.category_id);
+              } catch (error) {
+                console.warn(`Could not load category ${investment.category_id} for investment ${investment.id}:`, error);
+              }
+            }
+            
+            return {
+              id: investment.id,
+              fecha: investment.fecha,
+              monto: investment.monto,
+              montoFormatted: formatCurrency(investment.monto),
+              concepto: investment.concepto,
+              category: category ? {
+                id: category.id,
+                name: category.name,
+                icon_config: category.icon_config,
+                text_style: category.text_style
+              } : null
+            };
+          }));
+          
           return {
             student,
             totalVCoins,
@@ -680,6 +736,7 @@ export class AdminService {
             achievementCount: achievementStats.achievements_unlocked,
             totalAchievementPoints: achievementStats.total_points,
             unlockedAchievements: unlockedOnly,
+            investments: formattedInvestments,
             rank: 0 // Will be set after sorting with tie handling
           };
         } catch (error) {
@@ -694,6 +751,7 @@ export class AdminService {
             achievementCount: 0,
             totalAchievementPoints: 0,
             unlockedAchievements: [],
+            investments: [],
             rank: 0
           };
         }
