@@ -7,6 +7,7 @@ import { useAdminFilters } from '@/presentation/features/admin/hooks/useAdminFil
 import FilterBadges from './filter-badges'
 import MobileFilters from '@/components/admin/mobile-filters'
 import { AchievementsOverview, AchievementFilters } from '@/presentation/features/admin/achievements'
+import { StudentLeaderboard, StudentLeaderboardData } from '@/presentation/features/admin/dashboard'
 import { formatAchievementsForClient } from '@/utils/admin-data-types'
 import { processAchievements } from '@/app/admin/actions'
 import { Users, TrendingUp, Percent, Tags, Trophy, DollarSign, GraduationCap, Target } from 'lucide-react'
@@ -18,9 +19,10 @@ interface AdminDashboardClientProps {
   students: Student[]
   achievements: Achievement[]
   achievementStudentCounts: Map<number, number>
+  leaderboardData: StudentLeaderboardData[]
 }
 
-export default function AdminDashboardClient({ stats, user, classes, students, achievements, achievementStudentCounts }: AdminDashboardClientProps) {
+export default function AdminDashboardClient({ stats, user, classes, students, achievements, achievementStudentCounts, leaderboardData }: AdminDashboardClientProps) {
   const { getUrlWithFilters, filters, updateFilters } = useAdminFilters()
 
   // Process achievements handler
@@ -110,6 +112,14 @@ export default function AdminDashboardClient({ stats, user, classes, students, a
         achievements={formatAchievementsForClient(achievements)}
         achievementStudentCounts={achievementStudentCounts}
         onProcess={handleProcessAchievements}
+      />
+
+      {/* Student Leaderboard */}
+      <StudentLeaderboard 
+        leaderboardData={leaderboardData}
+        classes={classes}
+        currentClassFilter={filters.classId}
+        onClassFilterChange={(classId) => updateFilters({ classId })}
       />
 
       {/* Quick Actions - Responsive */}

@@ -2,6 +2,7 @@ import { AdminService } from '@/services/admin-service'
 import { Suspense } from 'react'
 import AdminDashboardClient from '@/app/admin/components/admin-dashboard-client'
 import { checkAdminAuth } from '@/utils/admin-auth'
+import { StudentLeaderboardData } from '@/presentation/features/admin/dashboard'
 
 // Force dynamic rendering to avoid build-time evaluation
 export const dynamic = 'force-dynamic'
@@ -30,12 +31,13 @@ export default async function AdminDashboard({ searchParams }: AdminDashboardPro
   const adminService = new AdminService()
   
   try {
-    const [stats, classes, students, achievements, achievementStudentCounts] = await Promise.all([
+    const [stats, classes, students, achievements, achievementStudentCounts, leaderboardData] = await Promise.all([
       adminService.getAdminStats(classId, studentId),
       adminService.getAllClasses(),
       adminService.getAllStudents(),
       adminService.getAllAchievements(),
-      adminService.getStudentCountsByAchievements(classId)
+      adminService.getStudentCountsByAchievements(classId),
+      adminService.getStudentLeaderboard(classId, 20) // Get top 20 students for leaderboard
     ])
     
     return (
@@ -47,6 +49,7 @@ export default async function AdminDashboard({ searchParams }: AdminDashboardPro
           students={students}
           achievements={achievements}
           achievementStudentCounts={achievementStudentCounts}
+          leaderboardData={leaderboardData}
         />
       </Suspense>
     )
@@ -70,6 +73,7 @@ export default async function AdminDashboard({ searchParams }: AdminDashboardPro
 
     // Create empty achievement student counts map for error case
     const achievementStudentCounts = new Map<number, number>()
+    const leaderboardData: StudentLeaderboardData[] = [] // Empty leaderboard for error case
     
     return (
       <Suspense fallback={<div>Loading admin dashboard...</div>}>
@@ -80,6 +84,7 @@ export default async function AdminDashboard({ searchParams }: AdminDashboardPro
           students={students}
           achievements={achievements}
           achievementStudentCounts={achievementStudentCounts}
+          leaderboardData={leaderboardData}
         />
       </Suspense>
     )

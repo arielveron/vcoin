@@ -618,4 +618,123 @@ export class AdminService {
       topStudents: [], // TODO: Implement leaderboard
     };
   }
+
+  async getStudentLeaderboard(classId?: number, limit = 10): Promise<Array<{
+    student: Student;
+    totalVCoins: number;
+    totalVCoinsFormatted: string;
+    originalInvested: number;
+    originalInvestedFormatted: string;
+    investmentCount: number;
+    achievementCount: number;
+    totalAchievementPoints: number;
+    unlockedAchievements: AchievementWithProgress[];
+    rank: number;
+  }>> {
+    const { ServerDataService } = await import('@/services/server-data-service');
+    const { calculateMontoActual } = await import('@/logic/calculations');
+
+    // Get students filtered by class if provided
+    const students = classId 
+      ? await this.studentRepo.findByClassId(classId) 
+      : await this.studentRepo.findAll();
+    
+    // Calculate metrics for each student
+    const studentMetrics = await Promise.all(
+      students.map(async (student) => {
+        try {
+          // Get student's investments
+          const investments = await this.investmentRepo.findByStudentId(student.id);
+          
+          // Calculate original investment total
+          const originalInvested = investments.reduce((sum, inv) => sum + inv.monto, 0);
+          
+          // Calculate current amount with interest
+          let totalVCoins = 0;
+          if (investments.length > 0) {
+            try {
+              const classSettings = await ServerDataService.getStudentClassSettings(student.id);
+              totalVCoins = calculateMontoActual(investments, classSettings);
+            } catch (error) {
+              console.error(`Error calculating VCoins for student ${student.id}:`, error);
+              totalVCoins = originalInvested; // Fallback to original investment
+            }
+          }
+          
+          // Get achievement stats and unlocked achievements
+          const [achievementStats, unlockedAchievements] = await Promise.all([
+            this.achievementRepo.getStudentStats(student.id),
+            this.achievementRepo.getStudentAchievements(student.id)
+          ]);
+          
+          // Filter only unlocked achievements
+          const unlockedOnly = unlockedAchievements.filter(a => a.unlocked);
+          
+          return {
+            student,
+            totalVCoins,
+            totalVCoinsFormatted: formatCurrency(totalVCoins),
+            originalInvested,
+            originalInvestedFormatted: formatCurrency(originalInvested),
+            investmentCount: investments.length,
+            achievementCount: achievementStats.achievements_unlocked,
+            totalAchievementPoints: achievementStats.total_points,
+            unlockedAchievements: unlockedOnly,
+            rank: 0 // Will be set after sorting with tie handling
+          };
+        } catch (error) {
+          console.error(`Error calculating metrics for student ${student.id}:`, error);
+          return {
+            student,
+            totalVCoins: 0,
+            totalVCoinsFormatted: formatCurrency(0),
+            originalInvested: 0,
+            originalInvestedFormatted: formatCurrency(0),
+            investmentCount: 0,
+            achievementCount: 0,
+            totalAchievementPoints: 0,
+            unlockedAchievements: [],
+            rank: 0
+          };
+        }
+      })
+    );
+
+    // Sort by multiple criteria: VCoins first, then achievement points, then investment count
+    const sortedMetrics = studentMetrics.sort((a, b) => {
+      // Primary: Total VCoins (descending)
+      if (b.totalVCoins !== a.totalVCoins) {
+        return b.totalVCoins - a.totalVCoins;
+      }
+      // Secondary: Achievement points (descending)
+      if (b.totalAchievementPoints !== a.totalAchievementPoints) {
+        return b.totalAchievementPoints - a.totalAchievementPoints;
+      }
+      // Tertiary: Investment count (descending)
+      return b.investmentCount - a.investmentCount;
+    });
+
+    // Assign ranks with tie handling
+    let currentRank = 1;
+    for (let i = 0; i < sortedMetrics.length; i++) {
+      if (i > 0) {
+        const current = sortedMetrics[i];
+        const previous = sortedMetrics[i - 1];
+        
+        // Check if current student has same performance as previous
+        const isTied = current.totalVCoins === previous.totalVCoins &&
+                      current.totalAchievementPoints === previous.totalAchievementPoints &&
+                      current.investmentCount === previous.investmentCount;
+        
+        if (!isTied) {
+          currentRank = i + 1; // Set rank to position + 1
+        }
+        // If tied, keep the same rank as previous student
+      }
+      
+      sortedMetrics[i].rank = currentRank;
+    }
+
+    return sortedMetrics.slice(0, limit);
+  }
 }
