@@ -209,13 +209,13 @@ export default function LeaderboardItem({ item }: LeaderboardItemProps) {
           </div>
         </div>
         
-        <div className="grid grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-3 gap-4 text-sm">
           <div>
             <div className="text-gray-500">VCoins</div>
             <div className="font-semibold text-green-600">{item.totalVCoinsFormatted}</div>
           </div>
           <div className="relative" ref={mobileInvestmentDropdownRef}>
-            <div className="text-gray-500">Investments</div>
+            <div className="text-gray-500">Inversiones</div>
               <div 
                 className="flex items-center space-x-1 cursor-pointer hover:bg-gray-50 p-1 rounded"
                 onClick={toggleInvestmentDropdown}
@@ -250,8 +250,12 @@ export default function LeaderboardItem({ item }: LeaderboardItemProps) {
               </div>
             )}
           </div>
-          <div className="col-span-2 relative" ref={mobileDropdownRef}>
-            <div className="text-gray-500">Achievements</div>
+          <div>
+            <div className="text-gray-500">Puntos</div>
+            <div className="font-semibold text-orange-600">{item.totalAchievementPoints}</div>
+          </div>
+          <div className="col-span-3 relative" ref={mobileDropdownRef}>
+            <div className="text-gray-500">Logros</div>
             <div 
               className="flex items-center space-x-1 cursor-pointer hover:bg-gray-50 p-1 rounded"
               onClick={toggleAchievementDropdown}
@@ -328,7 +332,7 @@ export default function LeaderboardItem({ item }: LeaderboardItemProps) {
             </div>
           </div>
           
-          <div className="grid grid-cols-[120px_120px_1fr] gap-4 text-sm min-w-[450px]">
+          <div className="grid grid-cols-[120px_120px_100px_1fr] gap-4 text-sm min-w-[550px]">
             <div className="text-center">
               <div className="text-gray-500">VCoins</div>
               <div className="font-semibold text-green-600">{item.totalVCoinsFormatted}</div>
@@ -370,6 +374,10 @@ export default function LeaderboardItem({ item }: LeaderboardItemProps) {
                   </div>
                 </div>
               )}
+            </div>
+            <div className="text-center">
+              <div className="text-gray-500">Puntos</div>
+              <div className="font-semibold text-orange-600">{item.totalAchievementPoints}</div>
             </div>
             <div className="text-center relative" ref={desktopDropdownRef}>
               <div className="text-gray-500">Logros</div>

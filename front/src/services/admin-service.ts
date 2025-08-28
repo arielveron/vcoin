@@ -782,7 +782,7 @@ export class AdminService {
       return b.investmentCount - a.investmentCount;
     });
 
-    // Assign ranks with tie handling
+    // Assign ranks with tie handling (consecutive ranking)
     let currentRank = 1;
     for (let i = 0; i < sortedMetrics.length; i++) {
       if (i > 0) {
@@ -795,7 +795,7 @@ export class AdminService {
                       current.investmentCount === previous.investmentCount;
         
         if (!isTied) {
-          currentRank = i + 1; // Set rank to position + 1
+          currentRank++; // Increment rank by 1 for consecutive ranking
         }
         // If tied, keep the same rank as previous student
       }
