@@ -6,11 +6,14 @@
 
 import { useState } from 'react'
 import { Trophy } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { AchievementWithProgress, Class } from '@/types/database'
 import AchievementTooltip from './AchievementTooltip'
 import LeaderboardStats from './LeaderboardStats'
 import LeaderboardFilters from './LeaderboardFilters'
 import LeaderboardList from './LeaderboardList'
+import Pagination from '@/components/admin/pagination'
+import PageSizeSelector from '@/components/admin/page-size-selector'
 
 export type StudentLeaderboardData = {
   student: {
@@ -36,18 +39,42 @@ interface StudentLeaderboardProps {
   classes: Class[]
   onClassFilterChange?: (classId: number | null) => void
   currentClassFilter?: number | null
+  pagination?: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+  }
 }
 
 export default function StudentLeaderboard({
   leaderboardData,
   classes = [],
   onClassFilterChange,
-  currentClassFilter
+  currentClassFilter,
+  pagination
 }: StudentLeaderboardProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  
   const [hoveredAchievement, setHoveredAchievement] = useState<{
     achievement: AchievementWithProgress
     position: { x: number; y: number }
   } | null>(null)
+
+  // Handle pagination navigation
+  const handlePageChange = (page: number) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString())
+    newSearchParams.set('page', page.toString())
+    router.push(`/admin?${newSearchParams.toString()}`)
+  }
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString())
+    newSearchParams.set('pageSize', newPageSize.toString())
+    newSearchParams.set('page', '1') // Reset to first page when changing page size
+    router.push(`/admin?${newSearchParams.toString()}`)
+  }
 
   // Handle class filter change
   const handleClassFilterChange = (classId: number | null) => {
@@ -137,6 +164,33 @@ export default function StudentLeaderboard({
 
       {/* Leaderboard List */}
       <LeaderboardList leaderboardData={leaderboardItemsData} />
+
+      {/* Pagination Controls */}
+      {pagination && pagination.totalCount > 0 && (
+        <div className="bg-white shadow rounded-lg mt-6">
+          <div className="px-4 lg:px-6 py-4 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="text-sm text-gray-700">
+                Mostrando {Math.min((pagination.currentPage - 1) * pagination.pageSize + 1, pagination.totalCount)} - {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalCount)} de {pagination.totalCount} estudiantes
+              </div>
+              <PageSizeSelector 
+                currentPageSize={pagination.pageSize}
+                onPageSizeChange={handlePageSizeChange}
+                options={[5, 10, 20, 50]}
+              />
+            </div>
+          </div>
+          {pagination.totalPages > 1 && (
+            <div className="p-4 lg:p-6">
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Achievement Tooltip */}
       {hoveredAchievement && (

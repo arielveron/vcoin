@@ -619,35 +619,40 @@ export class AdminService {
     };
   }
 
-  async getStudentLeaderboard(classId?: number, limit = 10): Promise<Array<{
-    student: Student;
-    totalVCoins: number;
-    totalVCoinsFormatted: string;
-    originalInvested: number;
-    originalInvestedFormatted: string;
-    investmentCount: number;
-    achievementCount: number;
-    totalAchievementPoints: number;
-    unlockedAchievements: AchievementWithProgress[];
-    investments: Array<{
-      id: number;
-      fecha: Date;
-      monto: number;
-      montoFormatted: string;
-      concepto: string;
-      category?: {
+  async getStudentLeaderboard(
+    classId?: number, 
+    page = 1, 
+    pageSize = 10
+  ): Promise<{
+    data: Array<{
+      student: Student;
+      totalVCoins: number;
+      totalVCoinsFormatted: string;
+      originalInvested: number;
+      originalInvestedFormatted: string;
+      investmentCount: number;
+      achievementCount: number;
+      totalAchievementPoints: number;
+      unlockedAchievements: AchievementWithProgress[];
+      investments: Array<{
         id: number;
-        name: string;
-        icon_config?: {
+        fecha: Date;
+        monto: number;
+        montoFormatted: string;
+        concepto: string;
+        category?: {
+          id: number;
           name: string;
-          library: 'lucide' | 'heroicons-solid' | 'heroicons-outline' | 'tabler' | 'phosphor';
-          size?: number;
-          animationClass?: string;
-          effectClass?: string;
-          color?: string;
-          backgroundColor?: string;
-          padding?: number;
-        } | null;
+          icon_config?: {
+            name: string;
+            library: 'lucide' | 'heroicons-solid' | 'heroicons-outline' | 'tabler' | 'phosphor';
+            size?: number;
+            animationClass?: string;
+            effectClass?: string;
+            color?: string;
+            backgroundColor?: string;
+            padding?: number;
+          } | null;
         text_style?: {
           fontSize?: string;
           fontWeight?: string;
@@ -659,7 +664,12 @@ export class AdminService {
       } | null;
     }>;
     rank: number;
-  }>> {
+  }>;
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+  }> {
     const { ServerDataService } = await import('@/services/server-data-service');
     const { calculateMontoActual } = await import('@/logic/calculations');
 
@@ -793,6 +803,19 @@ export class AdminService {
       sortedMetrics[i].rank = currentRank;
     }
 
-    return sortedMetrics.slice(0, limit);
+    // Calculate pagination
+    const totalCount = sortedMetrics.length;
+    const totalPages = Math.ceil(totalCount / pageSize);
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedData = sortedMetrics.slice(startIndex, endIndex);
+
+    return {
+      data: paginatedData,
+      totalCount,
+      totalPages,
+      currentPage: page,
+      pageSize
+    };
   }
 }

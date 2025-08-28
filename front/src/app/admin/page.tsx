@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 interface AdminDashboardProps {
-  searchParams: Promise<{ qc?: string; qs?: string }>
+  searchParams: Promise<{ qc?: string; qs?: string; page?: string; pageSize?: string }>
 }
 
 export default async function AdminDashboard({ searchParams }: AdminDashboardProps) {
@@ -22,22 +22,24 @@ export default async function AdminDashboard({ searchParams }: AdminDashboardPro
 
   const { session } = authResult
 
-  // Parse filters from query parameters
+  // Parse filters and pagination from query parameters
   const params = await searchParams
   const classId = params.qc ? parseInt(params.qc) : undefined
   const studentId = params.qs ? parseInt(params.qs) : undefined
+  const page = params.page ? parseInt(params.page) : 1
+  const pageSize = params.pageSize ? parseInt(params.pageSize) : 10
 
   // Fetch data on server side
   const adminService = new AdminService()
   
   try {
-    const [stats, classes, students, achievements, achievementStudentCounts, leaderboardData] = await Promise.all([
+    const [stats, classes, students, achievements, achievementStudentCounts, leaderboardResponse] = await Promise.all([
       adminService.getAdminStats(classId, studentId),
       adminService.getAllClasses(),
       adminService.getAllStudents(),
       adminService.getAllAchievements(),
       adminService.getStudentCountsByAchievements(classId),
-      adminService.getStudentLeaderboard(classId, 20) // Get top 20 students for leaderboard
+      adminService.getStudentLeaderboard(classId, page, pageSize)
     ])
     
     return (
@@ -49,7 +51,13 @@ export default async function AdminDashboard({ searchParams }: AdminDashboardPro
           students={students}
           achievements={achievements}
           achievementStudentCounts={achievementStudentCounts}
-          leaderboardData={leaderboardData}
+          leaderboardData={leaderboardResponse.data}
+          leaderboardPagination={{
+            totalCount: leaderboardResponse.totalCount,
+            totalPages: leaderboardResponse.totalPages,
+            currentPage: leaderboardResponse.currentPage,
+            pageSize: leaderboardResponse.pageSize
+          }}
         />
       </Suspense>
     )
@@ -85,6 +93,12 @@ export default async function AdminDashboard({ searchParams }: AdminDashboardPro
           achievements={achievements}
           achievementStudentCounts={achievementStudentCounts}
           leaderboardData={leaderboardData}
+          leaderboardPagination={{
+            totalCount: 0,
+            totalPages: 0,
+            currentPage: 1,
+            pageSize: 10
+          }}
         />
       </Suspense>
     )

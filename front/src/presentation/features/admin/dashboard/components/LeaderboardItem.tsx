@@ -222,7 +222,6 @@ export default function LeaderboardItem({ item }: LeaderboardItemProps) {
               >
                 <span className="font-semibold text-blue-600">{item.investmentCount}</span>
                 <TrendingUp className="h-3 w-3 text-blue-400" />
-                {/* Always show chevron for now to debug */}
                 {isInvestmentDropdownOpen ? 
                   <ChevronUp className="h-3 w-3 text-gray-400 ml-1" /> : 
                   <ChevronDown className="h-3 w-3 text-gray-400 ml-1" />
@@ -342,13 +341,12 @@ export default function LeaderboardItem({ item }: LeaderboardItemProps) {
               >
                 <span className="font-semibold text-blue-600">{item.investmentCount}</span>
                 <TrendingUp className="h-3 w-3 text-blue-400" />
-                {/* Always show chevron for now to debug */}
                 {isInvestmentDropdownOpen ? 
                   <ChevronUp className="h-3 w-3 text-gray-400 ml-1" /> : 
                   <ChevronDown className="h-3 w-3 text-gray-400 ml-1" />
                 }
               </div>
-              
+
               {/* Investment Dropdown */}
               {isInvestmentDropdownOpen && (
                 <div className="absolute top-full right-0 mt-1 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">

@@ -20,9 +20,24 @@ interface AdminDashboardClientProps {
   achievements: Achievement[]
   achievementStudentCounts: Map<number, number>
   leaderboardData: StudentLeaderboardData[]
+  leaderboardPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+  }
 }
 
-export default function AdminDashboardClient({ stats, user, classes, students, achievements, achievementStudentCounts, leaderboardData }: AdminDashboardClientProps) {
+export default function AdminDashboardClient({ 
+  stats, 
+  user, 
+  classes, 
+  students, 
+  achievements, 
+  achievementStudentCounts, 
+  leaderboardData,
+  leaderboardPagination 
+}: AdminDashboardClientProps) {
   const { getUrlWithFilters, filters, updateFilters } = useAdminFilters()
 
   // Process achievements handler
@@ -120,6 +135,7 @@ export default function AdminDashboardClient({ stats, user, classes, students, a
         classes={classes}
         currentClassFilter={filters.classId || undefined}
         onClassFilterChange={(classId) => updateFilters({ classId })}
+        pagination={leaderboardPagination}
       />
 
       {/* Quick Actions - Responsive */}
