@@ -118,7 +118,7 @@ export default function AdminDashboardClient({ stats, user, classes, students, a
       <StudentLeaderboard 
         leaderboardData={leaderboardData}
         classes={classes}
-        currentClassFilter={filters.classId}
+        currentClassFilter={filters.classId || undefined}
         onClassFilterChange={(classId) => updateFilters({ classId })}
       />
 
