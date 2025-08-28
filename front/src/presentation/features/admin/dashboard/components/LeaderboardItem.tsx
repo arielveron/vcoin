@@ -328,13 +328,13 @@ export default function LeaderboardItem({ item }: LeaderboardItemProps) {
             </div>
           </div>
           
-          <div className="flex items-center space-x-6 text-sm">
+          <div className="grid grid-cols-[120px_120px_1fr] gap-4 text-sm min-w-[450px]">
             <div className="text-center">
               <div className="text-gray-500">VCoins</div>
               <div className="font-semibold text-green-600">{item.totalVCoinsFormatted}</div>
             </div>
-            <div className="text-center min-w-[100px] relative" ref={desktopInvestmentDropdownRef}>
-              <div className="text-gray-500">Investments</div>
+            <div className="text-center relative" ref={desktopInvestmentDropdownRef}>
+              <div className="text-gray-500">Inversiones</div>
               <div 
                 className="flex items-center justify-center space-x-1 cursor-pointer hover:bg-gray-50 p-1 rounded"
                 onClick={toggleInvestmentDropdown}
@@ -371,42 +371,44 @@ export default function LeaderboardItem({ item }: LeaderboardItemProps) {
                 </div>
               )}
             </div>
-            <div className="text-center min-w-[150px] relative" ref={desktopDropdownRef}>
-              <div className="text-gray-500">Achievements</div>
+            <div className="text-center relative" ref={desktopDropdownRef}>
+              <div className="text-gray-500">Logros</div>
               <div 
-                className="flex items-center justify-center space-x-1 cursor-pointer hover:bg-gray-50 p-1 rounded"
+                className="flex items-center justify-center flex-wrap gap-1 cursor-pointer hover:bg-gray-50 p-1 rounded"
                 onClick={toggleAchievementDropdown}
               >
-                <span className="font-semibold text-purple-600">{item.achievementCount}</span>
-                <div className="flex items-center space-x-1 ml-2">
-                  {sortedAchievements.slice(0, 5).map((achievement) => {
+                <div className="flex items-center space-x-1">
+                  <span className="font-semibold text-purple-600">{item.achievementCount}</span>
+                  {sortedAchievements.length > 0 && (
+                    isAchievementDropdownOpen ? 
+                      <ChevronUp className="h-3 w-3 text-gray-400" /> : 
+                      <ChevronDown className="h-3 w-3 text-gray-400" />
+                  )}
+                </div>
+                <div className="flex items-center space-x-1">
+                  {sortedAchievements.slice(0, 4).map((achievement) => {
                     const rarityStyle = getRarityClasses(achievement.rarity)
                     return (
                       <div
                         key={achievement.id}
-                        className={`w-6 h-6 rounded-full flex items-center justify-center ${rarityStyle.bgColor} transform hover:scale-110 transition-transform`}
+                        className={`w-5 h-5 rounded-full flex items-center justify-center ${rarityStyle.bgColor} transform hover:scale-110 transition-transform`}
                         onMouseEnter={(e) => item.onAchievementMouseEnter(achievement, e)}
                         onMouseLeave={item.onAchievementMouseLeave}
                       >
                         <IconRenderer
                           name={achievement.icon_config.name}
                           library={achievement.icon_config.library}
-                          size={achievement.icon_config.size || 20}
+                          size={achievement.icon_config.size || 16}
                           color={achievement.icon_config.color || '#6B7280'}
-                          className={`w-3 h-3 ${rarityStyle.textColor}`}
+                          className={`w-2.5 h-2.5 ${rarityStyle.textColor}`}
                         />
                       </div>
                     )
                   })}
-                  {sortedAchievements.length > 5 && (
-                    <span className="text-xs text-gray-500 ml-1">+{sortedAchievements.length - 5}</span>
+                  {sortedAchievements.length > 4 && (
+                    <span className="text-xs text-gray-500">+{sortedAchievements.length - 4}</span>
                   )}
                 </div>
-                {sortedAchievements.length > 0 && (
-                  isAchievementDropdownOpen ? 
-                    <ChevronUp className="h-3 w-3 text-gray-400 ml-1" /> : 
-                    <ChevronDown className="h-3 w-3 text-gray-400 ml-1" />
-                )}
               </div>
               
               {/* Achievement Dropdown */}

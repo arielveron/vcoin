@@ -114,7 +114,7 @@ export default function InvestmentDropdownItem({
   const config = sizeConfig[size]
 
   return (
-    <div className={`flex items-start justify-between hover:bg-gray-50 rounded ${config.container}`}>
+    <div className={`flex items-start justify-between hover:bg-gray-300 bg-gray-200 mb-1 rounded ${config.container}`}>
       {/* Left side - Date and concept */}
       <div className="flex items-start space-x-2 sm:space-x-3 flex-1">
         <div className="flex-shrink-0 mt-0.5">
@@ -149,7 +149,7 @@ export default function InvestmentDropdownItem({
                   </div>
                 )}
               </div>
-              <p className={`${config.date} text-gray-500 mt-1`}>
+              <p className={`${config.date} text-gray-500 mt-1 text-left`}>
                 {formatDayWithWeekday(investment.fecha)}
               </p>
             </div>
@@ -165,6 +165,7 @@ export default function InvestmentDropdownItem({
           </span>
         </div>
       </div>
+      
     </div>
   )
 }
