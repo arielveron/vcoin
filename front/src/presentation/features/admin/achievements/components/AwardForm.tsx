@@ -5,7 +5,7 @@
  */
 'use client'
 
-import type { Achievement } from '@/types/database'
+import type { Achievement, InvestmentCategory } from '@/types/database'
 import IconRenderer from '@/components/icon-renderer'
 import type { ActionResult } from '@/utils/server-actions'
 import type { OperationResult } from '@/utils/admin-server-action-types'
@@ -13,6 +13,7 @@ import type { OperationResult } from '@/utils/admin-server-action-types'
 interface AwardFormProps {
   achievement: Achievement
   studentId: number
+  categories?: InvestmentCategory[]
   isGranted?: boolean
   onSuccess?: () => void
   onAward: (formData: FormData) => Promise<ActionResult<OperationResult>>
@@ -22,6 +23,7 @@ interface AwardFormProps {
 export default function AwardForm({ 
   achievement, 
   studentId, 
+  categories = [],
   isGranted = false,
   onSuccess,
   onAward,
@@ -94,6 +96,10 @@ export default function AwardForm({
           {achievement.trigger_type === 'automatic' && achievement.trigger_config && (
             <p className="text-xs text-gray-400 mt-1">
               Triggers: {achievement.trigger_config.metric} {achievement.trigger_config.operator} {achievement.trigger_config.value}
+              {achievement.trigger_config.category_id && categories.length > 0 && (() => {
+                const category = categories.find(c => c.id === achievement.trigger_config?.category_id)
+                return category ? ` & category = '${category.name}'` : ''
+              })()}
             </p>
           )}
         </div>

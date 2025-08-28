@@ -238,11 +238,40 @@ export default function AchievementBadge({
                 <div className="text-gray-600 mb-2">
                   <div className="font-medium mb-1">Progreso:</div>
                   <div>
-                    {achievement.current_value} / {achievement.required_value}
-                    {achievement.trigger_config?.metric === 'investment_count' && ' inversiones'}
-                    {achievement.trigger_config?.metric === 'total_invested' && ' ARS'}
-                    {achievement.trigger_config?.metric === 'streak_days' && ' días consecutivos'}
-                    {achievement.trigger_config?.metric === 'category_count' && ' inversiones en categoría'}
+                    {/* Display format based on operator type */}
+                    {achievement.trigger_config?.operator === '=' && (
+                      <>
+                        {achievement.current_value} / {achievement.required_value}
+                        {achievement.trigger_config?.metric === 'investment_count' && ' inversiones'}
+                        {achievement.trigger_config?.metric === 'total_invested' && ' ARS'}
+                        {achievement.trigger_config?.metric === 'streak_days' && ' días consecutivos'}
+                        {achievement.trigger_config?.metric === 'category_count' && ' inversiones en categoría'}
+                      </>
+                    )}
+                    {(achievement.trigger_config?.operator === '>=' || achievement.trigger_config?.operator === '>') && (
+                      <>
+                        {achievement.current_value} / {achievement.required_value}
+                        {achievement.trigger_config?.metric === 'investment_count' && ' inversiones'}
+                        {achievement.trigger_config?.metric === 'total_invested' && ' ARS'}
+                        {achievement.trigger_config?.metric === 'streak_days' && ' días consecutivos'}
+                        {achievement.trigger_config?.metric === 'category_count' && ' inversiones en categoría'}
+                        <div className="text-xs text-gray-500 mt-1">
+                          (Necesitas {achievement.trigger_config.operator} {achievement.required_value})
+                        </div>
+                      </>
+                    )}
+                    {(achievement.trigger_config?.operator === '<=' || achievement.trigger_config?.operator === '<') && (
+                      <>
+                        {achievement.current_value} / {achievement.required_value}
+                        {achievement.trigger_config?.metric === 'investment_count' && ' inversiones'}
+                        {achievement.trigger_config?.metric === 'total_invested' && ' ARS'}
+                        {achievement.trigger_config?.metric === 'streak_days' && ' días consecutivos'}
+                        {achievement.trigger_config?.metric === 'category_count' && ' inversiones en categoría'}
+                        <div className="text-xs text-gray-500 mt-1">
+                          (Máximo permitido: {achievement.trigger_config.operator} {achievement.required_value})
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}

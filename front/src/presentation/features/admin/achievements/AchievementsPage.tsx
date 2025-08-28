@@ -48,6 +48,7 @@ interface BackgroundJobStatus {
 export default function AchievementsPage({
   initialAchievements,
   classes,
+  categories,
   students,
   manualAward,
   manualRevoke,
@@ -142,6 +143,7 @@ export default function AchievementsPage({
         achievements={achievements}
         students={studentsData}
         classes={classes}
+        categories={categories}
         selectedStudent={selectedStudent}
         studentAchievements={studentAchievements}
         isLoadingStudent={isLoadingStudent}

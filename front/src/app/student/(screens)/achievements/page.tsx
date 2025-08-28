@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { SecureStudentSessionService } from '@/services/secure-student-session-service';
 import { ServerDataService } from '@/services/server-data-service';
+import { AchievementEngine } from '@/services/achievement-engine';
 import AchievementSection from '@/app/student/components/achievement-section';
 
 export default async function AchievementsPage() {
@@ -8,6 +9,14 @@ export default async function AchievementsPage() {
   
   if (!session) {
     redirect('/login');
+  }
+
+  // Process achievements to ensure progress is up to date
+  try {
+    const achievementEngine = new AchievementEngine();
+    await achievementEngine.checkAchievementsForStudent(session.student_id);
+  } catch (error) {
+    console.error('Error processing achievements on achievements page:', error);
   }
 
   // Fetch achievement data for the authenticated student with personalization

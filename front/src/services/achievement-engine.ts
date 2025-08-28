@@ -40,8 +40,19 @@ export class AchievementEngine {
           // Check if already unlocked
           const existingUnlock = await this.achievementRepo.isAchievementUnlocked(studentId, achievement.id);
           if (!existingUnlock) {
+            // Get the correct trigger value based on metric type
+            let triggerValue: number;
+            if (achievement.trigger_config.metric === 'category_count' && achievement.trigger_config.category_id) {
+              triggerValue = metrics[`category_${achievement.trigger_config.category_id}_count`] || 0;
+            } else if (achievement.trigger_config.metric === 'investment_count' && achievement.trigger_config.category_id) {
+              // Handle investment_count with category filter
+              triggerValue = metrics[`category_${achievement.trigger_config.category_id}_count`] || 0;
+            } else {
+              triggerValue = metrics[achievement.trigger_config.metric] || 0;
+            }
+            
             await this.achievementRepo.unlockAchievement(studentId, achievement.id, {
-              triggerValue: metrics[achievement.trigger_config.metric],
+              triggerValue,
               triggeredBy: 'investment',
               investmentId
             });
@@ -50,11 +61,22 @@ export class AchievementEngine {
         }
         
         // Update progress for progressive achievements
-        if (achievement.trigger_config.metric && metrics[achievement.trigger_config.metric] !== undefined) {
+        let currentValue: number | undefined;
+        
+        if (achievement.trigger_config.metric === 'category_count' && achievement.trigger_config.category_id) {
+          currentValue = metrics[`category_${achievement.trigger_config.category_id}_count`];
+        } else if (achievement.trigger_config.metric === 'investment_count' && achievement.trigger_config.category_id) {
+          // Handle investment_count with category filter
+          currentValue = metrics[`category_${achievement.trigger_config.category_id}_count`];
+        } else if (achievement.trigger_config.metric) {
+          currentValue = metrics[achievement.trigger_config.metric];
+        }
+        
+        if (currentValue !== undefined) {
           await this.achievementRepo.updateProgress(
             studentId,
             achievement.id,
-            metrics[achievement.trigger_config.metric]
+            currentValue
           );
         }
       }
@@ -169,6 +191,15 @@ export class AchievementEngine {
           currentValue = metrics[`category_${category_id}_count`] || 0;
         } else {
           return false;
+        }
+        break;
+      case 'investment_count':
+        if (category_id) {
+          // If category is specified, use category-specific count
+          currentValue = metrics[`category_${category_id}_count`] || 0;
+        } else {
+          // If no category specified, use total investment count
+          currentValue = metrics[metric] || 0;
         }
         break;
       default:

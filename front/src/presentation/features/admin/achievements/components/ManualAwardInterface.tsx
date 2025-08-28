@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react'
 import { Users, BookOpen } from 'lucide-react'
 import { sortAchievementsForClient } from '@/utils/achievement-sorting'
 import AwardForm from './AwardForm'
-import type { Student, Class, Achievement, AchievementWithProgress } from '@/types/database'
+import type { Student, Class, Achievement, AchievementWithProgress, InvestmentCategory } from '@/types/database'
 import { formatAchievementForClient } from '@/utils/admin-data-types'
 import type { AchievementForClient } from '@/utils/admin-data-types'
 import type { ActionResult } from '@/utils/server-actions'
@@ -19,6 +19,7 @@ interface StudentAchievementManagementProps {
   achievements: AchievementForClient[]
   students: Student[]
   classes: Class[]
+  categories: InvestmentCategory[]
   selectedStudent: number | null
   studentAchievements: AchievementWithProgress[]
   isLoadingStudent: boolean
@@ -32,6 +33,7 @@ export default function ManualAwardInterface({
   achievements, 
   students, 
   classes,
+  categories = [],
   selectedStudent,
   studentAchievements,
   isLoadingStudent,
@@ -151,6 +153,7 @@ export default function ManualAwardInterface({
                 <AwardForm
                   key={achievement.id}
                   achievement={achievement}
+                  categories={categories}
                   studentId={selectedStudent}
                   isGranted={isGranted}
                   onSuccess={handleAwardSuccess}

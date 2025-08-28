@@ -155,7 +155,20 @@ export class AchievementRepository {
           END as required_value,
           CASE 
             WHEN a.trigger_config->>'value' IS NOT NULL AND ap.current_value IS NOT NULL
-            THEN LEAST(100, (ap.current_value / (a.trigger_config->>'value')::numeric * 100))
+            THEN 
+              CASE 
+                WHEN a.trigger_config->>'operator' = '=' THEN
+                  LEAST(100, (ap.current_value / (a.trigger_config->>'value')::numeric * 100))
+                WHEN a.trigger_config->>'operator' IN ('>=', '>') THEN
+                  LEAST(100, (ap.current_value / (a.trigger_config->>'value')::numeric * 100))
+                WHEN a.trigger_config->>'operator' IN ('<=', '<') THEN
+                  CASE 
+                    WHEN ap.current_value <= (a.trigger_config->>'value')::numeric 
+                    THEN LEAST(100, (ap.current_value / (a.trigger_config->>'value')::numeric * 100))
+                    ELSE 100
+                  END
+                ELSE 0
+              END
             ELSE 0
           END as progress
         FROM achievements a
