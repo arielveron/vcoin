@@ -1,52 +1,73 @@
 /**
  * GroupForm Component
  * Form component for creating and editing groups
+ * Following students pattern with server action handling
  */
 'use client'
 
-import type { ClassForClient, GroupWithDetailsForClient } from '@/utils/admin-data-types'
+import { useState } from 'react'
 import type { GroupWithDetails } from '@/types/database'
 import type { ActionResult } from '@/utils/server-actions'
-import { useServerAction } from '@/presentation/hooks'
+import type { ClassForClient, GroupWithDetailsForClient } from '@/utils/admin-data-types'
 
 interface GroupFormProps {
   classes: ClassForClient[]
-  group?: GroupWithDetailsForClient | null
-  onSubmit: (formData: FormData) => Promise<ActionResult<GroupWithDetails>>
+  editingGroup?: GroupWithDetailsForClient | null
+  preSelectedClassId?: number
+  createGroup: (formData: FormData) => Promise<ActionResult<GroupWithDetails>>
+  updateGroup: (formData: FormData) => Promise<ActionResult<GroupWithDetails>>
   onSuccess: (group: GroupWithDetails) => void
   onCancel: () => void
-  preSelectedClassId?: number
 }
 
 export default function GroupForm({
   classes,
-  group,
-  onSubmit,
+  editingGroup,
+  preSelectedClassId,
+  createGroup,
+  updateGroup,
   onSuccess,
-  onCancel,
-  preSelectedClassId
+  onCancel
 }: GroupFormProps) {
-  const { execute, loading } = useServerAction(onSubmit)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
     
-    const result = await execute(formData)
-    if (result?.success && result?.data) {
-      onSuccess(result.data)
-    } else {
-      alert(result?.error || (group ? 'Error al actualizar grupo' : 'Error al crear grupo'))
+    setIsSubmitting(true)
+    try {
+      let result: ActionResult<GroupWithDetails>
+      
+      if (editingGroup) {
+        // Include the group ID in the FormData for update
+        formData.set('id', editingGroup.id.toString())
+        result = await updateGroup(formData)
+      } else {
+        result = await createGroup(formData)
+      }
+      
+      if (result.success && result.data) {
+        onSuccess(result.data)
+        alert(editingGroup ? 'Group updated successfully!' : 'Group created successfully!')
+      } else if (!result.success) {
+        alert(result.error || (editingGroup ? 'Error updating group' : 'Error creating group'))
+      }
+    } catch (error) {
+      console.error('Group form error:', error)
+      alert('Error: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
-  const defaultClassId = group?.class_id || preSelectedClassId || ''
+  const defaultClassId = editingGroup?.class_id || preSelectedClassId || ''
 
   return (
     <div className="bg-white rounded-lg shadow-lg max-w-md w-full">
       <div className="px-6 py-4 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-900">
-          {group ? 'Edit Group' : 'Create New Group'}
+          {editingGroup ? 'Edit Group' : 'Create New Group'}
         </h3>
       </div>
 
@@ -59,11 +80,11 @@ export default function GroupForm({
             type="text"
             id="name"
             name="name"
-            defaultValue={group?.name || ''}
+            defaultValue={editingGroup?.name || ''}
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter group name"
-            disabled={loading}
+            disabled={isSubmitting}
           />
         </div>
 
@@ -75,12 +96,12 @@ export default function GroupForm({
             type="number"
             id="group_number"
             name="group_number"
-            defaultValue={group?.group_number || ''}
+            defaultValue={editingGroup?.group_number || ''}
             required
             min="1"
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter group number"
-            disabled={loading}
+            disabled={isSubmitting}
           />
         </div>
 
@@ -94,7 +115,7 @@ export default function GroupForm({
             defaultValue={defaultClassId}
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            disabled={loading}
+            disabled={isSubmitting}
           >
             <option value="">Select a class</option>
             {classes.map((cls) => (
@@ -112,9 +133,9 @@ export default function GroupForm({
             type="checkbox"
             id="is_enabled"
             name="is_enabled"
-            defaultChecked={group?.is_enabled ?? true}
+            defaultChecked={editingGroup?.is_enabled ?? true}
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            disabled={loading}
+            disabled={isSubmitting}
           />
           <label htmlFor="is_enabled" className="ml-2 block text-sm text-gray-700">
             Group is enabled
@@ -122,8 +143,8 @@ export default function GroupForm({
         </div>
 
         {/* Hidden field for group ID when editing */}
-        {group && (
-          <input type="hidden" name="id" value={group.id} />
+        {editingGroup && (
+          <input type="hidden" name="id" value={editingGroup.id} />
         )}
 
         <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
@@ -131,22 +152,22 @@ export default function GroupForm({
             type="button"
             onClick={onCancel}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-            disabled={loading}
+            disabled={isSubmitting}
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? (
+            {isSubmitting ? (
               <div className="flex items-center">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                {group ? 'Updating...' : 'Creating...'}
+                {editingGroup ? 'Updating...' : 'Creating...'}
               </div>
             ) : (
-              group ? 'Update Group' : 'Create Group'
+              editingGroup ? 'Update Group' : 'Create Group'
             )}
           </button>
         </div>

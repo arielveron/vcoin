@@ -14,9 +14,9 @@
  * - Type safety for server action responses
  */
 
-import type { Student, Class, Investment, InvestmentWithStudent, InvestmentCategory, InterestRateHistory, Achievement, AchievementWithProgress, BatchInvestmentResult } from '@/types/database'
+import type { Student, Class, Investment, InvestmentWithStudent, InvestmentCategory, InterestRateHistory, Achievement, AchievementWithProgress, BatchInvestmentResult, GroupWithDetails } from '@/types/database'
 import type { ActionResult } from '@/utils/server-actions'
-import type { InterestRateForClient, CurrentRateInfo, StudentForClient, ClassForClient } from '@/utils/admin-data-types'
+import type { InterestRateForClient, CurrentRateInfo, StudentForClient, ClassForClient, GroupWithDetailsForClient } from '@/utils/admin-data-types'
 
 // ===================================================================
 // STANDARD OPERATION RESULT TYPES
@@ -211,6 +211,21 @@ export interface AchievementManagePageProps {
   createAchievement: (formData: FormData) => Promise<ActionResult<Achievement>>
   updateAchievement: (formData: FormData) => Promise<ActionResult<Achievement | null>>
   deleteAchievement: (formData: FormData) => Promise<ActionResult<{ success: boolean; message: string }>>
+}
+
+/**
+ * Groups page props with proper ActionResult types
+ */
+export interface GroupsPageProps {
+  groups: GroupWithDetailsForClient[]
+  classes: ClassForClient[]
+  createGroup: (formData: FormData) => Promise<ActionResult<GroupWithDetails>>
+  updateGroup: (formData: FormData) => Promise<ActionResult<GroupWithDetails>>
+  deleteGroup?: (formData: FormData) => Promise<ActionResult<DeleteResult>>
+  toggleGroupStatus?: (formData: FormData) => Promise<ActionResult<OperationResult>>
+  addStudentsToGroup?: (formData: FormData) => Promise<ActionResult<OperationResult>>
+  removeStudentsFromGroup?: (formData: FormData) => Promise<ActionResult<OperationResult>>
+  moveStudentsToGroup?: (formData: FormData) => Promise<ActionResult<OperationResult>>
 }
 
 // ===== FORM COMPONENT TYPES =====

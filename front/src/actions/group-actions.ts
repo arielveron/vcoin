@@ -6,7 +6,7 @@
  */
 
 import { AdminService } from '@/services/admin-service'
-import { CreateGroupRequest } from '@/types/database'
+import { CreateGroupRequest, GroupWithDetails } from '@/types/database'
 import { 
   withAdminAuth, 
   validateRequired, 
@@ -17,15 +17,14 @@ import {
   createActionSuccess,
   createActionError
 } from '@/utils/server-actions'
-import type { ActionResult } from '@/utils/admin-server-action-types'
 
 const adminService = new AdminService()
 
-export const createGroup = withAdminAuth(async (formData: FormData): Promise<ActionResult> => {
+export const createGroup = withAdminAuth(async (formData: FormData) => {
   try {
     const missing = validateRequired(formData, ['group_number', 'name', 'class_id'])
     if (missing.length > 0) {
-      return createActionError(`Missing required fields: ${missing.join(', ')}`)
+      throw new Error(`Missing required fields: ${missing.join(', ')}`)
     }
 
     const group_number = parseFormNumber(formData, 'group_number')
@@ -41,19 +40,27 @@ export const createGroup = withAdminAuth(async (formData: FormData): Promise<Act
     }
 
     const group = await adminService.createGroup(groupData)
-    return createActionSuccess(group, 'Group created successfully')
+    
+    // Return the created group with complete details (following VCoin pattern)
+    const allGroupsWithDetails = await adminService.getGroupsWithDetails()
+    const groupWithDetails = allGroupsWithDetails.find(g => g.id === group.id)
+    
+    if (!groupWithDetails) {
+      throw new Error('Failed to retrieve created group details')
+    }
+    
+    return groupWithDetails
   } catch (error) {
-    return createActionError(
-      error instanceof Error ? error.message : 'Failed to create group'
-    )
+    // Let withAdminAuth handle error wrapping
+    throw error
   }
 }, 'create group')
 
-export const updateGroup = withAdminAuth(async (formData: FormData): Promise<ActionResult> => {
+export const updateGroup = withAdminAuth(async (formData: FormData) => {
   try {
     const missing = validateRequired(formData, ['id'])
     if (missing.length > 0) {
-      return createActionError(`Missing required fields: ${missing.join(', ')}`)
+      throw new Error(`Missing required fields: ${missing.join(', ')}`)
     }
 
     const id = parseFormNumber(formData, 'id')
@@ -69,23 +76,30 @@ export const updateGroup = withAdminAuth(async (formData: FormData): Promise<Act
     if (is_enabled !== undefined) updates.is_enabled = is_enabled
 
     if (Object.keys(updates).length === 0) {
-      return createActionError('No fields to update')
+      throw new Error('No fields to update')
     }
 
     const group = await adminService.updateGroup(id, updates)
     if (!group) {
-      return createActionError('Group not found')
+      throw new Error('Group not found')
     }
 
-    return createActionSuccess(group, 'Group updated successfully')
+    // Ensure calculated fields have proper default values (VCoin pattern: clean data flow)
+    const cleanGroup: GroupWithDetails = {
+      ...group,
+      calculated_average_vcoin_amount: group.calculated_average_vcoin_amount ?? 0,
+      calculated_average_achievement_points: group.calculated_average_achievement_points ?? 0,
+      calculated_at: group.calculated_at || null
+    }
+    
+    return cleanGroup
   } catch (error) {
-    return createActionError(
-      error instanceof Error ? error.message : 'Failed to update group'
-    )
+    // Let withAdminAuth handle error wrapping
+    throw error
   }
 }, 'update group')
 
-export const deleteGroup = withAdminAuth(async (formData: FormData): Promise<ActionResult> => {
+export const deleteGroup = withAdminAuth(async (formData: FormData) => {
   try {
     const missing = validateRequired(formData, ['id'])
     if (missing.length > 0) {
@@ -110,7 +124,7 @@ export const deleteGroup = withAdminAuth(async (formData: FormData): Promise<Act
   }
 }, 'delete group')
 
-export const toggleGroupStatus = withAdminAuth(async (formData: FormData): Promise<ActionResult> => {
+export const toggleGroupStatus = withAdminAuth(async (formData: FormData) => {
   try {
     const missing = validateRequired(formData, ['id'])
     if (missing.length > 0) {
@@ -135,7 +149,7 @@ export const toggleGroupStatus = withAdminAuth(async (formData: FormData): Promi
   }
 }, 'toggle group status')
 
-export const addStudentsToGroup = withAdminAuth(async (formData: FormData): Promise<ActionResult> => {
+export const addStudentsToGroup = withAdminAuth(async (formData: FormData) => {
   try {
     const missing = validateRequired(formData, ['group_id', 'student_ids'])
     if (missing.length > 0) {
@@ -169,7 +183,7 @@ export const addStudentsToGroup = withAdminAuth(async (formData: FormData): Prom
   }
 }, 'add students to group')
 
-export const removeStudentsFromGroup = withAdminAuth(async (formData: FormData): Promise<ActionResult> => {
+export const removeStudentsFromGroup = withAdminAuth(async (formData: FormData) => {
   try {
     const missing = validateRequired(formData, ['student_ids'])
     if (missing.length > 0) {
@@ -202,7 +216,7 @@ export const removeStudentsFromGroup = withAdminAuth(async (formData: FormData):
   }
 }, 'remove students from group')
 
-export const moveStudentsToGroup = withAdminAuth(async (formData: FormData): Promise<ActionResult> => {
+export const moveStudentsToGroup = withAdminAuth(async (formData: FormData) => {
   try {
     const missing = validateRequired(formData, ['student_ids', 'target_group_id'])
     if (missing.length > 0) {

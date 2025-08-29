@@ -5,9 +5,9 @@ import { Suspense } from 'react'
 import { GroupsPage } from '@/presentation/features/admin/groups'
 import { 
   formatGroupsWithDetailsForClient, 
-  formatClassesForClient,
-  formatStudentsForClient 
+  formatClassesForClient
 } from '@/utils/admin-data-types'
+import { createGroup, updateGroup } from '@/actions/group-actions'
 
 // Optimize rendering for less frequent updates
 export const dynamic = 'force-dynamic'
@@ -63,16 +63,10 @@ export default async function GroupsAdminPage({ searchParams }: GroupsPageProps)
 
     // Fetch all classes for filtering and forms
     const classes = await adminService.getAllClasses()
-    
-    // Fetch students for group management (filtered by class if needed)
-    const allStudents = classId 
-      ? await adminService.getStudentsByClass(classId)
-      : await adminService.getAllStudents()
 
     // Format data for client components
     const groupsForClient = formatGroupsWithDetailsForClient(groups)
     const classesForClient = formatClassesForClient(classes)
-    const studentsForClient = formatStudentsForClient(allStudents)
 
     // Create a filter key to force re-render when filters change
     const filterKey = `${classId || 'all'}-${groupId || 'all'}-${groupSearchText || 'all'}-${studentSearchText || 'all'}-${page}-${size}-${sortField}-${sortDirection}`
@@ -91,7 +85,6 @@ export default async function GroupsAdminPage({ searchParams }: GroupsPageProps)
             key={filterKey}
             initialGroups={groupsForClient}
             classes={classesForClient}
-            allStudents={studentsForClient}
             pagination={{
               totalItems: totalGroups,
               totalPages: totalPages,
@@ -99,6 +92,8 @@ export default async function GroupsAdminPage({ searchParams }: GroupsPageProps)
               offset: (page - 1) * size,
               limit: size
             }}
+            createGroup={createGroup}
+            updateGroup={updateGroup}
           />
         </Suspense>
       </div>
