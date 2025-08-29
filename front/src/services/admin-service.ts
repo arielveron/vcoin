@@ -4,6 +4,7 @@ import { InvestmentRepository } from "../repos/investment-repo";
 import { InterestRateHistoryRepository } from "../repos/interest-rate-history-repo";
 import { InvestmentCategoryRepository } from "../repos/investment-category-repo";
 import { AchievementRepository } from "../repos/achievement-repo";
+import { GroupRepository } from "../repos/group-repo";
 import { formatDate, formatCurrency, formatPercentage } from "@/shared/utils/formatting";
 import { isSameDate } from "@/shared/utils/formatting/date";
 import {
@@ -14,12 +15,17 @@ import {
   InvestmentCategory,
   Achievement,
   AchievementWithProgress,
+  Group,
+  GroupWithClass,
+  GroupWithStudents,
+  GroupWithDetails,
   CreateClassRequest,
   CreateStudentRequest,
   CreateInvestmentRequest,
   CreateInterestRateRequest,
   CreateInvestmentCategoryRequest,
   CreateAchievementRequest,
+  CreateGroupRequest,
   CreateBatchInvestmentRequest,
   BatchInvestmentResult,
 } from "../types/database";
@@ -39,6 +45,7 @@ export class AdminService {
   private interestRateRepo: InterestRateHistoryRepository;
   private categoryRepo: InvestmentCategoryRepository;
   private achievementRepo: AchievementRepository;
+  private groupRepo: GroupRepository;
 
   constructor() {
     this.classRepo = new ClassRepository();
@@ -47,6 +54,7 @@ export class AdminService {
     this.interestRateRepo = new InterestRateHistoryRepository();
     this.categoryRepo = new InvestmentCategoryRepository();
     this.achievementRepo = new AchievementRepository();
+    this.groupRepo = new GroupRepository();
   }
 
   // Dashboard stats
@@ -817,5 +825,301 @@ export class AdminService {
       currentPage: page,
       pageSize
     };
+  }
+
+  // ============================================================================
+  // GROUP MANAGEMENT METHODS
+  // ============================================================================
+
+  /**
+   * Get all groups with optional class filtering
+   */
+  async getGroups(classId?: number): Promise<GroupWithClass[]> {
+    if (classId) {
+      const groups = await this.groupRepo.findByClassId(classId);
+      const cls = await this.classRepo.findById(classId);
+      if (!cls) {
+        throw new Error(`Class with ID ${classId} not found`);
+      }
+      return groups.map(group => ({
+        ...group,
+        class_name: cls.name
+      }));
+    }
+    return this.groupRepo.findWithClass();
+  }
+
+  /**
+   * Get a specific group with students
+   */
+  async getGroupWithStudents(groupId: number): Promise<GroupWithStudents | null> {
+    return this.groupRepo.findWithStudents(groupId);
+  }
+
+  /**
+   * Get all groups with detailed information (students included)
+   */
+  async getGroupsWithDetails(): Promise<GroupWithDetails[]> {
+    return this.groupRepo.findWithDetails();
+  }
+
+  /**
+   * Get paginated groups with filtering and sorting
+   */
+  async getGroupsPaginated(options: {
+    page: number;
+    size: number;
+    classId?: number | null;
+    searchText?: string | null;
+    sortField?: string;
+    sortDirection?: 'asc' | 'desc';
+  }): Promise<{
+    groups: GroupWithDetails[];
+    totalGroups: number;
+    totalPages: number;
+  }> {
+    const { page, size, classId, searchText, sortField = 'group_number', sortDirection = 'asc' } = options;
+    
+    // Get all groups with details (includes student count and class info)
+    let allGroups = await this.getGroupsWithDetails();
+    
+    // Apply class filter if specified
+    if (classId) {
+      allGroups = allGroups.filter(group => group.class_id === classId);
+    }
+    
+    // Apply text search filtering
+    if (searchText && searchText.trim() !== '') {
+      const searchLower = searchText.toLowerCase().trim();
+      allGroups = allGroups.filter(group => 
+        group.name.toLowerCase().includes(searchLower) ||
+        group.group_number.toString().includes(searchLower) ||
+        group.class_name.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Apply sorting
+    allGroups.sort((a, b) => {
+      let aValue: string | number;
+      let bValue: string | number;
+      
+      switch (sortField) {
+        case 'group_number':
+          aValue = a.group_number;
+          bValue = b.group_number;
+          break;
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'class_name':
+          aValue = a.class_name.toLowerCase();
+          bValue = b.class_name.toLowerCase();
+          break;
+        case 'student_count':
+          aValue = a.student_count || 0;
+          bValue = b.student_count || 0;
+          break;
+        case 'calculated_average_vcoin_amount':
+          aValue = a.calculated_average_vcoin_amount || 0;
+          bValue = b.calculated_average_vcoin_amount || 0;
+          break;
+        case 'calculated_average_achievement_points':
+          aValue = a.calculated_average_achievement_points || 0;
+          bValue = b.calculated_average_achievement_points || 0;
+          break;
+        case 'is_enabled':
+          aValue = a.is_enabled ? 1 : 0;
+          bValue = b.is_enabled ? 1 : 0;
+          break;
+        default:
+          aValue = a.group_number;
+          bValue = b.group_number;
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    
+    const totalGroups = allGroups.length;
+    const totalPages = Math.ceil(totalGroups / size);
+    const startIndex = (page - 1) * size;
+    const groups = allGroups.slice(startIndex, startIndex + size);
+    
+    return {
+      groups,
+      totalGroups,
+      totalPages
+    };
+  }
+
+  /**
+   * Create a new group
+   */
+  async createGroup(data: CreateGroupRequest): Promise<Group> {
+    // Validate that the class exists
+    const cls = await this.classRepo.findById(data.class_id);
+    if (!cls) {
+      throw new Error(`Class with ID ${data.class_id} not found`);
+    }
+
+    // Check if group number already exists in this class
+    const numberExists = await this.groupRepo.checkGroupNumberExists(data.class_id, data.group_number);
+    if (numberExists) {
+      throw new Error(`Group number ${data.group_number} already exists in this class`);
+    }
+
+    // Check if group name already exists in this class
+    const nameExists = await this.groupRepo.checkGroupNameExists(data.class_id, data.name);
+    if (nameExists) {
+      throw new Error(`Group name "${data.name}" already exists in this class`);
+    }
+
+    return this.groupRepo.create(data);
+  }
+
+  /**
+   * Update an existing group
+   */
+  async updateGroup(id: number, data: Partial<CreateGroupRequest>): Promise<GroupWithDetails | null> {
+    const existingGroup = await this.groupRepo.findById(id);
+    if (!existingGroup) {
+      throw new Error(`Group with ID ${id} not found`);
+    }
+
+    // Validate class if being changed
+    if (data.class_id && data.class_id !== existingGroup.class_id) {
+      const cls = await this.classRepo.findById(data.class_id);
+      if (!cls) {
+        throw new Error(`Class with ID ${data.class_id} not found`);
+      }
+    }
+
+    const targetClassId = data.class_id || existingGroup.class_id;
+
+    // Check if group number already exists in target class (excluding current group)
+    if (data.group_number !== undefined) {
+      const numberExists = await this.groupRepo.checkGroupNumberExists(targetClassId, data.group_number, id);
+      if (numberExists) {
+        throw new Error(`Group number ${data.group_number} already exists in this class`);
+      }
+    }
+
+    // Check if group name already exists in target class (excluding current group)
+    if (data.name !== undefined) {
+      const nameExists = await this.groupRepo.checkGroupNameExists(targetClassId, data.name, id);
+      if (nameExists) {
+        throw new Error(`Group name "${data.name}" already exists in this class`);
+      }
+    }
+
+    // Update the group
+    await this.groupRepo.update(id, data);
+    
+    // Return the updated group with complete details
+    const allGroupsWithDetails = await this.groupRepo.findWithDetails();
+    return allGroupsWithDetails.find(g => g.id === id) || null;
+  }
+
+  /**
+   * Delete a group (removes students from group but doesn't delete them)
+   */
+  async deleteGroup(id: number): Promise<boolean> {
+    const group = await this.groupRepo.findById(id);
+    if (!group) {
+      throw new Error(`Group with ID ${id} not found`);
+    }
+
+    return this.groupRepo.delete(id);
+  }
+
+  /**
+   * Toggle group enabled status
+   */
+  async toggleGroupStatus(id: number): Promise<GroupWithDetails | null> {
+    const group = await this.groupRepo.findById(id);
+    if (!group) {
+      throw new Error(`Group with ID ${id} not found`);
+    }
+
+    // Update the status
+    await this.groupRepo.updateEnabledStatus(id, !group.is_enabled);
+    
+    // Return the updated group with details
+    const allGroupsWithDetails = await this.groupRepo.findWithDetails();
+    return allGroupsWithDetails.find(g => g.id === id) || null;
+  }
+
+  /**
+   * Add students to a group
+   */
+  async addStudentsToGroup(groupId: number, studentIds: number[]): Promise<void> {
+    const group = await this.groupRepo.findById(groupId);
+    if (!group) {
+      throw new Error(`Group with ID ${groupId} not found`);
+    }
+
+    // Validate all students exist and belong to the same class as the group
+    const students = await this.studentRepo.findByIds(studentIds);
+    const invalidStudents = students.filter(s => s.class_id !== group.class_id);
+    if (invalidStudents.length > 0) {
+      throw new Error(`Students ${invalidStudents.map(s => s.name).join(', ')} do not belong to the same class as the group`);
+    }
+
+    // Update group assignments
+    const updates = studentIds.map(studentId => ({ studentId, groupId }));
+    await this.studentRepo.bulkUpdateGroupAssignments(updates);
+  }
+
+  /**
+   * Remove students from a group
+   */
+  async removeStudentsFromGroup(studentIds: number[]): Promise<void> {
+    // Update group assignments to null
+    const updates = studentIds.map(studentId => ({ studentId, groupId: null }));
+    await this.studentRepo.bulkUpdateGroupAssignments(updates);
+  }
+
+  /**
+   * Move students to a different group
+   */
+  async moveStudentsToGroup(studentIds: number[], targetGroupId: number): Promise<void> {
+    const targetGroup = await this.groupRepo.findById(targetGroupId);
+    if (!targetGroup) {
+      throw new Error(`Target group with ID ${targetGroupId} not found`);
+    }
+
+    // Validate all students exist and belong to the same class as the target group
+    const students = await this.studentRepo.findByIds(studentIds);
+    const invalidStudents = students.filter(s => s.class_id !== targetGroup.class_id);
+    if (invalidStudents.length > 0) {
+      throw new Error(`Students ${invalidStudents.map(s => s.name).join(', ')} do not belong to the same class as the target group`);
+    }
+
+    // Update group assignments
+    const updates = studentIds.map(studentId => ({ studentId, groupId: targetGroupId }));
+    await this.studentRepo.bulkUpdateGroupAssignments(updates);
+  }
+
+  /**
+   * Get students without groups for a specific class
+   */
+  async getStudentsWithoutGroups(classId: number): Promise<Student[]> {
+    return this.studentRepo.findWithoutGroupByClassId(classId);
+  }
+
+  /**
+   * Get next available group number for a class
+   */
+  async getNextGroupNumber(classId: number): Promise<number> {
+    return this.groupRepo.getNextGroupNumber(classId);
+  }
+
+  /**
+   * Get enabled groups for a class (used for student assignment)
+   */
+  async getEnabledGroupsByClass(classId: number): Promise<Group[]> {
+    return this.groupRepo.findEnabledByClassId(classId);
   }
 }

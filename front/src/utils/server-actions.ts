@@ -131,3 +131,103 @@ export function parseFormDate(formData: FormData, field: string): Date {
   }
   return date
 }
+
+// ============================================================================
+// NEW ENHANCED FORM PARSING UTILITIES
+// ============================================================================
+
+/**
+ * Parse a string field from FormData with optional default value
+ * @param formData - The FormData object
+ * @param field - The field name to parse
+ * @param defaultValue - Optional default value if field is empty
+ * @returns The string value or default
+ */
+export function parseFormString(formData: FormData, field: string, defaultValue?: string): string {
+  const value = formData.get(field) as string
+  if (!value || value.trim() === '') {
+    if (defaultValue !== undefined) {
+      return defaultValue
+    }
+    throw new Error(`Missing or empty string for field: ${field}`)
+  }
+  return value.trim()
+}
+
+/**
+ * Parse an optional string field from FormData
+ * @param formData - The FormData object
+ * @param field - The field name to parse
+ * @returns The string value or null if empty
+ */
+export function parseFormStringOptional(formData: FormData, field: string): string | null {
+  const value = formData.get(field) as string
+  return value && value.trim() !== '' ? value.trim() : null
+}
+
+/**
+ * Parse a boolean field from FormData (checkbox or select)
+ * @param formData - The FormData object
+ * @param field - The field name to parse
+ * @param defaultValue - Optional default value if field is missing
+ * @returns The boolean value
+ */
+export function parseFormBoolean(formData: FormData, field: string, defaultValue: boolean = false): boolean {
+  const value = formData.get(field) as string
+  if (!value) return defaultValue
+  
+  // Handle checkbox values (can be 'on', 'true', '1')
+  if (value === 'on' || value === 'true' || value === '1') return true
+  if (value === 'false' || value === '0') return false
+  
+  return defaultValue
+}
+
+/**
+ * Parse an optional number field from FormData
+ * @param formData - The FormData object
+ * @param field - The field name to parse
+ * @returns The number value or null if empty
+ */
+export function parseFormNumberOptional(formData: FormData, field: string): number | null {
+  const value = formData.get(field) as string
+  if (!value || value.trim() === '') return null
+  
+  const parsed = parseInt(value, 10)
+  if (isNaN(parsed)) {
+    throw new Error(`Invalid number for field: ${field}`)
+  }
+  return parsed
+}
+
+// ============================================================================
+// ACTION RESULT HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Create a successful ActionResult
+ * @param data - Optional data to include in the result
+ * @param message - Optional success message
+ * @returns ActionSuccess<T>
+ */
+export function createActionSuccess<T = unknown>(data?: T, message?: string): ActionSuccess<T> {
+  return {
+    success: true,
+    ...(data !== undefined && { data }),
+    ...(message && { message })
+  }
+}
+
+/**
+ * Create an error ActionResult
+ * @param error - Error message
+ * @param code - Optional error code
+ * @returns ActionError
+ */
+export function createActionError(error: string, code?: string): ActionError {
+  return {
+    success: false,
+    error,
+    ...(code && { code })
+  }
+}

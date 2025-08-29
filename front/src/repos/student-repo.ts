@@ -6,7 +6,7 @@ export class StudentRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        SELECT s.id, s.registro, s.name, s.email, s.class_id, s.password_hash, s.created_at, s.updated_at
+        SELECT s.id, s.registro, s.name, s.email, s.class_id, s.group_id, s.password_hash, s.personalizacion, s.created_at, s.updated_at
         FROM students s
         ORDER BY s.name
       `);
@@ -20,7 +20,7 @@ export class StudentRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        SELECT id, registro, name, email, class_id, password_hash, created_at, updated_at 
+        SELECT id, registro, name, email, class_id, group_id, password_hash, personalizacion, created_at, updated_at 
         FROM students 
         WHERE id = $1
       `, [id]);
@@ -34,7 +34,7 @@ export class StudentRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        SELECT id, registro, name, email, class_id, password_hash, created_at, updated_at 
+        SELECT id, registro, name, email, class_id, group_id, password_hash, personalizacion, created_at, updated_at 
         FROM students 
         WHERE class_id = $1
         ORDER BY name
@@ -52,7 +52,7 @@ export class StudentRepository {
     try {
       const placeholders = ids.map((_, index) => `$${index + 1}`).join(',');
       const result = await client.query(`
-        SELECT id, registro, name, email, class_id, password_hash, created_at, updated_at 
+        SELECT id, registro, name, email, class_id, group_id, password_hash, personalizacion, created_at, updated_at 
         FROM students 
         WHERE id IN (${placeholders})
         ORDER BY name
@@ -67,7 +67,7 @@ export class StudentRepository {
     const client = await pool.connect();
     try {
       const studentResult = await client.query(`
-        SELECT id, registro, name, email, class_id, password_hash, created_at, updated_at 
+        SELECT id, registro, name, email, class_id, group_id, password_hash, personalizacion, created_at, updated_at 
         FROM students 
         WHERE id = $1
       `, [id]);
@@ -105,10 +105,10 @@ export class StudentRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        INSERT INTO students (name, registro, email, class_id) 
-        VALUES ($1, $2, $3, $4) 
-        RETURNING id, registro, name, email, class_id, password_hash, created_at, updated_at
-      `, [data.name, data.registro, data.email, data.class_id]);
+        INSERT INTO students (name, registro, email, class_id, group_id) 
+        VALUES ($1, $2, $3, $4, $5) 
+        RETURNING id, registro, name, email, class_id, group_id, password_hash, personalizacion, created_at, updated_at
+      `, [data.name, data.registro, data.email, data.class_id, data.group_id || null]);
       return result.rows[0];
     } finally {
       client.release();
@@ -119,7 +119,7 @@ export class StudentRepository {
     const client = await pool.connect();
     try {
       const updates: string[] = [];
-      const values: (string | number | undefined)[] = [];
+      const values: (string | number | null | undefined)[] = [];
       let paramCount = 1;
 
       if (data.name !== undefined) {
@@ -142,16 +142,22 @@ export class StudentRepository {
         values.push(data.class_id);
       }
 
+      if (data.group_id !== undefined) {
+        updates.push(`group_id = $${paramCount++}`);
+        values.push(data.group_id);
+      }
+
       if (updates.length === 0) {
         return this.findById(id);
       }
 
+      updates.push(`updated_at = NOW()`);
       values.push(id);
       const result = await client.query(`
         UPDATE students 
         SET ${updates.join(', ')} 
         WHERE id = $${paramCount} 
-        RETURNING id, registro, name, email, class_id, password_hash, created_at, updated_at
+        RETURNING id, registro, name, email, class_id, group_id, password_hash, personalizacion, created_at, updated_at
       `, values);
 
       return result.rows[0] || null;
@@ -253,7 +259,7 @@ export class StudentRepository {
 
       // Get paginated results
       const dataQuery = `
-        SELECT s.id, s.registro, s.name, s.email, s.class_id, s.password_hash, s.created_at, s.updated_at
+        SELECT s.id, s.registro, s.name, s.email, s.class_id, s.group_id, s.password_hash, s.personalizacion, s.created_at, s.updated_at
         FROM students s
         ${whereClause}
         ${orderByClause}
@@ -288,6 +294,87 @@ export class StudentRepository {
       `, params);
       
       return parseInt(result.rows[0].total, 10);
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Find students by group ID
+   */
+  async findByGroupId(groupId: number): Promise<Student[]> {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        SELECT id, registro, name, email, class_id, group_id, password_hash, personalizacion, created_at, updated_at 
+        FROM students 
+        WHERE group_id = $1
+        ORDER BY name
+      `, [groupId]);
+      return result.rows;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Find students without a group in a specific class
+   */
+  async findWithoutGroupByClassId(classId: number): Promise<Student[]> {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        SELECT id, registro, name, email, class_id, group_id, password_hash, personalizacion, created_at, updated_at 
+        FROM students 
+        WHERE class_id = $1 AND group_id IS NULL
+        ORDER BY name
+      `, [classId]);
+      return result.rows;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Update student's group assignment
+   */
+  async updateGroupAssignment(studentId: number, groupId: number | null): Promise<Student | null> {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        UPDATE students 
+        SET group_id = $1, updated_at = NOW()
+        WHERE id = $2
+        RETURNING id, registro, name, email, class_id, group_id, password_hash, personalizacion, created_at, updated_at
+      `, [groupId, studentId]);
+      return result.rows[0] || null;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Bulk update group assignments for multiple students
+   */
+  async bulkUpdateGroupAssignments(updates: { studentId: number; groupId: number | null }[]): Promise<void> {
+    if (updates.length === 0) return;
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      for (const update of updates) {
+        await client.query(`
+          UPDATE students 
+          SET group_id = $1, updated_at = NOW()
+          WHERE id = $2
+        `, [update.groupId, update.studentId]);
+      }
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
     } finally {
       client.release();
     }

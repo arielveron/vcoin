@@ -90,6 +90,7 @@ export interface Student {
   name: string;
   email: string;
   class_id: number;
+  group_id?: number | null; // Optional reference to group
   password_hash?: string; // Optional password hash for student authentication
   personalizacion?: 'A' | 'O' | null; // Personalization preference: A (feminine), O (masculine), null (not defined)
   created_at: Date;
@@ -125,6 +126,35 @@ export interface StudentWithInvestments extends Student {
   total_invested: number;
 }
 
+// Group interfaces
+export interface Group {
+  id: number;
+  group_number: number; // Human-readable identifier (not the database ID)
+  name: string;
+  class_id: number;
+  is_enabled: boolean; // Can be enabled/disabled like students and classes
+  calculated_average_vcoin_amount: number; // For scheduled calculations
+  calculated_average_achievement_points: number; // For scheduled calculations
+  calculated_at: Date | null; // Last calculation timestamp
+  calculation_status: 'pending' | 'calculating' | 'completed' | 'error'; // Calculation status
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface GroupWithClass extends Group {
+  class_name: string;
+}
+
+export interface GroupWithStudents extends Group {
+  students: Student[];
+  student_count: number;
+}
+
+export interface GroupWithDetails extends GroupWithClass {
+  students: Student[];
+  student_count: number;
+}
+
 // Request types
 export interface CreateClassRequest {
   name: string;
@@ -138,7 +168,15 @@ export interface CreateStudentRequest {
   name: string;
   email: string;
   class_id: number;
+  group_id?: number; // Optional group assignment
   password?: string; // Optional password for initial creation
+}
+
+export interface CreateGroupRequest {
+  group_number: number;
+  name: string;
+  class_id: number;
+  is_enabled?: boolean; // Optional, defaults to true
 }
 
 export interface CreateInvestmentRequest {
